@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0f">
+    <title>Fitra Invest</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo-mark">FI</div>
+                <div>
+                    <h1>Fitra Invest</h1>
+                    <p class="subtitle">Value Investing AI</p>
+                </div>
+            </div>
+            <button class="menu-btn" id="menuBtn">⋮</button>
+        </header>
+
+        <!-- Tabs -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="dashboard">Dashboard</button>
+            <button class="tab" data-tab="screener">Screener</button>
+            <button class="tab" data-tab="portfolio">Portfolio</button>
+            <button class="tab" data-tab="news">News</button>
+        </nav>
+
+        <!-- Content -->
+        <main class="content" id="content">
+            <!-- Dashboard -->
+            <section class="tab-content active" id="tab-dashboard">
+                <div class="section-header">
+                    <h2>Watchlist</h2>
+                    <button class="add-btn" id="addAssetBtn">＋</button>
+                </div>
+                <div class="watchlist" id="watchlist">
+                    <div class="empty-state">Memuat data...</div>
+                </div>
+            </section>
+
+            <!-- Screener -->
+            <section class="tab-content" id="tab-screener">
+                <h2>Screener</h2>
+                <p class="description">Filter saham/crypto berdasarkan kriteria value investing.</p>
+                <div class="screener-filters">
+                    <div class="filter-group">
+                        <label>P/E Ratio max</label>
+                        <input type="number" id="peMax" value="15" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label>P/B Ratio max</label>
+                        <input type="number" id="pbMax" value="1.5" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label>ROE min (%)</label>
+                        <input type="number" id="roeMin" value="15" step="1">
+                    </div>
+                    <div class="filter-group">
+                        <label>DER max</label>
+                        <input type="number" id="derMax" value="1" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label>Dividend Yield min (%)</label>
+                        <input type="number" id="divMin" value="3" step="0.1">
+                    </div>
+                </div>
+                <button class="primary-btn" id="runScreener">Jalankan Screener</button>
+                <div class="screener-results" id="screenerResults"></div>
+            </section>
+
+            <!-- Portfolio -->
+            <section class="tab-content" id="tab-portfolio">
+                <h2>Portfolio</h2>
+                <p class="description">Track portofolio investasi lu.</p>
+                <div class="portfolio-summary">
+                    <div class="summary-card">
+                        <span class="label">Total Value</span>
+                        <span class="value" id="totalValue">Rp 0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">Unrealized P/L</span>
+                        <span class="value" id="unrealizedPL">Rp 0</span>
+                    </div>
+                </div>
+                <button class="primary-btn" id="addHolding">＋ Tambah Holding</button>
+                <div class="holdings" id="holdings"></div>
+            </section>
+
+            <!-- News -->
+            <section class="tab-content" id="tab-news">
+                <h2>News & Sentiment</h2>
+                <p class="description">Berita terkait aset lu, dengan analisis sentimen AI.</p>
+                <div class="news-list" id="newsList">
+                    <div class="empty-state">Belum ada berita</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
