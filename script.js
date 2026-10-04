@@ -37,10 +37,7 @@ async function fetchPrice(symbol, type) {
             body: JSON.stringify({ symbol, type })
         });
 
-        if (!response.ok) {
-            throw new Error('HTTP ' + response.status);
-        }
-
+        if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
 
         if (type !== 'crypto' && data.chart && data.chart.result) {
@@ -66,6 +63,28 @@ async function fetchPrice(symbol, type) {
     } catch (error) {
         console.error('Error fetching price:', error);
         return null;
+    }
+}
+
+// ============ FETCH FUNDAMENTAL ============
+async function fetchFundamental(symbol, type) {
+    try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-fundamental`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ symbol, type })
+        });
+
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        return data.fundamental || {};
+    } catch (error) {
+        console.error('Error fetching fundamental:', error);
+        return {};
     }
 }
 
@@ -105,7 +124,7 @@ async function renderWatchlist() {
             : '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
 
         return `
-            <div class="asset-card" onclick="analyzeAsset('${asset.symbol}', '${p.name || asset.name}', ${p.price})">
+            <div class="asset-card" onclick="analyzeAsset('${asset.symbol}', '${p.name || asset.name}', ${p.price}, '${asset.type}')">
                 <div class="asset-info">
                     <span class="asset-symbol">${asset.symbol}</span>
                     <span class="asset-name">${asset.name}</span>
@@ -120,7 +139,7 @@ async function renderWatchlist() {
 }
 
 // ============ ANALISIS AI ============
-async function analyzeAsset(symbol, name, price) {
+async function analyzeAsset(symbol, name, price, type) {
     // Tampilin modal loading
     const modal = document.createElement('div');
     modal.className = 'analysis-modal';
@@ -133,13 +152,19 @@ async function analyzeAsset(symbol, name, price) {
             </div>
             <div class="analysis-body" id="analysisBody">
                 <div class="loading-spinner"></div>
-                <p class="loading-text">Fitra AI sedang menganalisis ${name}...</p>
+                <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
 
     try {
+        // Fetch fundamental data dulu
+        const fundamental = await fetchFundamental(symbol, type);
+
+        document.getElementById('loadingText').textContent = 'Fitra AI sedang menganalisis...';
+
+        // Panggil Edge Function analyze-stock
         const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, {
             method: 'POST',
             headers: {
@@ -151,19 +176,11 @@ async function analyzeAsset(symbol, name, price) {
                 symbol: symbol,
                 name: name,
                 price: price,
-                fundamental: {
-                    pe: 0,
-                    pb: 0,
-                    roe: 0,
-                    der: 0,
-                    dividendYield: 0
-                }
+                fundamental: fundamental
             })
         });
 
-        if (!response.ok) {
-            throw new Error('HTTP ' + response.status);
-        }
+        if (!response.ok) throw new Error('HTTP ' + response.status);
 
         const data = await response.json();
         const analysis = data.analysis || 'Gagal memuat analisis.';
