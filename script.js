@@ -17,7 +17,7 @@ let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
     { symbol: 'BBCA.JK', name: 'Bank Central Asia', type: 'stock' },
     { symbol: 'BBRI.JK', name: 'Bank Rakyat Indonesia', type: 'stock' },
     { symbol: 'bitcoin', name: 'Bitcoin', type: 'crypto' },
-    { symbol: 'XAUUSD', name: 'Gold Spot', type: 'commodity' },
+    { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity' },
 ];
 
 function saveWatchlist() {
@@ -36,13 +36,13 @@ async function fetchPrice(symbol, type) {
             },
             body: JSON.stringify({ symbol, type })
         });
-        
+
         if (!response.ok) {
             throw new Error('HTTP ' + response.status);
         }
-        
+
         const data = await response.json();
-        
+
         if (type !== 'crypto' && data.chart && data.chart.result) {
             const meta = data.chart.result[0].meta;
             return {
@@ -52,7 +52,7 @@ async function fetchPrice(symbol, type) {
                 name: meta.longName || meta.shortName
             };
         }
-        
+
         if (type === 'crypto' && data[symbol]) {
             return {
                 price: data[symbol].usd,
@@ -61,7 +61,7 @@ async function fetchPrice(symbol, type) {
                 name: symbol
             };
         }
-        
+
         return null;
     } catch (error) {
         console.error('Error fetching price:', error);
@@ -73,14 +73,14 @@ async function fetchPrice(symbol, type) {
 async function renderWatchlist() {
     const container = document.getElementById('watchlist');
     container.innerHTML = '<div class="empty-state">Memuat data...</div>';
-    
+
     const results = await Promise.all(
         watchlist.map(async (asset) => {
             const priceData = await fetchPrice(asset.symbol, asset.type);
             return { ...asset, priceData };
         })
     );
-    
+
     container.innerHTML = results.map(asset => {
         const p = asset.priceData;
         if (!p) {
@@ -97,13 +97,13 @@ async function renderWatchlist() {
                 </div>
             `;
         }
-        
+
         const trend = p.change >= 0 ? 'up' : 'down';
         const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
-        const priceStr = p.currency === 'IDR' 
+        const priceStr = p.currency === 'IDR'
             ? 'Rp ' + p.price.toLocaleString('id-ID')
             : '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
-        
+
         return `
             <div class="asset-card" onclick="analyzeAsset('${asset.symbol}', '${p.name || asset.name}', ${p.price})">
                 <div class="asset-info">
@@ -121,7 +121,76 @@ async function renderWatchlist() {
 
 // ============ ANALISIS AI ============
 async function analyzeAsset(symbol, name, price) {
-    alert(`Menganalisis ${symbol}...\n\nFitur analisis AI bakal muncul di sini.\n\n(Kita bakal sambungin ke Edge Function analyze-stock)`);
+    // Tampilin modal loading
+    const modal = document.createElement('div');
+    modal.className = 'analysis-modal';
+    modal.id = 'analysisModal';
+    modal.innerHTML = `
+        <div class="analysis-content">
+            <div class="analysis-header">
+                <h3>Analisis AI: ${symbol}</h3>
+                <button class="analysis-close" onclick="closeAnalysis()">×</button>
+            </div>
+            <div class="analysis-body" id="analysisBody">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Fitra AI sedang menganalisis ${name}...</p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({
+                symbol: symbol,
+                name: name,
+                price: price,
+                fundamental: {
+                    pe: 0,
+                    pb: 0,
+                    roe: 0,
+                    der: 0,
+                    dividendYield: 0
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+
+        const data = await response.json();
+        const analysis = data.analysis || 'Gagal memuat analisis.';
+
+        document.getElementById('analysisBody').innerHTML = `
+            <div class="analysis-result">${formatAnalysis(analysis)}</div>
+        `;
+
+    } catch (error) {
+        document.getElementById('analysisBody').innerHTML = `
+            <div class="analysis-error">
+                <p>❌ Gagal memuat analisis</p>
+                <p class="error-detail">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function formatAnalysis(text) {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+}
+
+function closeAnalysis() {
+    const modal = document.getElementById('analysisModal');
+    if (modal) modal.remove();
 }
 
 // ============ SCREENER ============
