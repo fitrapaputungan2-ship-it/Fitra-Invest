@@ -9,6 +9,11 @@ document.querySelectorAll('.tab').forEach(tab => {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        
+        // Load news pas tab News dibuka
+        if (tab.dataset.tab === 'news') {
+            renderNews();
+        }
     });
 });
 
@@ -210,6 +215,77 @@ function formatAnalysis(text) {
 function closeAnalysis() {
     const modal = document.getElementById('analysisModal');
     if (modal) modal.remove();
+}
+
+// ============ NEWS FEED ============
+async function renderNews() {
+    const container = document.getElementById('newsList');
+    container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
+    
+    try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-news`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ tickers: 'AAPL,MSFT,NVDA,TSLA,GOOGL,BTC,ETH' })
+        });
+        
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        
+        const data = await response.json();
+        const news = data.news || [];
+        
+        if (news.length === 0) {
+            container.innerHTML = '<div class="empty-state">Belum ada berita</div>';
+            return;
+        }
+        
+        container.innerHTML = news.map(item => {
+            const sentimentClass = getSentimentClass(item.overallSentimentLabel);
+            const time = formatTime(item.timePublished);
+            
+            return `
+                <div class="news-card" onclick="window.open('${item.url}', '_blank')">
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-summary">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div>
+                    <div class="news-meta">
+                        <span class="sentiment-tag ${sentimentClass}">${item.overallSentimentLabel || 'Neutral'}</span>
+                        <span>${item.source || 'Unknown'}</span>
+                        <span>${time}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="empty-state">
+                ❌ Gagal memuat berita<br>
+                <small>${error.message}</small>
+            </div>
+        `;
+    }
+}
+
+function getSentimentClass(label) {
+    if (!label) return 'neutral';
+    if (label.includes('Bullish')) return 'positive';
+    if (label.includes('Bearish')) return 'negative';
+    return 'neutral';
+}
+
+function formatTime(timeStr) {
+    if (!timeStr) return '';
+    // Format: 20261002T043855 → 2026-10-02 04:38
+    const year = timeStr.substring(0, 4);
+    const month = timeStr.substring(4, 6);
+    const day = timeStr.substring(6, 8);
+    const hour = timeStr.substring(9, 11);
+    const minute = timeStr.substring(11, 13);
+    return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
 // ============ SCREENER ============
