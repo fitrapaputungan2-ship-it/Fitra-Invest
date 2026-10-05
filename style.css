@@ -218,6 +218,13 @@ h2 {
     color: var(--text-secondary);
 }
 
+.asset-metrics {
+    font-size: 11px;
+    color: var(--gold);
+    margin-top: 4px;
+    font-weight: 500;
+}
+
 .asset-price {
     text-align: right;
 }
@@ -528,4 +535,4 @@ h2 {
     font-size: 12px;
     color: var(--text-secondary);
     margin-top: 8px;
-}
+    }
