@@ -1,6 +1,6 @@
 // ============ KONFIGURASI ============
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
-const SUPABASE_ANON_KEY = "MASUKIN_ANON_KEY_DISINI";
+const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
 // ============ TAB NAVIGATION ============
 document.querySelectorAll('.tab').forEach(tab => {
@@ -10,9 +10,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.add('active');
         document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
         
-        if (tab.dataset.tab === 'news') {
-            renderNews();
-        }
+        if (tab.dataset.tab === 'news') renderNews();
     });
 });
 
@@ -26,12 +24,7 @@ let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
     { symbol: 'bitcoin', name: 'Bitcoin', type: 'crypto' },
     { symbol: 'ethereum', name: 'Ethereum', type: 'crypto' },
     { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity' },
-    { symbol: 'CL=F', name: 'Crude Oil', type: 'commodity' },
 ];
-
-function saveWatchlist() {
-    localStorage.setItem('fitraWatchlist', JSON.stringify(watchlist));
-}
 
 // ============ FETCH HARGA ============
 async function fetchPrice(symbol, type) {
@@ -45,7 +38,6 @@ async function fetchPrice(symbol, type) {
             },
             body: JSON.stringify({ symbol, type })
         });
-        
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
@@ -58,7 +50,6 @@ async function fetchPrice(symbol, type) {
                 name: meta.longName || meta.shortName
             };
         }
-        
         if (type === 'crypto' && data[symbol]) {
             return {
                 price: data[symbol].usd,
@@ -67,7 +58,6 @@ async function fetchPrice(symbol, type) {
                 name: symbol
             };
         }
-        
         return null;
     } catch (error) {
         console.error('Error fetching price:', error);
@@ -87,7 +77,6 @@ async function fetchFundamental(symbol, type) {
             },
             body: JSON.stringify({ symbol, type })
         });
-        
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         return data.fundamental || {};
@@ -111,20 +100,18 @@ async function renderWatchlist() {
     
     container.innerHTML = results.map(asset => {
         const p = asset.priceData;
-        if (!p) {
-            return `
-                <div class="asset-card">
-                    <div class="asset-info">
-                        <span class="asset-symbol">${asset.symbol}</span>
-                        <span class="asset-name">${asset.name}</span>
-                    </div>
-                    <div class="asset-price">
-                        <div class="price">-</div>
-                        <div class="change">Gagal memuat</div>
-                    </div>
+        if (!p) return `
+            <div class="asset-card">
+                <div class="asset-info">
+                    <span class="asset-symbol">${asset.symbol}</span>
+                    <span class="asset-name">${asset.name}</span>
                 </div>
-            `;
-        }
+                <div class="asset-price">
+                    <div class="price">-</div>
+                    <div class="change">Gagal memuat</div>
+                </div>
+            </div>
+        `;
         
         const trend = p.change >= 0 ? 'up' : 'down';
         const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
@@ -168,7 +155,6 @@ async function analyzeAsset(symbol, name, price, type) {
     
     try {
         const fundamental = await fetchFundamental(symbol, type);
-        
         document.getElementById('loadingText').textContent = 'Fitra AI sedang menganalisis...';
         
         const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, {
@@ -178,23 +164,14 @@ async function analyzeAsset(symbol, name, price, type) {
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                 'apikey': SUPABASE_ANON_KEY
             },
-            body: JSON.stringify({
-                symbol: symbol,
-                name: name,
-                price: price,
-                fundamental: fundamental
-            })
+            body: JSON.stringify({ symbol, name, price, fundamental })
         });
-        
         if (!response.ok) throw new Error('HTTP ' + response.status);
-        
         const data = await response.json();
-        const analysis = data.analysis || 'Gagal memuat analisis.';
         
         document.getElementById('analysisBody').innerHTML = `
-            <div class="analysis-result">${formatAnalysis(analysis)}</div>
+            <div class="analysis-result">${formatAnalysis(data.analysis || 'Gagal memuat analisis.')}</div>
         `;
-        
     } catch (error) {
         document.getElementById('analysisBody').innerHTML = `
             <div class="analysis-error">
@@ -206,9 +183,7 @@ async function analyzeAsset(symbol, name, price, type) {
 }
 
 function formatAnalysis(text) {
-    return text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\n/g, '<br>');
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
 }
 
 function closeAnalysis() {
@@ -216,16 +191,66 @@ function closeAnalysis() {
     if (modal) modal.remove();
 }
 
-// ============ NEWS FEED (WITH DEBUG) ============
+// ============ SCREENER ============
+async function runScreener() {
+    const results = document.getElementById('screenerResults');
+    results.innerHTML = '<div class="empty-state">Screener lagi diproses...</div>';
+    
+    const peMax = parseFloat(document.getElementById('peMax').value) || 15;
+    const pbMax = parseFloat(document.getElementById('pbMax').value) || 1.5;
+    const roeMin = (parseFloat(document.getElementById('roeMin').value) || 15) / 100;
+    const derMax = parseFloat(document.getElementById('derMax').value) || 1;
+    const divMin = (parseFloat(document.getElementById('divMin').value) || 3) / 100;
+    
+    try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/run-screener`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ peMax, pbMax, roeMin, derMax, divMin })
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        
+        if (!data.results || data.results.length === 0) {
+            results.innerHTML = '<div class="empty-state">Gak ada saham yang lolos filter. Coba longgarin kriteria.</div>';
+            return;
+        }
+        
+        results.innerHTML = `
+            <p class="description">${data.count} saham lolos filter:</p>
+            ${data.results.map(stock => `
+                <div class="asset-card">
+                    <div class="asset-info">
+                        <span class="asset-symbol">${stock.symbol}</span>
+                        <span class="asset-name">${stock.company_name}</span>
+                        <span class="asset-metrics">
+                            P/E ${stock.pe_ratio?.toFixed(2)} · 
+                            P/B ${stock.pb_ratio?.toFixed(2)} · 
+                            ROE ${((stock.roe || 0) * 100).toFixed(1)}% · 
+                            Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%
+                        </span>
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    } catch (error) {
+        results.innerHTML = `<div class="empty-state">❌ Gagal: ${error.message}</div>`;
+    }
+}
+
+document.getElementById('runScreener').addEventListener('click', runScreener);
+
+// ============ NEWS FEED ============
 async function renderNews() {
     const container = document.getElementById('newsList');
     container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
     
     try {
-        const url = `${SUPABASE_URL}/functions/v1/fetch-news`;
-        console.log('Fetching:', url);
-        
-        const response = await fetch(url, {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-news`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -234,30 +259,18 @@ async function renderNews() {
             },
             body: JSON.stringify({ tickers: 'AAPL,MSFT,NVDA,TSLA,GOOGL' })
         });
-        
-        console.log('Response status:', response.status);
-        
         if (!response.ok) throw new Error('HTTP ' + response.status);
-        
         const data = await response.json();
-        console.log('Data received:', data);
-        
         const news = data.news || [];
         
         if (news.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    Belum ada berita<br>
-                    <small style="font-size:10px">Debug: ${JSON.stringify(data).substring(0, 200)}</small>
-                </div>
-            `;
+            container.innerHTML = '<div class="empty-state">Belum ada berita</div>';
             return;
         }
         
         container.innerHTML = news.map(item => {
             const sentimentClass = getSentimentClass(item.overallSentimentLabel);
             const time = formatTime(item.timePublished);
-            
             return `
                 <div class="news-card" onclick="window.open('${item.url}', '_blank')">
                     <div class="news-title">${item.title}</div>
@@ -270,15 +283,8 @@ async function renderNews() {
                 </div>
             `;
         }).join('');
-        
     } catch (error) {
-        console.error('Error fetching news:', error);
-        container.innerHTML = `
-            <div class="empty-state">
-                ❌ Gagal memuat berita<br>
-                <small style="font-size:11px;color:#ef4444">${error.message}</small>
-            </div>
-        `;
+        container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`;
     }
 }
 
@@ -298,12 +304,6 @@ function formatTime(timeStr) {
     const minute = timeStr.substring(11, 13);
     return `${day}/${month}/${year} ${hour}:${minute}`;
 }
-
-// ============ SCREENER ============
-document.getElementById('runScreener').addEventListener('click', () => {
-    const results = document.getElementById('screenerResults');
-    results.innerHTML = '<div class="empty-state">Screener lagi diproses... (Fitur ini butuh data fundamental dari API)</div>';
-});
 
 // ============ INIT ============
 renderWatchlist();
