@@ -10,14 +10,13 @@ document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.add('active');
         document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
         
-        // Load news pas tab News dibuka
         if (tab.dataset.tab === 'news') {
             renderNews();
         }
     });
 });
 
-// ============ DATA WATCHLIST (SAHAM GLOBAL + CRYPTO + KOMODITI) ============
+// ============ DATA WATCHLIST ============
 let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
     { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock' },
     { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock' },
@@ -217,29 +216,41 @@ function closeAnalysis() {
     if (modal) modal.remove();
 }
 
-// ============ NEWS FEED ============
+// ============ NEWS FEED (WITH DEBUG) ============
 async function renderNews() {
     const container = document.getElementById('newsList');
     container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
     
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-news`, {
+        const url = `${SUPABASE_URL}/functions/v1/fetch-news`;
+        console.log('Fetching:', url);
+        
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                 'apikey': SUPABASE_ANON_KEY
             },
-            body: JSON.stringify({ tickers: 'AAPL,MSFT,NVDA,TSLA,GOOGL,BTC,ETH' })
+            body: JSON.stringify({ tickers: 'AAPL,MSFT,NVDA,TSLA,GOOGL' })
         });
+        
+        console.log('Response status:', response.status);
         
         if (!response.ok) throw new Error('HTTP ' + response.status);
         
         const data = await response.json();
+        console.log('Data received:', data);
+        
         const news = data.news || [];
         
         if (news.length === 0) {
-            container.innerHTML = '<div class="empty-state">Belum ada berita</div>';
+            container.innerHTML = `
+                <div class="empty-state">
+                    Belum ada berita<br>
+                    <small style="font-size:10px">Debug: ${JSON.stringify(data).substring(0, 200)}</small>
+                </div>
+            `;
             return;
         }
         
@@ -261,10 +272,11 @@ async function renderNews() {
         }).join('');
         
     } catch (error) {
+        console.error('Error fetching news:', error);
         container.innerHTML = `
             <div class="empty-state">
                 ❌ Gagal memuat berita<br>
-                <small>${error.message}</small>
+                <small style="font-size:11px;color:#ef4444">${error.message}</small>
             </div>
         `;
     }
@@ -279,7 +291,6 @@ function getSentimentClass(label) {
 
 function formatTime(timeStr) {
     if (!timeStr) return '';
-    // Format: 20261002T043855 → 2026-10-02 04:38
     const year = timeStr.substring(0, 4);
     const month = timeStr.substring(4, 6);
     const day = timeStr.substring(6, 8);
