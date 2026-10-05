@@ -1,6 +1,6 @@
 // ============ KONFIGURASI ============
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
+const SUPABASE_ANON_KEY = "MASUKIN_ANON_KEY_DISINI";
 
 // ============ TAB NAVIGATION ============
 document.querySelectorAll('.tab').forEach(tab => {
@@ -12,12 +12,17 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 });
 
-// ============ DATA WATCHLIST ============
+// ============ DATA WATCHLIST (SAHAM GLOBAL + CRYPTO + KOMODITI) ============
 let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
-    { symbol: 'BBCA.JK', name: 'Bank Central Asia', type: 'stock' },
-    { symbol: 'BBRI.JK', name: 'Bank Rakyat Indonesia', type: 'stock' },
+    { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock' },
+    { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock' },
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock' },
+    { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock' },
+    { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock' },
     { symbol: 'bitcoin', name: 'Bitcoin', type: 'crypto' },
+    { symbol: 'ethereum', name: 'Ethereum', type: 'crypto' },
     { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity' },
+    { symbol: 'CL=F', name: 'Crude Oil', type: 'commodity' },
 ];
 
 function saveWatchlist() {
@@ -36,10 +41,10 @@ async function fetchPrice(symbol, type) {
             },
             body: JSON.stringify({ symbol, type })
         });
-
+        
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
-
+        
         if (type !== 'crypto' && data.chart && data.chart.result) {
             const meta = data.chart.result[0].meta;
             return {
@@ -49,7 +54,7 @@ async function fetchPrice(symbol, type) {
                 name: meta.longName || meta.shortName
             };
         }
-
+        
         if (type === 'crypto' && data[symbol]) {
             return {
                 price: data[symbol].usd,
@@ -58,7 +63,7 @@ async function fetchPrice(symbol, type) {
                 name: symbol
             };
         }
-
+        
         return null;
     } catch (error) {
         console.error('Error fetching price:', error);
@@ -78,7 +83,7 @@ async function fetchFundamental(symbol, type) {
             },
             body: JSON.stringify({ symbol, type })
         });
-
+        
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         return data.fundamental || {};
@@ -92,14 +97,14 @@ async function fetchFundamental(symbol, type) {
 async function renderWatchlist() {
     const container = document.getElementById('watchlist');
     container.innerHTML = '<div class="empty-state">Memuat data...</div>';
-
+    
     const results = await Promise.all(
         watchlist.map(async (asset) => {
             const priceData = await fetchPrice(asset.symbol, asset.type);
             return { ...asset, priceData };
         })
     );
-
+    
     container.innerHTML = results.map(asset => {
         const p = asset.priceData;
         if (!p) {
@@ -116,13 +121,13 @@ async function renderWatchlist() {
                 </div>
             `;
         }
-
+        
         const trend = p.change >= 0 ? 'up' : 'down';
         const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
-        const priceStr = p.currency === 'IDR'
+        const priceStr = p.currency === 'IDR' 
             ? 'Rp ' + p.price.toLocaleString('id-ID')
             : '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
-
+        
         return `
             <div class="asset-card" onclick="analyzeAsset('${asset.symbol}', '${p.name || asset.name}', ${p.price}, '${asset.type}')">
                 <div class="asset-info">
@@ -140,7 +145,6 @@ async function renderWatchlist() {
 
 // ============ ANALISIS AI ============
 async function analyzeAsset(symbol, name, price, type) {
-    // Tampilin modal loading
     const modal = document.createElement('div');
     modal.className = 'analysis-modal';
     modal.id = 'analysisModal';
@@ -157,14 +161,12 @@ async function analyzeAsset(symbol, name, price, type) {
         </div>
     `;
     document.body.appendChild(modal);
-
+    
     try {
-        // Fetch fundamental data dulu
         const fundamental = await fetchFundamental(symbol, type);
-
+        
         document.getElementById('loadingText').textContent = 'Fitra AI sedang menganalisis...';
-
-        // Panggil Edge Function analyze-stock
+        
         const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, {
             method: 'POST',
             headers: {
@@ -179,16 +181,16 @@ async function analyzeAsset(symbol, name, price, type) {
                 fundamental: fundamental
             })
         });
-
+        
         if (!response.ok) throw new Error('HTTP ' + response.status);
-
+        
         const data = await response.json();
         const analysis = data.analysis || 'Gagal memuat analisis.';
-
+        
         document.getElementById('analysisBody').innerHTML = `
             <div class="analysis-result">${formatAnalysis(analysis)}</div>
         `;
-
+        
     } catch (error) {
         document.getElementById('analysisBody').innerHTML = `
             <div class="analysis-error">
