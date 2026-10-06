@@ -31,7 +31,6 @@
         </nav>
 
         <main class="content" id="content">
-            <!-- Dashboard -->
             <section class="tab-content active" id="tab-dashboard">
                 <div class="section-header">
                     <h2>Watchlist</h2>
@@ -42,7 +41,6 @@
                 </div>
             </section>
 
-            <!-- Screener -->
             <section class="tab-content" id="tab-screener">
                 <h2>Screener</h2>
                 <p class="description">Filter saham global berdasarkan kriteria value investing.</p>
@@ -72,7 +70,6 @@
                 <div class="screener-results" id="screenerResults"></div>
             </section>
 
-            <!-- Portfolio -->
             <section class="tab-content" id="tab-portfolio">
                 <h2>Portfolio</h2>
                 <p class="description">Track portofolio investasi global lu.</p>
@@ -98,7 +95,6 @@
                 <div class="holdings" id="holdings"></div>
             </section>
 
-            <!-- News -->
             <section class="tab-content" id="tab-news">
                 <h2>News & Sentiment</h2>
                 <p class="description">Berita terkait aset global lu, dengan analisis sentimen AI.</p>
@@ -107,6 +103,26 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Modal Chart -->
+    <div class="chart-modal" id="chartModal">
+        <div class="chart-content">
+            <div class="chart-header">
+                <div>
+                    <h3 id="chartTitle">Chart</h3>
+                    <p class="chart-subtitle" id="chartPrice">-</p>
+                </div>
+                <button class="analysis-close" id="closeChartModal">×</button>
+            </div>
+            <div class="chart-timeframes">
+                <button class="tf-btn" data-range="1w">1W</button>
+                <button class="tf-btn active" data-range="1m">1M</button>
+                <button class="tf-btn" data-range="3m">3M</button>
+                <button class="tf-btn" data-range="1y">1Y</button>
+            </div>
+            <div id="chartContainer" class="chart-container"></div>
+        </div>
     </div>
 
     <!-- Modal Tambah Holding -->
@@ -118,7 +134,7 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Symbol (contoh: AAPL, bitcoin, GC=F)</label>
+                    <label>Symbol (contoh: AAPL, BTC, GC=F)</label>
                     <input type="text" id="holdingSymbol" placeholder="AAPL" autocomplete="off">
                 </div>
                 <div class="form-group">
@@ -149,6 +165,8 @@
         </div>
     </div>
 
+    <!-- Lightweight Charts Library -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
