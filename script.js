@@ -49,7 +49,6 @@ async function fetchPrice(symbol, type) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
-        // Binance API response (crypto)
         if (type === 'crypto' && data.price) {
             return {
                 price: data.price,
@@ -59,7 +58,6 @@ async function fetchPrice(symbol, type) {
             };
         }
         
-        // Yahoo Finance response (stock & commodity)
         if (type !== 'crypto' && data.chart && data.chart.result) {
             const meta = data.chart.result[0].meta;
             return {
@@ -132,7 +130,7 @@ async function renderWatchlist() {
             : '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
         
         return `
-            <div class="asset-card" onclick="analyzeAsset('${asset.symbol}', '${p.name || asset.name}', ${p.price}, '${asset.type}')">
+            <div class="asset-card" onclick="openChart('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
                 <div class="asset-info">
                     <span class="asset-symbol">${asset.symbol}</span>
                     <span class="asset-name">${asset.name}</span>
@@ -146,62 +144,160 @@ async function renderWatchlist() {
     }).join('');
 }
 
-// ============ ANALISIS AI ============
-async function analyzeAsset(symbol, name, price, type) {
-    const modal = document.createElement('div');
-    modal.className = 'analysis-modal';
-    modal.id = 'analysisModal';
-    modal.innerHTML = `
-        <div class="analysis-content">
-            <div class="analysis-header">
-                <h3>Analisis AI: ${symbol}</h3>
-                <button class="analysis-close" onclick="closeAnalysis()">×</button>
-            </div>
-            <div class="analysis-body" id="analysisBody">
-                <div class="loading-spinner"></div>
-                <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
+// ============ CHART ============
+let currentChart = null;
+let currentCandlestick = null;
+let currentSymbol = null;
+let currentType = null;
+let currentPrice = 0;
+let currentChange = 0;
+
+async function openChart(symbol, name, price, change, type) {
+    currentSymbol = symbol;
+    currentType = type;
+    currentPrice = price;
+    currentChange = change;
+    
+    const modal = document.getElementById('chartModal');
+    modal.classList.add('active');
+    
+    document.getElementById('chartTitle').textContent = symbol + ' — ' + name;
+    updateChartPrice();
+    
+    // Reset timeframe aktif ke 1M
+    document.querySelectorAll('.tf-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.range === '1m');
+    });
+    
+    await loadChart(symbol, type, '1m');
+}
+
+function updateChartPrice() {
+    const changeStr = (currentChange >= 0 ? '+' : '') + currentChange.toFixed(2) + '%';
+    const priceStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    const priceEl = document.getElementById('chartPrice');
+    priceEl.textContent = priceStr + '  ' + changeStr;
+    priceEl.style.color = currentChange >= 0 ? '#10b981' : '#ef4444';
+}
+
+async function loadChart(symbol, type, range) {
+    const container = document.getElementById('chartContainer');
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:13px;">Memuat chart...</div>';
     
     try {
-        const fundamental = await fetchFundamental(symbol, type);
-        document.getElementById('loadingText').textContent = 'Fitra AI sedang menganalisis...';
+        // Map range ke interval + yahoo range
+        let interval = '1d';
+        let yahooRange = range;
+        if (range === '1w') { interval = '1h'; yahooRange = '5d'; }
+        else if (range === '1m') { interval = '1d'; yahooRange = '1mo'; }
+        else if (range === '3m') { interval = '1d'; yahooRange = '3mo'; }
+        else if (range === '1y') { interval = '1wk'; yahooRange = '1y'; }
         
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                 'apikey': SUPABASE_ANON_KEY
             },
-            body: JSON.stringify({ symbol, name, price, fundamental })
+            body: JSON.stringify({ symbol, type, interval, range: yahooRange })
         });
+        
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
+        const candles = data.data || [];
         
-        document.getElementById('analysisBody').innerHTML = `
-            <div class="analysis-result">${formatAnalysis(data.analysis || 'Gagal memuat analisis.')}</div>
-        `;
+        if (candles.length === 0) {
+            container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:13px;">Chart tidak tersedia</div>';
+            return;
+        }
+        
+        // Render chart
+        container.innerHTML = '';
+        
+        const chart = LightweightCharts.createChart(container, {
+            layout: {
+                background: { color: 'transparent' },
+                textColor: 'rgba(255, 255, 255, 0.6)',
+            },
+            grid: {
+                vertLines: { color: 'rgba(255, 255, 255, 0.04)' },
+                horzLines: { color: 'rgba(255, 255, 255, 0.04)' },
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
+            rightPriceScale: {
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+            },
+            timeScale: {
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+                timeVisible: true,
+                secondsVisible: false,
+            },
+            handleScroll: true,
+            handleScale: true,
+        });
+        
+        const candlestick = chart.addCandlestickSeries({
+            upColor: '#10b981',
+            downColor: '#ef4444',
+            borderDownColor: '#ef4444',
+            borderUpColor: '#10b981',
+            wickDownColor: '#ef4444',
+            wickUpColor: '#10b981',
+        });
+        
+        // Format data buat Lightweight Charts
+        const chartData = candles.map(c => ({
+            time: c.time,
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+        })).filter(c => c.open && c.high && c.low && c.close);
+        
+        candlestick.setData(chartData);
+        chart.timeScale().fitContent();
+        
+        currentChart = chart;
+        currentCandlestick = candlestick;
+        
+        // Handle resize
+        const resizeObserver = new ResizeObserver(() => {
+            chart.applyOptions({ 
+                width: container.clientWidth, 
+                height: container.clientHeight 
+            });
+        });
+        resizeObserver.observe(container);
+        
     } catch (error) {
-        document.getElementById('analysisBody').innerHTML = `
-            <div class="analysis-error">
-                <p>❌ Gagal memuat analisis</p>
-                <p class="error-detail">${error.message}</p>
-            </div>
-        `;
+        container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ef4444;font-size:13px;">❌ ${error.message}</div>`;
     }
 }
 
-function formatAnalysis(text) {
-    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+function closeChart() {
+    document.getElementById('chartModal').classList.remove('active');
+    if (currentChart) {
+        currentChart.remove();
+        currentChart = null;
+        currentCandlestick = null;
+    }
 }
 
-function closeAnalysis() {
-    const modal = document.getElementById('analysisModal');
-    if (modal) modal.remove();
-}
+// Event: timeframe buttons
+document.querySelectorAll('.tf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (currentSymbol) {
+            loadChart(currentSymbol, currentType, btn.dataset.range);
+        }
+    });
+});
+
+document.getElementById('closeChartModal').addEventListener('click', closeChart);
 
 // ============ SCREENER ============
 async function runScreener() {
