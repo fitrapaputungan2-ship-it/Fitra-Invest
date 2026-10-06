@@ -22,8 +22,8 @@ let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
     { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock' },
     { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock' },
     { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock' },
-    { symbol: 'bitcoin', name: 'Bitcoin', type: 'crypto' },
-    { symbol: 'ethereum', name: 'Ethereum', type: 'crypto' },
+    { symbol: 'BTC', name: 'Bitcoin', type: 'crypto' },
+    { symbol: 'ETH', name: 'Ethereum', type: 'crypto' },
     { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity' },
 ];
 
@@ -49,6 +49,17 @@ async function fetchPrice(symbol, type) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
+        // Binance API response (crypto)
+        if (type === 'crypto' && data.price) {
+            return {
+                price: data.price,
+                currency: 'USD',
+                change: data.change || 0,
+                name: data.name || symbol
+            };
+        }
+        
+        // Yahoo Finance response (stock & commodity)
         if (type !== 'crypto' && data.chart && data.chart.result) {
             const meta = data.chart.result[0].meta;
             return {
@@ -58,14 +69,7 @@ async function fetchPrice(symbol, type) {
                 name: meta.longName || meta.shortName
             };
         }
-        if (type === 'crypto' && data[symbol]) {
-            return {
-                price: data[symbol].usd,
-                currency: 'USD',
-                change: data[symbol].usd_24h_change || 0,
-                name: symbol
-            };
-        }
+        
         return null;
     } catch (error) {
         console.error('Error fetching price:', error);
@@ -271,7 +275,6 @@ async function renderPortfolio() {
     
     container.innerHTML = '<div class="empty-state">Memuat harga...</div>';
     
-    // Fetch harga untuk semua holding
     const holdingsWithPrice = await Promise.all(
         portfolio.map(async (h) => {
             const priceData = await fetchPrice(h.symbol, h.type);
@@ -311,7 +314,6 @@ async function renderPortfolio() {
     }).join('');
     
     const totalPL = totalValue - totalCost;
-    const totalPLClass = totalPL >= 0 ? 'up' : 'down';
     const totalPLSign = totalPL >= 0 ? '+' : '';
     
     totalValueEl.textContent = '$ ' + totalValue.toFixed(2);
@@ -371,7 +373,6 @@ document.getElementById('saveHolding').addEventListener('click', () => {
     savePortfolio();
     holdingModal.classList.remove('active');
     
-    // Reset form
     document.getElementById('holdingSymbol').value = '';
     document.getElementById('holdingName').value = '';
     document.getElementById('holdingShares').value = '';
