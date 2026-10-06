@@ -11,6 +11,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
         
         if (tab.dataset.tab === 'news') renderNews();
+        if (tab.dataset.tab === 'portfolio') renderPortfolio();
     });
 });
 
@@ -25,6 +26,13 @@ let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
     { symbol: 'ethereum', name: 'Ethereum', type: 'crypto' },
     { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity' },
 ];
+
+// ============ DATA PORTFOLIO ============
+let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
+
+function savePortfolio() {
+    localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio));
+}
 
 // ============ FETCH HARGA ============
 async function fetchPrice(symbol, type) {
@@ -243,6 +251,134 @@ async function runScreener() {
 }
 
 document.getElementById('runScreener').addEventListener('click', runScreener);
+
+// ============ PORTFOLIO ============
+async function renderPortfolio() {
+    const container = document.getElementById('holdings');
+    const totalValueEl = document.getElementById('totalValue');
+    const unrealizedPLEl = document.getElementById('unrealizedPL');
+    const totalCostEl = document.getElementById('totalCost');
+    const totalHoldingsEl = document.getElementById('totalHoldings');
+    
+    if (portfolio.length === 0) {
+        container.innerHTML = '<div class="empty-state">Belum ada holding. Klik "Tambah Holding" buat mulai.</div>';
+        totalValueEl.textContent = '$ 0';
+        unrealizedPLEl.textContent = '$ 0';
+        totalCostEl.textContent = '$ 0';
+        totalHoldingsEl.textContent = '0';
+        return;
+    }
+    
+    container.innerHTML = '<div class="empty-state">Memuat harga...</div>';
+    
+    // Fetch harga untuk semua holding
+    const holdingsWithPrice = await Promise.all(
+        portfolio.map(async (h) => {
+            const priceData = await fetchPrice(h.symbol, h.type);
+            return { ...h, currentPrice: priceData?.price || 0 };
+        })
+    );
+    
+    let totalValue = 0;
+    let totalCost = 0;
+    
+    container.innerHTML = holdingsWithPrice.map(h => {
+        const currentValue = h.currentPrice * h.shares;
+        const costBasis = h.avgPrice * h.shares;
+        const pl = currentValue - costBasis;
+        const plPercent = costBasis > 0 ? (pl / costBasis) * 100 : 0;
+        
+        totalValue += currentValue;
+        totalCost += costBasis;
+        
+        const plClass = pl >= 0 ? 'up' : 'down';
+        const plSign = pl >= 0 ? '+' : '';
+        
+        return `
+            <div class="holding-card">
+                <div class="holding-info">
+                    <span class="holding-symbol">${h.symbol}</span>
+                    <span class="holding-detail">${h.shares} × $${h.avgPrice.toFixed(2)} = $${costBasis.toFixed(2)}</span>
+                    <span class="holding-detail">Current: $${h.currentPrice.toFixed(2)}</span>
+                </div>
+                <div class="holding-pl">
+                    <span class="holding-value">$${currentValue.toFixed(2)}</span>
+                    <span class="holding-pl-amount ${plClass}">${plSign}$${pl.toFixed(2)} (${plSign}${plPercent.toFixed(2)}%)</span>
+                </div>
+                <button class="holding-delete" onclick="deleteHolding('${h.id}')">×</button>
+            </div>
+        `;
+    }).join('');
+    
+    const totalPL = totalValue - totalCost;
+    const totalPLClass = totalPL >= 0 ? 'up' : 'down';
+    const totalPLSign = totalPL >= 0 ? '+' : '';
+    
+    totalValueEl.textContent = '$ ' + totalValue.toFixed(2);
+    totalValueEl.style.color = '#fbbf24';
+    
+    unrealizedPLEl.textContent = `${totalPLSign}$${totalPL.toFixed(2)}`;
+    unrealizedPLEl.style.color = totalPL >= 0 ? '#10b981' : '#ef4444';
+    
+    totalCostEl.textContent = '$ ' + totalCost.toFixed(2);
+    totalHoldingsEl.textContent = portfolio.length;
+}
+
+function deleteHolding(id) {
+    if (!confirm('Hapus holding ini?')) return;
+    portfolio = portfolio.filter(h => h.id !== id);
+    savePortfolio();
+    renderPortfolio();
+}
+
+// ============ MODAL TAMBAH HOLDING ============
+const holdingModal = document.getElementById('holdingModal');
+
+document.getElementById('addHolding').addEventListener('click', () => {
+    holdingModal.classList.add('active');
+});
+
+document.getElementById('closeHoldingModal').addEventListener('click', () => {
+    holdingModal.classList.remove('active');
+});
+
+document.getElementById('cancelHolding').addEventListener('click', () => {
+    holdingModal.classList.remove('active');
+});
+
+document.getElementById('saveHolding').addEventListener('click', () => {
+    const symbol = document.getElementById('holdingSymbol').value.trim().toUpperCase();
+    const name = document.getElementById('holdingName').value.trim();
+    const type = document.getElementById('holdingType').value;
+    const shares = parseFloat(document.getElementById('holdingShares').value);
+    const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value);
+    
+    if (!symbol || !name || !shares || !avgPrice) {
+        alert('Isi semua field dulu!');
+        return;
+    }
+    
+    portfolio.push({
+        id: 'holding-' + Date.now(),
+        symbol,
+        name,
+        type,
+        shares,
+        avgPrice,
+        addedAt: Date.now()
+    });
+    
+    savePortfolio();
+    holdingModal.classList.remove('active');
+    
+    // Reset form
+    document.getElementById('holdingSymbol').value = '';
+    document.getElementById('holdingName').value = '';
+    document.getElementById('holdingShares').value = '';
+    document.getElementById('holdingAvgPrice').value = '';
+    
+    renderPortfolio();
+});
 
 // ============ NEWS FEED ============
 async function renderNews() {
