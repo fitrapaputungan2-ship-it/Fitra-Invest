@@ -31,6 +31,7 @@
         </nav>
 
         <main class="content" id="content">
+            <!-- Dashboard -->
             <section class="tab-content active" id="tab-dashboard">
                 <div class="section-header">
                     <h2>Watchlist</h2>
@@ -41,35 +42,37 @@
                 </div>
             </section>
 
+            <!-- Screener -->
             <section class="tab-content" id="tab-screener">
                 <h2>Screener</h2>
                 <p class="description">Filter saham global berdasarkan kriteria value investing.</p>
                 <div class="screener-filters">
                     <div class="filter-group">
                         <label>P/E Ratio max</label>
-                        <input type="number" id="peMax" value="15" step="0.1">
+                        <input type="number" id="peMax" value="25" step="0.1">
                     </div>
                     <div class="filter-group">
                         <label>P/B Ratio max</label>
-                        <input type="number" id="pbMax" value="1.5" step="0.1">
+                        <input type="number" id="pbMax" value="5" step="0.1">
                     </div>
                     <div class="filter-group">
                         <label>ROE min (%)</label>
-                        <input type="number" id="roeMin" value="15" step="1">
+                        <input type="number" id="roeMin" value="10" step="1">
                     </div>
                     <div class="filter-group">
                         <label>DER max</label>
-                        <input type="number" id="derMax" value="1" step="0.1">
+                        <input type="number" id="derMax" value="3" step="0.1">
                     </div>
                     <div class="filter-group">
                         <label>Dividend Yield min (%)</label>
-                        <input type="number" id="divMin" value="3" step="0.1">
+                        <input type="number" id="divMin" value="1" step="0.1">
                     </div>
                 </div>
                 <button class="primary-btn" id="runScreener">Jalankan Screener</button>
                 <div class="screener-results" id="screenerResults"></div>
             </section>
 
+            <!-- Portfolio -->
             <section class="tab-content" id="tab-portfolio">
                 <h2>Portfolio</h2>
                 <p class="description">Track portofolio investasi global lu.</p>
@@ -82,11 +85,20 @@
                         <span class="label">Unrealized P/L</span>
                         <span class="value" id="unrealizedPL">$ 0</span>
                     </div>
+                    <div class="summary-card">
+                        <span class="label">Total Cost</span>
+                        <span class="value" id="totalCost">$ 0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">Holdings</span>
+                        <span class="value" id="totalHoldings">0</span>
+                    </div>
                 </div>
                 <button class="primary-btn" id="addHolding">＋ Tambah Holding</button>
                 <div class="holdings" id="holdings"></div>
             </section>
 
+            <!-- News -->
             <section class="tab-content" id="tab-news">
                 <h2>News & Sentiment</h2>
                 <p class="description">Berita terkait aset global lu, dengan analisis sentimen AI.</p>
@@ -95,6 +107,46 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Modal Tambah Holding -->
+    <div class="modal-overlay" id="holdingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tambah Holding</h3>
+                <button class="modal-close" id="closeHoldingModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Symbol (contoh: AAPL, bitcoin, GC=F)</label>
+                    <input type="text" id="holdingSymbol" placeholder="AAPL" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Nama Aset</label>
+                    <input type="text" id="holdingName" placeholder="Apple Inc." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Tipe</label>
+                    <select id="holdingType">
+                        <option value="stock">Stock</option>
+                        <option value="crypto">Crypto</option>
+                        <option value="commodity">Commodity</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah Saham</label>
+                    <input type="number" id="holdingShares" placeholder="10" step="any">
+                </div>
+                <div class="form-group">
+                    <label>Harga Beli Rata-rata (USD)</label>
+                    <input type="number" id="holdingAvgPrice" placeholder="150" step="any">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancelHolding">Batal</button>
+                <button class="btn-save" id="saveHolding">Simpan</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
