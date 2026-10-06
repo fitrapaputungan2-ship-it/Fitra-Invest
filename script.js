@@ -1,7 +1,7 @@
 // ============ KONFIGURASI ============
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
-
+    
 // ============ TAB NAVIGATION ============
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -50,12 +50,7 @@ async function fetchPrice(symbol, type) {
         const data = await response.json();
         
         if (type === 'crypto' && data.price) {
-            return {
-                price: data.price,
-                currency: 'USD',
-                change: data.change || 0,
-                name: data.name || symbol
-            };
+            return { price: data.price, currency: 'USD', change: data.change || 0, name: data.name || symbol };
         }
         
         if (type !== 'crypto' && data.chart && data.chart.result) {
@@ -125,12 +120,10 @@ async function renderWatchlist() {
         
         const trend = p.change >= 0 ? 'up' : 'down';
         const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
-        const priceStr = p.currency === 'IDR' 
-            ? 'Rp ' + p.price.toLocaleString('id-ID')
-            : '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
         
         return `
-            <div class="asset-card" onclick="openChart('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
+            <div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
                 <div class="asset-info">
                     <span class="asset-symbol">${asset.symbol}</span>
                     <span class="asset-name">${asset.name}</span>
@@ -144,15 +137,14 @@ async function renderWatchlist() {
     }).join('');
 }
 
-// ============ CHART ============
+// ============ ASSET DETAIL (CHART + AI ANALYSIS) ============
 let currentChart = null;
-let currentCandlestick = null;
 let currentSymbol = null;
 let currentType = null;
 let currentPrice = 0;
 let currentChange = 0;
 
-async function openChart(symbol, name, price, change, type) {
+async function openAssetDetail(symbol, name, price, change, type) {
     currentSymbol = symbol;
     currentType = type;
     currentPrice = price;
@@ -164,12 +156,19 @@ async function openChart(symbol, name, price, change, type) {
     document.getElementById('chartTitle').textContent = symbol + ' — ' + name;
     updateChartPrice();
     
-    // Reset timeframe aktif ke 1M
     document.querySelectorAll('.tf-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.range === '1m');
     });
     
-    await loadChart(symbol, type, '1m');
+    // Reset analysis section
+    document.getElementById('analysisBody').innerHTML = `
+        <div class="loading-spinner"></div>
+        <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
+    `;
+    
+    // Load chart & analysis bersamaan
+    loadChart(symbol, type, '1m');
+    loadAnalysis(symbol, name, price, type);
 }
 
 function updateChartPrice() {
@@ -185,7 +184,6 @@ async function loadChart(symbol, type, range) {
     container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:13px;">Memuat chart...</div>';
     
     try {
-        // Map range ke interval + yahoo range
         let interval = '1d';
         let yahooRange = range;
         if (range === '1w') { interval = '1h'; yahooRange = '5d'; }
@@ -212,7 +210,6 @@ async function loadChart(symbol, type, range) {
             return;
         }
         
-        // Render chart
         container.innerHTML = '';
         
         const chart = LightweightCharts.createChart(container, {
@@ -224,12 +221,8 @@ async function loadChart(symbol, type, range) {
                 vertLines: { color: 'rgba(255, 255, 255, 0.04)' },
                 horzLines: { color: 'rgba(255, 255, 255, 0.04)' },
             },
-            crosshair: {
-                mode: LightweightCharts.CrosshairMode.Normal,
-            },
-            rightPriceScale: {
-                borderColor: 'rgba(255, 255, 255, 0.08)',
-            },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+            rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
             timeScale: {
                 borderColor: 'rgba(255, 255, 255, 0.08)',
                 timeVisible: true,
@@ -248,7 +241,6 @@ async function loadChart(symbol, type, range) {
             wickUpColor: '#10b981',
         });
         
-        // Format data buat Lightweight Charts
         const chartData = candles.map(c => ({
             time: c.time,
             open: c.open,
@@ -261,9 +253,7 @@ async function loadChart(symbol, type, range) {
         chart.timeScale().fitContent();
         
         currentChart = chart;
-        currentCandlestick = candlestick;
         
-        // Handle resize
         const resizeObserver = new ResizeObserver(() => {
             chart.applyOptions({ 
                 width: container.clientWidth, 
@@ -277,16 +267,48 @@ async function loadChart(symbol, type, range) {
     }
 }
 
-function closeChart() {
+async function loadAnalysis(symbol, name, price, type) {
+    const container = document.getElementById('analysisBody');
+    
+    try {
+        const fundamental = await fetchFundamental(symbol, type);
+        
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ symbol, name, price, fundamental })
+        });
+        
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        
+        container.innerHTML = formatAnalysis(data.analysis || 'Gagal memuat analisis.');
+    } catch (error) {
+        container.innerHTML = `
+            <div class="analysis-error">
+                <p>❌ Gagal memuat analisis</p>
+                <p class="error-detail">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function formatAnalysis(text) {
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+}
+
+function closeAssetDetail() {
     document.getElementById('chartModal').classList.remove('active');
     if (currentChart) {
         currentChart.remove();
         currentChart = null;
-        currentCandlestick = null;
     }
 }
 
-// Event: timeframe buttons
 document.querySelectorAll('.tf-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
@@ -297,7 +319,7 @@ document.querySelectorAll('.tf-btn').forEach(btn => {
     });
 });
 
-document.getElementById('closeChartModal').addEventListener('click', closeChart);
+document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
 
 // ============ SCREENER ============
 async function runScreener() {
