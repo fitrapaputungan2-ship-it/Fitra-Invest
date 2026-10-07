@@ -40,24 +40,36 @@ function getTradingViewSymbol(symbol, type) {
     
     if (type === 'crypto') {
         const cryptoSymbols = {
-            'BTC': 'BINANCE:BTCUSDT', 'ETH': 'BINANCE:ETHUSDT',
-            'SOL': 'BINANCE:SOLUSDT', 'BNB': 'BINANCE:BNBUSDT',
-            'XRP': 'BINANCE:XRPUSDT', 'ADA': 'BINANCE:ADAUSDT',
-            'DOGE': 'BINANCE:DOGEUSDT', 'MATIC': 'BINANCE:MATICUSDT',
+            'BTC': 'BINANCE:BTCUSDT',
+            'ETH': 'BINANCE:ETHUSDT',
+            'SOL': 'BINANCE:SOLUSDT',
+            'BNB': 'BINANCE:BNBUSDT',
+            'XRP': 'BINANCE:XRPUSDT',
+            'ADA': 'BINANCE:ADAUSDT',
+            'DOGE': 'BINANCE:DOGEUSDT',
+            'MATIC': 'BINANCE:MATICUSDT',
+            'DOT': 'BINANCE:DOTUSDT',
+            'LINK': 'BINANCE:LINKUSDT',
         };
         return cryptoSymbols[upperSymbol] || 'BINANCE:' + upperSymbol + 'USDT';
     }
     
     if (type === 'commodity') {
         const commoditySymbols = {
-            'GC=F': 'TVC:GOLD', 'SI=F': 'TVC:SILVER',
-            'CL=F': 'TVC:USOIL', 'NG=F': 'TVC:NATURALGAS',
+            'GC=F': 'TVC:GOLD',
+            'SI=F': 'TVC:SILVER',
+            'CL=F': 'TVC:USOIL',
+            'NG=F': 'TVC:NATURALGAS',
+            'HG=F': 'TVC:COPPER',
+            'PL=F': 'TVC:PLATINUM',
         };
         return commoditySymbols[upperSymbol] || 'TVC:GOLD';
     }
     
     const nyseStocks = ['JPM', 'V', 'WMT', 'DIS', 'KO', 'MCD', 'NKE', 'GS', 'AXP', 'BA', 'CAT', 'CVX', 'IBM', 'JNJ', 'MMM', 'PG', 'TRV', 'UNH', 'VZ', 'HD', 'HON', 'CRM'];
-    if (nyseStocks.includes(upperSymbol)) return 'NYSE:' + upperSymbol;
+    if (nyseStocks.includes(upperSymbol)) {
+        return 'NYSE:' + upperSymbol;
+    }
     return 'NASDAQ:' + upperSymbol;
 }
 
@@ -89,6 +101,7 @@ async function fetchPrice(symbol, type) {
                 name: meta.longName || meta.shortName
             };
         }
+        
         return null;
     } catch (error) {
         console.error('Error fetching price:', error);
@@ -139,7 +152,7 @@ async function renderWatchlist() {
                 </div>
                 <div class="asset-price">
                     <div class="price">-</div>
-                    <div class="change">Gagal</div>
+                    <div class="change">Gagal memuat</div>
                 </div>
             </div>
         `;
@@ -163,7 +176,7 @@ async function renderWatchlist() {
     }).join('');
 }
 
-// ============ ASSET DETAIL (FUTURISTIC CHART + AI) ============
+// ============ ASSET DETAIL (TRADINGVIEW CHART + AI ANALYSIS) ============
 let currentSymbol = null;
 let currentType = null;
 let currentPrice = 0;
@@ -179,45 +192,23 @@ async function openAssetDetail(symbol, name, price, change, type) {
     modal.classList.add('active');
     
     document.getElementById('chartTitle').textContent = symbol + ' — ' + name;
+    updateChartPrice();
     
-    // Update price display
-    document.getElementById('chartPrice').textContent = '$' + price.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    const changeEl = document.getElementById('chartChange');
-    changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
-    changeEl.style.color = change >= 0 ? '#00ff88' : '#ff2e63';
-    changeEl.style.textShadow = change >= 0 ? '0 0 10px rgba(0,255,136,0.4)' : '0 0 10px rgba(255,46,99,0.4)';
-    
-    // Update BID/ASK
-    const bid = price * 0.9999;
-    const ask = price * 1.0001;
-    document.getElementById('bidValue').textContent = '$' + bid.toFixed(2);
-    document.getElementById('askValue').textContent = '$' + ask.toFixed(2);
-    
-    // Update HTF/LTF based on change
-    const htfBadge = document.getElementById('htfBadge');
-    const ltfBadge = document.getElementById('ltfBadge');
-    const direction = change >= 0 ? 'BULLISH' : 'BEARISH';
-    htfBadge.textContent = 'HTF: ' + direction;
-    ltfBadge.textContent = 'LTF: ' + direction;
-    htfBadge.style.color = change >= 0 ? '#00ff88' : '#ff2e63';
-    htfBadge.style.borderColor = change >= 0 ? 'rgba(0,255,136,0.3)' : 'rgba(255,46,99,0.3)';
-    ltfBadge.style.color = change >= 0 ? '#00ff88' : '#ff2e63';
-    ltfBadge.style.borderColor = change >= 0 ? 'rgba(0,255,136,0.3)' : 'rgba(255,46,99,0.3)';
-    
-    // Simulate EMA20 and RSI
-    document.getElementById('emaValue').textContent = (price * 0.98).toFixed(2);
-    const rsi = Math.max(20, Math.min(80, 50 + change * 2));
-    document.getElementById('rsiValue').textContent = rsi.toFixed(0);
-    
-    // Reset analysis
     document.getElementById('analysisBody').innerHTML = `
         <div class="loading-spinner"></div>
-        <p class="loading-text">Mengambil data fundamental...</p>
+        <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
     `;
-    document.getElementById('analysisStatus').textContent = 'ANALYZING...';
     
     loadTradingViewChart(symbol, type);
     loadAnalysis(symbol, name, price, type);
+}
+
+function updateChartPrice() {
+    const changeStr = (currentChange >= 0 ? '+' : '') + currentChange.toFixed(2) + '%';
+    const priceStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    const priceEl = document.getElementById('chartPrice');
+    priceEl.textContent = priceStr + '  ' + changeStr;
+    priceEl.style.color = currentChange >= 0 ? '#10b981' : '#ef4444';
 }
 
 function loadTradingViewChart(symbol, type) {
@@ -249,17 +240,42 @@ function loadTradingViewChart(symbol, type) {
             "hide_side_toolbar": false,
             "hide_top_toolbar": false,
             "withdateranges": true,
-            "studies": ["STD;RSI", "STD;MACD", "STD;EMA"],
+            "details": false,
+            "hotlist": false,
+            "calendar": false,
+            "studies": [
+                "STD;RSI",
+                "STD;MACD"
+            ],
+            "overrides": {
+                "mainSeriesProperties.candleStyle.upColor": "#ffffff",
+                "mainSeriesProperties.candleStyle.downColor": "#a855f7",
+                "mainSeriesProperties.candleStyle.borderUpColor": "#ffffff",
+                "mainSeriesProperties.candleStyle.borderDownColor": "#a855f7",
+                "mainSeriesProperties.candleStyle.wickUpColor": "#ffffff",
+                "mainSeriesProperties.candleStyle.wickDownColor": "#a855f7",
+                "mainSeriesProperties.candleStyle.drawBorder": true,
+                "mainSeriesProperties.candleStyle.drawWick": true,
+                "paneProperties.background": "#0a0a0f",
+                "paneProperties.backgroundType": "solid",
+                "paneProperties.vertGridProperties.color": "rgba(255, 255, 255, 0.04)",
+                "paneProperties.horzGridProperties.color": "rgba(255, 255, 255, 0.04)",
+                "scalesProperties.textColor": "rgba(255, 255, 255, 0.6)",
+                "scalesProperties.lineColor": "rgba(255, 255, 255, 0.08)",
+                "mainSeriesProperties.volumeStyle.upColor": "rgba(255, 255, 255, 0.5)",
+                "mainSeriesProperties.volumeStyle.downColor": "rgba(168, 85, 247, 0.5)"
+            },
             "show_popup_button": false,
+            "popup_width": "1000",
+            "popup_height": "650",
         });
     } else {
-        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">TradingView gagal dimuat</div>';
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">TradingView gagal dimuat. Cek koneksi internet.</div>';
     }
 }
 
 async function loadAnalysis(symbol, name, price, type) {
     const container = document.getElementById('analysisBody');
-    const statusEl = document.getElementById('analysisStatus');
     
     try {
         const fundamental = await fetchFundamental(symbol, type);
@@ -278,8 +294,6 @@ async function loadAnalysis(symbol, name, price, type) {
         const data = await response.json();
         
         container.innerHTML = formatAnalysis(data.analysis || 'Gagal memuat analisis.');
-        statusEl.textContent = 'ANALYSIS COMPLETE';
-        statusEl.style.color = '#00ff88';
     } catch (error) {
         container.innerHTML = `
             <div class="analysis-error">
@@ -287,8 +301,6 @@ async function loadAnalysis(symbol, name, price, type) {
                 <p class="error-detail">${error.message}</p>
             </div>
         `;
-        statusEl.textContent = 'ERROR';
-        statusEl.style.color = '#ff2e63';
     }
 }
 
@@ -328,7 +340,7 @@ async function runScreener() {
         const data = await response.json();
         
         if (!data.results || data.results.length === 0) {
-            results.innerHTML = '<div class="empty-state">Gak ada saham yang lolos filter.</div>';
+            results.innerHTML = '<div class="empty-state">Gak ada saham yang lolos filter. Coba longgarin kriteria.</div>';
             return;
         }
         
@@ -340,8 +352,10 @@ async function runScreener() {
                         <span class="asset-symbol">${stock.symbol}</span>
                         <span class="asset-name">${stock.company_name}</span>
                         <span class="asset-metrics">
-                            P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · 
-                            ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%
+                            P/E ${stock.pe_ratio?.toFixed(2)} · 
+                            P/B ${stock.pb_ratio?.toFixed(2)} · 
+                            ROE ${((stock.roe || 0) * 100).toFixed(1)}% · 
+                            Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%
                         </span>
                     </div>
                 </div>
@@ -363,9 +377,11 @@ async function renderPortfolio() {
     const totalHoldingsEl = document.getElementById('totalHoldings');
     
     if (portfolio.length === 0) {
-        container.innerHTML = '<div class="empty-state">Belum ada holding.</div>';
-        totalValueEl.textContent = '$ 0'; unrealizedPLEl.textContent = '$ 0';
-        totalCostEl.textContent = '$ 0'; totalHoldingsEl.textContent = '0';
+        container.innerHTML = '<div class="empty-state">Belum ada holding. Klik "Tambah Holding" buat mulai.</div>';
+        totalValueEl.textContent = '$ 0';
+        unrealizedPLEl.textContent = '$ 0';
+        totalCostEl.textContent = '$ 0';
+        totalHoldingsEl.textContent = '0';
         return;
     }
     
@@ -378,7 +394,8 @@ async function renderPortfolio() {
         })
     );
     
-    let totalValue = 0, totalCost = 0;
+    let totalValue = 0;
+    let totalCost = 0;
     
     container.innerHTML = holdingsWithPrice.map(h => {
         const currentValue = h.currentPrice * h.shares;
@@ -412,8 +429,11 @@ async function renderPortfolio() {
     const totalPLSign = totalPL >= 0 ? '+' : '';
     
     totalValueEl.textContent = '$ ' + totalValue.toFixed(2);
+    totalValueEl.style.color = '#fbbf24';
+    
     unrealizedPLEl.textContent = `${totalPLSign}$${totalPL.toFixed(2)}`;
-    unrealizedPLEl.style.color = totalPL >= 0 ? '#00ff88' : '#ff2e63';
+    unrealizedPLEl.style.color = totalPL >= 0 ? '#10b981' : '#ef4444';
+    
     totalCostEl.textContent = '$ ' + totalCost.toFixed(2);
     totalHoldingsEl.textContent = portfolio.length;
 }
@@ -428,9 +448,17 @@ function deleteHolding(id) {
 // ============ MODAL TAMBAH HOLDING ============
 const holdingModal = document.getElementById('holdingModal');
 
-document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
-document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active'));
-document.getElementById('cancelHolding').addEventListener('click', () => holdingModal.classList.remove('active'));
+document.getElementById('addHolding').addEventListener('click', () => {
+    holdingModal.classList.add('active');
+});
+
+document.getElementById('closeHoldingModal').addEventListener('click', () => {
+    holdingModal.classList.remove('active');
+});
+
+document.getElementById('cancelHolding').addEventListener('click', () => {
+    holdingModal.classList.remove('active');
+});
 
 document.getElementById('saveHolding').addEventListener('click', () => {
     const symbol = document.getElementById('holdingSymbol').value.trim().toUpperCase();
@@ -439,16 +467,24 @@ document.getElementById('saveHolding').addEventListener('click', () => {
     const shares = parseFloat(document.getElementById('holdingShares').value);
     const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value);
     
-    if (!symbol || !name || !shares || !avgPrice) { alert('Isi semua field!'); return; }
+    if (!symbol || !name || !shares || !avgPrice) {
+        alert('Isi semua field dulu!');
+        return;
+    }
     
     portfolio.push({
         id: 'holding-' + Date.now(),
-        symbol, name, type, shares, avgPrice,
+        symbol,
+        name,
+        type,
+        shares,
+        avgPrice,
         addedAt: Date.now()
     });
     
     savePortfolio();
     holdingModal.classList.remove('active');
+    
     document.getElementById('holdingSymbol').value = '';
     document.getElementById('holdingName').value = '';
     document.getElementById('holdingShares').value = '';
@@ -463,17 +499,6 @@ async function renderNews() {
     container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
     
     try {
-        // Update market pulse based on watchlist (simulated from BTC change)
-        const btcPrice = await fetchPrice('BTC', 'crypto');
-        if (btcPrice) {
-            const buyers = Math.max(20, Math.min(80, 50 + btcPrice.change * 3));
-            const sellers = 100 - buyers;
-            document.getElementById('pulseBuyers').style.width = buyers + '%';
-            document.getElementById('pulseBuyers').textContent = `BUYERS ${buyers.toFixed(0)}%`;
-            document.getElementById('pulseSellers').style.width = sellers + '%';
-            document.getElementById('pulseSellers').textContent = `SELLERS ${sellers.toFixed(0)}%`;
-        }
-        
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-news`, {
             method: 'POST',
             headers: {
