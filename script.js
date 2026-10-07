@@ -1,7 +1,7 @@
 // ============ KONFIGURASI ============
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
-    
+
 // ============ TAB NAVIGATION ============
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -139,6 +139,7 @@ async function renderWatchlist() {
 
 // ============ ASSET DETAIL (CHART + AI ANALYSIS) ============
 let currentChart = null;
+let currentVolumeChart = null;
 let currentSymbol = null;
 let currentType = null;
 let currentPrice = 0;
@@ -160,13 +161,11 @@ async function openAssetDetail(symbol, name, price, change, type) {
         btn.classList.toggle('active', btn.dataset.range === '1m');
     });
     
-    // Reset analysis section
     document.getElementById('analysisBody').innerHTML = `
         <div class="loading-spinner"></div>
         <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
     `;
     
-    // Load chart & analysis bersamaan
     loadChart(symbol, type, '1m');
     loadAnalysis(symbol, name, price, type);
 }
@@ -181,14 +180,20 @@ function updateChartPrice() {
 
 async function loadChart(symbol, type, range) {
     const container = document.getElementById('chartContainer');
-    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:13px;">Memuat chart...</div>';
+    const volumeContainer = document.getElementById('volumeContainer');
+    
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">Memuat chart...</div>';
+    volumeContainer.innerHTML = '';
     
     try {
         let interval = '1d';
         let yahooRange = range;
-        if (range === '1w') { interval = '1h'; yahooRange = '5d'; }
+        
+        if (range === '1d') { interval = '5m'; yahooRange = '1d'; }
+        else if (range === '1w') { interval = '1h'; yahooRange = '5d'; }
         else if (range === '1m') { interval = '1d'; yahooRange = '1mo'; }
         else if (range === '3m') { interval = '1d'; yahooRange = '3mo'; }
+        else if (range === '6m') { interval = '1d'; yahooRange = '6mo'; }
         else if (range === '1y') { interval = '1wk'; yahooRange = '1y'; }
         
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
@@ -206,25 +211,28 @@ async function loadChart(symbol, type, range) {
         const candles = data.data || [];
         
         if (candles.length === 0) {
-            container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:13px;">Chart tidak tersedia</div>';
+            container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">Chart tidak tersedia</div>';
             return;
         }
         
         container.innerHTML = '';
+        volumeContainer.innerHTML = '';
         
+        // === CHART CANDLESTICK ===
         const chart = LightweightCharts.createChart(container, {
             layout: {
                 background: { color: 'transparent' },
-                textColor: 'rgba(255, 255, 255, 0.6)',
+                textColor: 'rgba(255, 255, 255, 0.5)',
+                fontSize: 10,
             },
             grid: {
-                vertLines: { color: 'rgba(255, 255, 255, 0.04)' },
-                horzLines: { color: 'rgba(255, 255, 255, 0.04)' },
+                vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
+                horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
             },
             crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-            rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
+            rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.06)' },
             timeScale: {
-                borderColor: 'rgba(255, 255, 255, 0.08)',
+                borderColor: 'rgba(255, 255, 255, 0.06)',
                 timeVisible: true,
                 secondsVisible: false,
             },
@@ -254,16 +262,62 @@ async function loadChart(symbol, type, range) {
         
         currentChart = chart;
         
+        // === VOLUME HISTOGRAM ===
+        const volumeChart = LightweightCharts.createChart(volumeContainer, {
+            layout: {
+                background: { color: 'transparent' },
+                textColor: 'rgba(255, 255, 255, 0.4)',
+                fontSize: 9,
+            },
+            grid: {
+                vertLines: { color: 'transparent' },
+                horzLines: { color: 'transparent' },
+            },
+            rightPriceScale: { 
+                borderColor: 'transparent',
+                scaleMargins: { top: 0.1, bottom: 0 },
+            },
+            timeScale: {
+                borderColor: 'rgba(255, 255, 255, 0.06)',
+                visible: false,
+            },
+            handleScroll: false,
+            handleScale: false,
+        });
+        
+        const volumeSeries = volumeChart.addHistogramSeries({
+            color: 'rgba(34, 211, 238, 0.4)',
+            priceFormat: { type: 'volume' },
+            priceScaleId: '',
+        });
+        
+        const volumeData = candles.map(c => ({
+            time: c.time,
+            value: c.volume || 0,
+            color: c.close >= c.open ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)',
+        })).filter(c => c.value > 0);
+        
+        volumeSeries.setData(volumeData);
+        volumeChart.timeScale().fitContent();
+        
+        currentVolumeChart = volumeChart;
+        
+        // Sync scroll
+        chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+            if (range) volumeChart.timeScale().setVisibleLogicalRange(range);
+        });
+        volumeChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+            if (range) chart.timeScale().setVisibleLogicalRange(range);
+        });
+        
         const resizeObserver = new ResizeObserver(() => {
-            chart.applyOptions({ 
-                width: container.clientWidth, 
-                height: container.clientHeight 
-            });
+            chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+            volumeChart.applyOptions({ width: volumeContainer.clientWidth, height: volumeContainer.clientHeight });
         });
         resizeObserver.observe(container);
         
     } catch (error) {
-        container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ef4444;font-size:13px;">❌ ${error.message}</div>`;
+        container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ef4444;font-size:12px;">❌ ${error.message}</div>`;
     }
 }
 
@@ -303,10 +357,8 @@ function formatAnalysis(text) {
 
 function closeAssetDetail() {
     document.getElementById('chartModal').classList.remove('active');
-    if (currentChart) {
-        currentChart.remove();
-        currentChart = null;
-    }
+    if (currentChart) { currentChart.remove(); currentChart = null; }
+    if (currentVolumeChart) { currentVolumeChart.remove(); currentVolumeChart = null; }
 }
 
 document.querySelectorAll('.tf-btn').forEach(btn => {
