@@ -34,6 +34,46 @@ function savePortfolio() {
     localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio));
 }
 
+// ============ TRADINGVIEW SYMBOL MAPPING ============
+function getTradingViewSymbol(symbol, type) {
+    const upperSymbol = symbol.toUpperCase();
+    
+    if (type === 'crypto') {
+        const cryptoSymbols = {
+            'BTC': 'BINANCE:BTCUSDT',
+            'ETH': 'BINANCE:ETHUSDT',
+            'SOL': 'BINANCE:SOLUSDT',
+            'BNB': 'BINANCE:BNBUSDT',
+            'XRP': 'BINANCE:XRPUSDT',
+            'ADA': 'BINANCE:ADAUSDT',
+            'DOGE': 'BINANCE:DOGEUSDT',
+            'MATIC': 'BINANCE:MATICUSDT',
+            'DOT': 'BINANCE:DOTUSDT',
+            'LINK': 'BINANCE:LINKUSDT',
+        };
+        return cryptoSymbols[upperSymbol] || 'BINANCE:' + upperSymbol + 'USDT';
+    }
+    
+    if (type === 'commodity') {
+        const commoditySymbols = {
+            'GC=F': 'TVC:GOLD',
+            'SI=F': 'TVC:SILVER',
+            'CL=F': 'TVC:USOIL',
+            'NG=F': 'TVC:NATURALGAS',
+            'HG=F': 'TVC:COPPER',
+            'PL=F': 'TVC:PLATINUM',
+        };
+        return commoditySymbols[upperSymbol] || 'TVC:GOLD';
+    }
+    
+    // Stock
+    const nyseStocks = ['JPM', 'V', 'WMT', 'DIS', 'KO', 'MCD', 'NKE', 'GS', 'AXP', 'BA', 'CAT', 'CVX', 'IBM', 'JNJ', 'MMM', 'PG', 'TRV', 'UNH', 'VZ', 'HD', 'HON', 'CRM'];
+    if (nyseStocks.includes(upperSymbol)) {
+        return 'NYSE:' + upperSymbol;
+    }
+    return 'NASDAQ:' + upperSymbol;
+}
+
 // ============ FETCH HARGA ============
 async function fetchPrice(symbol, type) {
     try {
@@ -137,9 +177,7 @@ async function renderWatchlist() {
     }).join('');
 }
 
-// ============ ASSET DETAIL (CHART + AI ANALYSIS) ============
-let currentChart = null;
-let currentVolumeChart = null;
+// ============ ASSET DETAIL (TRADINGVIEW CHART + AI ANALYSIS) ============
 let currentSymbol = null;
 let currentType = null;
 let currentPrice = 0;
@@ -157,16 +195,12 @@ async function openAssetDetail(symbol, name, price, change, type) {
     document.getElementById('chartTitle').textContent = symbol + ' — ' + name;
     updateChartPrice();
     
-    document.querySelectorAll('.tf-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.range === '1m');
-    });
-    
     document.getElementById('analysisBody').innerHTML = `
         <div class="loading-spinner"></div>
         <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
     `;
     
-    loadChart(symbol, type, '1m');
+    loadTradingViewChart(symbol, type);
     loadAnalysis(symbol, name, price, type);
 }
 
@@ -178,146 +212,48 @@ function updateChartPrice() {
     priceEl.style.color = currentChange >= 0 ? '#10b981' : '#ef4444';
 }
 
-async function loadChart(symbol, type, range) {
-    const container = document.getElementById('chartContainer');
-    const volumeContainer = document.getElementById('volumeContainer');
+function loadTradingViewChart(symbol, type) {
+    const container = document.getElementById('tradingviewContainer');
+    container.innerHTML = '';
     
-    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">Memuat chart...</div>';
-    volumeContainer.innerHTML = '';
+    const tvSymbol = getTradingViewSymbol(symbol, type);
+    const widgetId = 'tv_widget_' + Date.now();
     
-    try {
-        let interval = '1d';
-        let yahooRange = range;
-        
-        if (range === '1d') { interval = '5m'; yahooRange = '1d'; }
-        else if (range === '1w') { interval = '1h'; yahooRange = '5d'; }
-        else if (range === '1m') { interval = '1d'; yahooRange = '1mo'; }
-        else if (range === '3m') { interval = '1d'; yahooRange = '3mo'; }
-        else if (range === '6m') { interval = '1d'; yahooRange = '6mo'; }
-        else if (range === '1y') { interval = '1wk'; yahooRange = '1y'; }
-        
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'apikey': SUPABASE_ANON_KEY
-            },
-            body: JSON.stringify({ symbol, type, interval, range: yahooRange })
+    const widgetDiv = document.createElement('div');
+    widgetDiv.id = widgetId;
+    widgetDiv.style.width = '100%';
+    widgetDiv.style.height = '100%';
+    container.appendChild(widgetDiv);
+    
+    if (typeof TradingView !== 'undefined') {
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": tvSymbol,
+            "interval": "D",
+            "timezone": "Asia/Jakarta",
+            "theme": "dark",
+            "style": "1",
+            "locale": "id",
+            "enable_publishing": false,
+            "allow_symbol_change": false,
+            "save_image": false,
+            "container_id": widgetId,
+            "hide_side_toolbar": false,
+            "hide_top_toolbar": false,
+            "withdateranges": true,
+            "details": false,
+            "hotlist": false,
+            "calendar": false,
+            "studies": [
+                "STD;RSI",
+                "STD;MACD"
+            ],
+            "show_popup_button": false,
+            "popup_width": "1000",
+            "popup_height": "650",
         });
-        
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        const candles = data.data || [];
-        
-        if (candles.length === 0) {
-            container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">Chart tidak tersedia</div>';
-            return;
-        }
-        
-        container.innerHTML = '';
-        volumeContainer.innerHTML = '';
-        
-        // === CHART CANDLESTICK ===
-        const chart = LightweightCharts.createChart(container, {
-            layout: {
-                background: { color: 'transparent' },
-                textColor: 'rgba(255, 255, 255, 0.5)',
-                fontSize: 10,
-            },
-            grid: {
-                vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
-                horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
-            },
-            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-            rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.06)' },
-            timeScale: {
-                borderColor: 'rgba(255, 255, 255, 0.06)',
-                timeVisible: true,
-                secondsVisible: false,
-            },
-            handleScroll: true,
-            handleScale: true,
-        });
-        
-        const candlestick = chart.addCandlestickSeries({
-            upColor: '#10b981',
-            downColor: '#ef4444',
-            borderDownColor: '#ef4444',
-            borderUpColor: '#10b981',
-            wickDownColor: '#ef4444',
-            wickUpColor: '#10b981',
-        });
-        
-        const chartData = candles.map(c => ({
-            time: c.time,
-            open: c.open,
-            high: c.high,
-            low: c.low,
-            close: c.close,
-        })).filter(c => c.open && c.high && c.low && c.close);
-        
-        candlestick.setData(chartData);
-        chart.timeScale().fitContent();
-        
-        currentChart = chart;
-        
-        // === VOLUME HISTOGRAM ===
-        const volumeChart = LightweightCharts.createChart(volumeContainer, {
-            layout: {
-                background: { color: 'transparent' },
-                textColor: 'rgba(255, 255, 255, 0.4)',
-                fontSize: 9,
-            },
-            grid: {
-                vertLines: { color: 'transparent' },
-                horzLines: { color: 'transparent' },
-            },
-            rightPriceScale: { 
-                borderColor: 'transparent',
-                scaleMargins: { top: 0.1, bottom: 0 },
-            },
-            timeScale: {
-                borderColor: 'rgba(255, 255, 255, 0.06)',
-                visible: false,
-            },
-            handleScroll: false,
-            handleScale: false,
-        });
-        
-        const volumeSeries = volumeChart.addHistogramSeries({
-            color: 'rgba(34, 211, 238, 0.4)',
-            priceFormat: { type: 'volume' },
-            priceScaleId: '',
-        });
-        
-        const volumeData = candles.map(c => ({
-            time: c.time,
-            value: c.volume || 0,
-            color: c.close >= c.open ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)',
-        })).filter(c => c.value > 0);
-        
-        volumeSeries.setData(volumeData);
-        volumeChart.timeScale().fitContent();
-        
-        currentVolumeChart = volumeChart;
-        
-        // Sync scroll
-        chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-            if (range) volumeChart.timeScale().setVisibleLogicalRange(range);
-        });
-        volumeChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-            if (range) chart.timeScale().setVisibleLogicalRange(range);
-        });
-        
-        const resizeObserver = new ResizeObserver(() => {
-            chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
-            volumeChart.applyOptions({ width: volumeContainer.clientWidth, height: volumeContainer.clientHeight });
-        });
-        resizeObserver.observe(container);
-        
-    } catch (error) {
-        container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ef4444;font-size:12px;">❌ ${error.message}</div>`;
+    } else {
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">TradingView gagal dimuat. Cek koneksi internet.</div>';
     }
 }
 
@@ -357,19 +293,8 @@ function formatAnalysis(text) {
 
 function closeAssetDetail() {
     document.getElementById('chartModal').classList.remove('active');
-    if (currentChart) { currentChart.remove(); currentChart = null; }
-    if (currentVolumeChart) { currentVolumeChart.remove(); currentVolumeChart = null; }
+    document.getElementById('tradingviewContainer').innerHTML = '';
 }
-
-document.querySelectorAll('.tf-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if (currentSymbol) {
-            loadChart(currentSymbol, currentType, btn.dataset.range);
-        }
-    });
-});
 
 document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
 
