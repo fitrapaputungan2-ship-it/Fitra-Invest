@@ -638,7 +638,7 @@ async function renderNews() {
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                 'apikey': SUPABASE_ANON_KEY
             },
-            body: JSON.stringify({ tickers: 'AAPL,MSFT,NVDA,TSLA,GOOGL' })
+            body: JSON.stringify({ category: 'all' })
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
@@ -650,14 +650,13 @@ async function renderNews() {
         }
         
         container.innerHTML = news.map(item => {
-            const sentimentClass = getSentimentClass(item.overallSentimentLabel);
             const time = formatTime(item.timePublished);
             return `
                 <div class="news-card" onclick="window.open('${item.url}', '_blank')">
                     <div class="news-title">${item.title}</div>
                     <div class="news-summary">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div>
                     <div class="news-meta">
-                        <span class="sentiment-tag ${sentimentClass}">${item.overallSentimentLabel || 'Neutral'}</span>
+                        <span class="sentiment-tag neutral">${(item.category || 'NEWS').toUpperCase()}</span>
                         <span>${item.source || 'Unknown'}</span>
                         <span>${time}</span>
                     </div>
@@ -676,13 +675,15 @@ function getSentimentClass(label) {
     return 'neutral';
 }
 
+// Update formatTime buat handle Unix timestamp (detik)
 function formatTime(timeStr) {
     if (!timeStr) return '';
-    const year = timeStr.substring(0, 4);
-    const month = timeStr.substring(4, 6);
-    const day = timeStr.substring(6, 8);
-    const hour = timeStr.substring(9, 11);
-    const minute = timeStr.substring(11, 13);
+    const date = new Date(timeStr * 1000);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
     return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
