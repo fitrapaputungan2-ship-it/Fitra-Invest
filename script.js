@@ -237,16 +237,13 @@ function loadTradingViewChart(symbol, type) {
             "allow_symbol_change": false,
             "save_image": false,
             "container_id": widgetId,
-            "hide_side_toolbar": false,
-            "hide_top_toolbar": false,
-            "withdateranges": true,
+            "hide_side_toolbar": true,      // Sembunyiin drawing tools sidebar
+            "hide_top_toolbar": false,       // Tetep tampilin timeframe & chart type
+            "withdateranges": false,         // Sembunyiin date range picker
             "details": false,
             "hotlist": false,
             "calendar": false,
-            "studies": [
-                "STD;RSI",
-                "STD;MACD"
-            ],
+            "studies": [],                   // ← Kosongin: hapus RSI & MACD
             "overrides": {
                 "mainSeriesProperties.candleStyle.upColor": "#ffffff",
                 "mainSeriesProperties.candleStyle.downColor": "#a855f7",
