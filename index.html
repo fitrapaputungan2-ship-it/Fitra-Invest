@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#050510">
+    <meta name="theme-color" content="#0a0a0f">
     <title>Fitra Invest</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -45,11 +45,26 @@
                 <h2>Screener</h2>
                 <p class="description">Filter saham global berdasarkan kriteria value investing.</p>
                 <div class="screener-filters">
-                    <div class="filter-group"><label>P/E Ratio max</label><input type="number" id="peMax" value="25" step="0.1"></div>
-                    <div class="filter-group"><label>P/B Ratio max</label><input type="number" id="pbMax" value="5" step="0.1"></div>
-                    <div class="filter-group"><label>ROE min (%)</label><input type="number" id="roeMin" value="10" step="1"></div>
-                    <div class="filter-group"><label>DER max</label><input type="number" id="derMax" value="3" step="0.1"></div>
-                    <div class="filter-group"><label>Dividend Yield min (%)</label><input type="number" id="divMin" value="1" step="0.1"></div>
+                    <div class="filter-group">
+                        <label>P/E Ratio max</label>
+                        <input type="number" id="peMax" value="25" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label>P/B Ratio max</label>
+                        <input type="number" id="pbMax" value="5" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label>ROE min (%)</label>
+                        <input type="number" id="roeMin" value="10" step="1">
+                    </div>
+                    <div class="filter-group">
+                        <label>DER max</label>
+                        <input type="number" id="derMax" value="3" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label>Dividend Yield min (%)</label>
+                        <input type="number" id="divMin" value="1" step="0.1">
+                    </div>
                 </div>
                 <button class="primary-btn" id="runScreener">Jalankan Screener</button>
                 <div class="screener-results" id="screenerResults"></div>
@@ -59,30 +74,32 @@
                 <h2>Portfolio</h2>
                 <p class="description">Track portofolio investasi global lu.</p>
                 <div class="portfolio-summary">
-                    <div class="summary-card"><span class="label">Total Value</span><span class="value" id="totalValue">$ 0</span></div>
-                    <div class="summary-card"><span class="label">Unrealized P/L</span><span class="value" id="unrealizedPL">$ 0</span></div>
-                    <div class="summary-card"><span class="label">Total Cost</span><span class="value" id="totalCost">$ 0</span></div>
-                    <div class="summary-card"><span class="label">Holdings</span><span class="value" id="totalHoldings">0</span></div>
+                    <div class="summary-card">
+                        <span class="label">Total Value</span>
+                        <span class="value" id="totalValue">$ 0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">Unrealized P/L</span>
+                        <span class="value" id="unrealizedPL">$ 0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">Total Cost</span>
+                        <span class="value" id="totalCost">$ 0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">Holdings</span>
+                        <span class="value" id="totalHoldings">0</span>
+                    </div>
                 </div>
                 <button class="primary-btn" id="addHolding">＋ Tambah Holding</button>
                 <div class="holdings" id="holdings"></div>
             </section>
 
             <section class="tab-content" id="tab-news">
-                <div class="news-header">
-                    <h2>📰 News & Sentiment</h2>
-                    <div class="live-badge"><span class="live-dot"></span> LIVE</div>
-                </div>
-                <p class="description">Berita real-time + analisis sentimen AI buat aset global lu.</p>
-                <div class="market-pulse" id="marketPulse">
-                    <div class="pulse-label">MARKET SENTIMENT</div>
-                    <div class="pulse-bar">
-                        <div class="pulse-buyers" id="pulseBuyers" style="width:50%">BUYERS 50%</div>
-                        <div class="pulse-sellers" id="pulseSellers" style="width:50%">SELLERS 50%</div>
-                    </div>
-                </div>
+                <h2>News & Sentiment</h2>
+                <p class="description">Berita terkait aset global lu, dengan analisis sentimen AI.</p>
                 <div class="news-list" id="newsList">
-                    <div class="empty-state">Memuat berita...</div>
+                    <div class="empty-state">Belum ada berita</div>
                 </div>
             </section>
         </main>
@@ -91,53 +108,68 @@
     <!-- Modal Chart TradingView + Analysis -->
     <div class="chart-modal" id="chartModal">
         <div class="chart-content">
-            <!-- Live Header -->
-            <div class="live-header">
-                <div class="live-badge-big"><span class="live-dot"></span> LIVE STREAMING · ZERO DELAY</div>
+            <div class="chart-header">
+                <div>
+                    <h3 id="chartTitle">Chart</h3>
+                    <p class="chart-subtitle" id="chartPrice">-</p>
+                </div>
                 <button class="analysis-close" id="closeChartModal">×</button>
             </div>
 
-            <!-- Symbol Info -->
-            <div class="symbol-info">
-                <h3 id="chartTitle">Chart</h3>
-                <div class="symbol-meta">
-                    <span class="htf-badge" id="htfBadge">HTF: -</span>
-                    <span class="ltf-badge" id="ltfBadge">LTF: -</span>
-                    <span class="indicator-badge">EMA20: <strong id="emaValue">-</strong></span>
-                    <span class="indicator-badge">RSI: <strong id="rsiValue">-</strong></span>
+            <!-- Indicator Panel -->
+            <div class="indicators-panel">
+                <div class="indicator-item">
+                    <span class="ind-label">HTF</span>
+                    <span class="ind-value" id="htfValue">-</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="ind-label">LTF</span>
+                    <span class="ind-value" id="ltfValue">-</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="ind-label">EMA20</span>
+                    <span class="ind-value" id="ema20Value">-</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="ind-label">RSI</span>
+                    <span class="ind-value" id="rsiValue">-</span>
                 </div>
             </div>
 
-            <!-- BID / ASK -->
-            <div class="bid-ask">
-                <div class="bid-box">
-                    <span class="ba-label">BID</span>
-                    <span class="ba-value" id="bidValue">-</span>
+            <!-- Bid/Ask -->
+            <div class="bidask-panel">
+                <div class="bidask-item bid">
+                    <span class="bidask-label">BID</span>
+                    <span class="bidask-value" id="bidValue">-</span>
                 </div>
-                <div class="ask-box">
-                    <span class="ba-label">ASK</span>
-                    <span class="ba-value" id="askValue">-</span>
+                <div class="bidask-item ask">
+                    <span class="bidask-label">ASK</span>
+                    <span class="bidask-value" id="askValue">-</span>
                 </div>
             </div>
 
-            <!-- Price + Change -->
-            <div class="price-display">
-                <span class="price-main" id="chartPrice">-</span>
-                <span class="price-change" id="chartChange">-</span>
+            <!-- Buyer/Seller Strength -->
+            <div class="sentiment-panel">
+                <div class="sentiment-header">
+                    <span class="sentiment-title">MARKET SENTIMENT</span>
+                    <div class="sentiment-stats">
+                        <span class="buy-stat">BUYERS: <span id="buyerPct">-</span>%</span>
+                        <span class="sell-stat">SELLERS: <span id="sellerPct">-</span>%</span>
+                    </div>
+                </div>
+                <div class="sentiment-bar">
+                    <div class="sentiment-fill buy" id="buyerBar" style="width: 50%"></div>
+                    <div class="sentiment-fill sell" id="sellerBar" style="width: 50%"></div>
+                </div>
             </div>
 
-            <!-- TradingView Chart -->
             <div id="tradingviewContainer" class="tradingview-container"></div>
 
-            <!-- AI Analysis Section -->
             <div class="analysis-section">
-                <div class="analysis-header-row">
-                    <h3 class="analysis-title">🧠 AI Value Investing</h3>
-                    <div class="analysis-status" id="analysisStatus">ANALYZING...</div>
-                </div>
+                <h3 class="analysis-title">🧠 Analisis AI Value Investing</h3>
                 <div id="analysisBody" class="analysis-body-inline">
                     <div class="loading-spinner"></div>
-                    <p class="loading-text">Mengambil data fundamental...</p>
+                    <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
                 </div>
             </div>
         </div>
@@ -151,11 +183,30 @@
                 <button class="modal-close" id="closeHoldingModal">×</button>
             </div>
             <div class="modal-body">
-                <div class="form-group"><label>Symbol (contoh: AAPL, BTC, GC=F)</label><input type="text" id="holdingSymbol" placeholder="AAPL" autocomplete="off"></div>
-                <div class="form-group"><label>Nama Aset</label><input type="text" id="holdingName" placeholder="Apple Inc." autocomplete="off"></div>
-                <div class="form-group"><label>Tipe</label><select id="holdingType"><option value="stock">Stock</option><option value="crypto">Crypto</option><option value="commodity">Commodity</option></select></div>
-                <div class="form-group"><label>Jumlah Saham</label><input type="number" id="holdingShares" placeholder="10" step="any"></div>
-                <div class="form-group"><label>Harga Beli Rata-rata (USD)</label><input type="number" id="holdingAvgPrice" placeholder="150" step="any"></div>
+                <div class="form-group">
+                    <label>Symbol (contoh: AAPL, BTC, GC=F)</label>
+                    <input type="text" id="holdingSymbol" placeholder="AAPL" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Nama Aset</label>
+                    <input type="text" id="holdingName" placeholder="Apple Inc." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Tipe</label>
+                    <select id="holdingType">
+                        <option value="stock">Stock</option>
+                        <option value="crypto">Crypto</option>
+                        <option value="commodity">Commodity</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah Saham</label>
+                    <input type="number" id="holdingShares" placeholder="10" step="any">
+                </div>
+                <div class="form-group">
+                    <label>Harga Beli Rata-rata (USD)</label>
+                    <input type="number" id="holdingAvgPrice" placeholder="150" step="any">
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel" id="cancelHolding">Batal</button>
