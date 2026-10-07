@@ -2,6 +2,8 @@
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
+let indicatorInterval = null;
+
 // ============ TAB NAVIGATION ============
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -48,8 +50,6 @@ function getTradingViewSymbol(symbol, type) {
             'ADA': 'BINANCE:ADAUSDT',
             'DOGE': 'BINANCE:DOGEUSDT',
             'MATIC': 'BINANCE:MATICUSDT',
-            'DOT': 'BINANCE:DOTUSDT',
-            'LINK': 'BINANCE:LINKUSDT',
         };
         return cryptoSymbols[upperSymbol] || 'BINANCE:' + upperSymbol + 'USDT';
     }
@@ -60,8 +60,6 @@ function getTradingViewSymbol(symbol, type) {
             'SI=F': 'TVC:SILVER',
             'CL=F': 'TVC:USOIL',
             'NG=F': 'TVC:NATURALGAS',
-            'HG=F': 'TVC:COPPER',
-            'PL=F': 'TVC:PLATINUM',
         };
         return commoditySymbols[upperSymbol] || 'TVC:GOLD';
     }
@@ -130,6 +128,27 @@ async function fetchFundamental(symbol, type) {
     }
 }
 
+// ============ FETCH CHART DATA ============
+async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
+    try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ symbol, type, interval, range })
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        return data.data || [];
+    } catch (error) {
+        console.error('Error fetching chart data:', error);
+        return [];
+    }
+}
+
 // ============ RENDER WATCHLIST ============
 async function renderWatchlist() {
     const container = document.getElementById('watchlist');
@@ -176,7 +195,102 @@ async function renderWatchlist() {
     }).join('');
 }
 
-// ============ ASSET DETAIL (TRADINGVIEW CHART + AI ANALYSIS) ============
+// ============ INDIKATOR CALCULATIONS ============
+function calcEMA(closes, period) {
+    if (closes.length < period) return closes[closes.length - 1] || 0;
+    const k = 2 / (period + 1);
+    let ema = closes[0];
+    for (let i = 1; i < closes.length; i++) {
+        ema = closes[i] * k + ema * (1 - k);
+    }
+    return ema;
+}
+
+function calcRSI(closes, period = 14) {
+    if (closes.length < period + 1) return 50;
+    let gains = 0, losses = 0;
+    for (let i = 1; i <= period; i++) {
+        const diff = closes[i] - closes[i - 1];
+        if (diff >= 0) gains += diff; else losses -= diff;
+    }
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+    for (let i = period + 1; i < closes.length; i++) {
+        const diff = closes[i] - closes[i - 1];
+        avgGain = (avgGain * (period - 1) + (diff > 0 ? diff : 0)) / period;
+        avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period;
+    }
+    if (avgLoss === 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - 100 / (1 + rs);
+}
+
+function calcSentiment(candles) {
+    const recent = candles.slice(-20);
+    let buyVol = 0, sellVol = 0;
+    recent.forEach(c => {
+        if (c.close >= c.open) buyVol += c.volume || 0;
+        else sellVol += c.volume || 0;
+    });
+    const total = buyVol + sellVol;
+    if (total === 0) return { buyPct: 50, sellPct: 50 };
+    const buyPct = (buyVol / total) * 100;
+    return { buyPct, sellPct: 100 - buyPct };
+}
+
+async function updateIndicators(symbol, type) {
+    const candles = await fetchChartData(symbol, type, '1d', '3mo');
+    if (candles.length < 20) return;
+
+    const closes = candles.map(c => c.close).filter(c => c);
+    const currentPrice = closes[closes.length - 1];
+
+    const ema20 = calcEMA(closes, 20);
+    const ema5 = calcEMA(closes, 5);
+    const rsi = calcRSI(closes, 14);
+
+    // HTF: longer trend — price vs EMA20
+    const htf = currentPrice > ema20 ? 'BULLISH' : 'BEARISH';
+    // LTF: short trend — EMA5 vs EMA20
+    const ltf = ema5 > ema20 ? 'BULLISH' : 'BEARISH';
+
+    // Update UI
+    const htfEl = document.getElementById('htfValue');
+    const ltfEl = document.getElementById('ltfValue');
+    const emaEl = document.getElementById('ema20Value');
+    const rsiEl = document.getElementById('rsiValue');
+    const bidEl = document.getElementById('bidValue');
+    const askEl = document.getElementById('askValue');
+
+    htfEl.textContent = htf;
+    htfEl.className = 'ind-value ' + (htf === 'BULLISH' ? 'bullish' : 'bearish');
+
+    ltfEl.textContent = ltf;
+    ltfEl.className = 'ind-value ' + (ltf === 'BULLISH' ? 'bullish' : 'bearish');
+
+    emaEl.textContent = ema20.toFixed(2);
+    emaEl.className = 'ind-value neutral';
+
+    rsiEl.textContent = rsi.toFixed(0);
+    if (rsi >= 70) rsiEl.className = 'ind-value bearish';
+    else if (rsi <= 30) rsiEl.className = 'ind-value bullish';
+    else rsiEl.className = 'ind-value neutral';
+
+    // Bid/Ask simulasi (dari harga terakhir)
+    const bid = currentPrice - (currentPrice * 0.0001);
+    const ask = currentPrice + (currentPrice * 0.0001);
+    bidEl.textContent = '$' + bid.toFixed(2);
+    askEl.textContent = '$' + ask.toFixed(2);
+
+    // Buyer/Seller sentiment
+    const sentiment = calcSentiment(candles);
+    document.getElementById('buyerPct').textContent = sentiment.buyPct.toFixed(0);
+    document.getElementById('sellerPct').textContent = sentiment.sellPct.toFixed(0);
+    document.getElementById('buyerBar').style.width = sentiment.buyPct + '%';
+    document.getElementById('sellerBar').style.width = sentiment.sellPct + '%';
+}
+
+// ============ ASSET DETAIL ============
 let currentSymbol = null;
 let currentType = null;
 let currentPrice = 0;
@@ -199,8 +313,25 @@ async function openAssetDetail(symbol, name, price, change, type) {
         <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
     `;
     
+    // Reset indicators
+    document.getElementById('htfValue').textContent = '-';
+    document.getElementById('ltfValue').textContent = '-';
+    document.getElementById('ema20Value').textContent = '-';
+    document.getElementById('rsiValue').textContent = '-';
+    document.getElementById('bidValue').textContent = '-';
+    document.getElementById('askValue').textContent = '-';
+    document.getElementById('buyerPct').textContent = '-';
+    document.getElementById('sellerPct').textContent = '-';
+    
     loadTradingViewChart(symbol, type);
+    updateIndicators(symbol, type);
     loadAnalysis(symbol, name, price, type);
+    
+    // Auto-refresh indicators tiap 15 detik
+    if (indicatorInterval) clearInterval(indicatorInterval);
+    indicatorInterval = setInterval(() => {
+        if (currentSymbol) updateIndicators(currentSymbol, currentType);
+    }, 15000);
 }
 
 function updateChartPrice() {
@@ -237,13 +368,13 @@ function loadTradingViewChart(symbol, type) {
             "allow_symbol_change": false,
             "save_image": false,
             "container_id": widgetId,
-            "hide_side_toolbar": true,      // Sembunyiin drawing tools sidebar
-            "hide_top_toolbar": false,       // Tetep tampilin timeframe & chart type
-            "withdateranges": false,         // Sembunyiin date range picker
+            "hide_side_toolbar": true,
+            "hide_top_toolbar": false,
+            "withdateranges": false,
             "details": false,
             "hotlist": false,
             "calendar": false,
-            "studies": [],                   // ← Kosongin: hapus RSI & MACD
+            "studies": [],
             "overrides": {
                 "mainSeriesProperties.candleStyle.upColor": "#ffffff",
                 "mainSeriesProperties.candleStyle.downColor": "#a855f7",
@@ -308,6 +439,10 @@ function formatAnalysis(text) {
 function closeAssetDetail() {
     document.getElementById('chartModal').classList.remove('active');
     document.getElementById('tradingviewContainer').innerHTML = '';
+    if (indicatorInterval) {
+        clearInterval(indicatorInterval);
+        indicatorInterval = null;
+    }
 }
 
 document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
