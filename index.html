@@ -116,7 +116,6 @@
                 <button class="analysis-close" id="closeChartModal">×</button>
             </div>
 
-            <!-- Indicator Panel -->
             <div class="indicators-panel">
                 <div class="indicator-item">
                     <span class="ind-label">HTF</span>
@@ -136,7 +135,6 @@
                 </div>
             </div>
 
-            <!-- Bid/Ask -->
             <div class="bidask-panel">
                 <div class="bidask-item bid">
                     <span class="bidask-label">BID</span>
@@ -148,7 +146,6 @@
                 </div>
             </div>
 
-            <!-- Buyer/Seller Strength -->
             <div class="sentiment-panel">
                 <div class="sentiment-header">
                     <span class="sentiment-title">MARKET SENTIMENT</span>
@@ -171,6 +168,38 @@
                     <div class="loading-spinner"></div>
                     <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Asset ke Watchlist -->
+    <div class="modal-overlay" id="assetModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tambah ke Watchlist</h3>
+                <button class="modal-close" id="closeAssetModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Symbol (contoh: AAPL, BTC, GC=F)</label>
+                    <input type="text" id="assetSymbol" placeholder="AAPL" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Nama Aset</label>
+                    <input type="text" id="assetName" placeholder="Apple Inc." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Tipe</label>
+                    <select id="assetType">
+                        <option value="stock">Stock</option>
+                        <option value="crypto">Crypto</option>
+                        <option value="commodity">Commodity</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancelAsset">Batal</button>
+                <button class="btn-save" id="saveAsset">Tambah</button>
             </div>
         </div>
     </div>
