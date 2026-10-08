@@ -183,6 +183,39 @@ h2 {
     gap: 10px;
 }
 
+.watchlist-card-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.watchlist-card-wrapper .asset-card {
+    flex: 1;
+}
+
+.watchlist-delete {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--red);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: 0.2s;
+    font-family: inherit;
+}
+
+.watchlist-delete:active {
+    background: rgba(239, 68, 68, 0.3);
+    transform: scale(0.9);
+}
+
 .asset-card {
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -500,7 +533,7 @@ h2 {
     box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
 }
 
-/* ============ MODAL TAMBAH HOLDING ============ */
+/* ============ MODAL ============ */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -639,7 +672,7 @@ h2 {
     transform: scale(0.98);
 }
 
-/* ============ CHART MODAL (TRADINGVIEW) ============ */
+/* ============ CHART MODAL ============ */
 .chart-modal {
     position: fixed;
     inset: 0;
