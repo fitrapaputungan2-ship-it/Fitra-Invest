@@ -29,6 +29,10 @@ let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
     { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity' },
 ];
 
+function saveWatchlist() {
+    localStorage.setItem('fitraWatchlist', JSON.stringify(watchlist));
+}
+
 // ============ DATA PORTFOLIO ============
 let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
 
@@ -154,6 +158,11 @@ async function renderWatchlist() {
     const container = document.getElementById('watchlist');
     container.innerHTML = '<div class="empty-state">Memuat data...</div>';
     
+    if (watchlist.length === 0) {
+        container.innerHTML = '<div class="empty-state">Watchlist kosong. Klik ＋ buat nambah aset.</div>';
+        return;
+    }
+    
     const results = await Promise.all(
         watchlist.map(async (asset) => {
             const priceData = await fetchPrice(asset.symbol, asset.type);
@@ -161,18 +170,21 @@ async function renderWatchlist() {
         })
     );
     
-    container.innerHTML = results.map(asset => {
+    container.innerHTML = results.map((asset, index) => {
         const p = asset.priceData;
         if (!p) return `
-            <div class="asset-card">
-                <div class="asset-info">
-                    <span class="asset-symbol">${asset.symbol}</span>
-                    <span class="asset-name">${asset.name}</span>
+            <div class="watchlist-card-wrapper">
+                <div class="asset-card">
+                    <div class="asset-info">
+                        <span class="asset-symbol">${asset.symbol}</span>
+                        <span class="asset-name">${asset.name}</span>
+                    </div>
+                    <div class="asset-price">
+                        <div class="price">-</div>
+                        <div class="change">Gagal memuat</div>
+                    </div>
                 </div>
-                <div class="asset-price">
-                    <div class="price">-</div>
-                    <div class="change">Gagal memuat</div>
-                </div>
+                <button class="watchlist-delete" onclick="deleteFromWatchlist(${index})">×</button>
             </div>
         `;
         
@@ -181,19 +193,70 @@ async function renderWatchlist() {
         const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
         
         return `
-            <div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
-                <div class="asset-info">
-                    <span class="asset-symbol">${asset.symbol}</span>
-                    <span class="asset-name">${asset.name}</span>
+            <div class="watchlist-card-wrapper">
+                <div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
+                    <div class="asset-info">
+                        <span class="asset-symbol">${asset.symbol}</span>
+                        <span class="asset-name">${asset.name}</span>
+                    </div>
+                    <div class="asset-price">
+                        <div class="price">${priceStr}</div>
+                        <div class="change ${trend}">${changeStr}</div>
+                    </div>
                 </div>
-                <div class="asset-price">
-                    <div class="price">${priceStr}</div>
-                    <div class="change ${trend}">${changeStr}</div>
-                </div>
+                <button class="watchlist-delete" onclick="deleteFromWatchlist(${index})">×</button>
             </div>
         `;
     }).join('');
 }
+
+function deleteFromWatchlist(index) {
+    const asset = watchlist[index];
+    if (!confirm(`Hapus ${asset.symbol} dari watchlist?`)) return;
+    watchlist.splice(index, 1);
+    saveWatchlist();
+    renderWatchlist();
+}
+
+// ============ MODAL TAMBAH ASSET ============
+const assetModal = document.getElementById('assetModal');
+
+document.getElementById('addAssetBtn').addEventListener('click', () => {
+    assetModal.classList.add('active');
+});
+
+document.getElementById('closeAssetModal').addEventListener('click', () => {
+    assetModal.classList.remove('active');
+});
+
+document.getElementById('cancelAsset').addEventListener('click', () => {
+    assetModal.classList.remove('active');
+});
+
+document.getElementById('saveAsset').addEventListener('click', () => {
+    const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase();
+    const name = document.getElementById('assetName').value.trim();
+    const type = document.getElementById('assetType').value;
+    
+    if (!symbol || !name) {
+        alert('Isi semua field dulu!');
+        return;
+    }
+    
+    if (watchlist.some(a => a.symbol === symbol)) {
+        alert(`${symbol} udah ada di watchlist!`);
+        return;
+    }
+    
+    watchlist.push({ symbol, name, type });
+    saveWatchlist();
+    assetModal.classList.remove('active');
+    
+    document.getElementById('assetSymbol').value = '';
+    document.getElementById('assetName').value = '';
+    
+    renderWatchlist();
+});
 
 // ============ INDIKATOR CALCULATIONS ============
 function calcEMA(closes, period) {
@@ -249,12 +312,9 @@ async function updateIndicators(symbol, type) {
     const ema5 = calcEMA(closes, 5);
     const rsi = calcRSI(closes, 14);
 
-    // HTF: longer trend — price vs EMA20
     const htf = currentPrice > ema20 ? 'BULLISH' : 'BEARISH';
-    // LTF: short trend — EMA5 vs EMA20
     const ltf = ema5 > ema20 ? 'BULLISH' : 'BEARISH';
 
-    // Update UI
     const htfEl = document.getElementById('htfValue');
     const ltfEl = document.getElementById('ltfValue');
     const emaEl = document.getElementById('ema20Value');
@@ -276,13 +336,11 @@ async function updateIndicators(symbol, type) {
     else if (rsi <= 30) rsiEl.className = 'ind-value bullish';
     else rsiEl.className = 'ind-value neutral';
 
-    // Bid/Ask simulasi (dari harga terakhir)
     const bid = currentPrice - (currentPrice * 0.0001);
     const ask = currentPrice + (currentPrice * 0.0001);
     bidEl.textContent = '$' + bid.toFixed(2);
     askEl.textContent = '$' + ask.toFixed(2);
 
-    // Buyer/Seller sentiment
     const sentiment = calcSentiment(candles);
     document.getElementById('buyerPct').textContent = sentiment.buyPct.toFixed(0);
     document.getElementById('sellerPct').textContent = sentiment.sellPct.toFixed(0);
@@ -313,7 +371,6 @@ async function openAssetDetail(symbol, name, price, change, type) {
         <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
     `;
     
-    // Reset indicators
     document.getElementById('htfValue').textContent = '-';
     document.getElementById('ltfValue').textContent = '-';
     document.getElementById('ema20Value').textContent = '-';
@@ -327,7 +384,6 @@ async function openAssetDetail(symbol, name, price, change, type) {
     updateIndicators(symbol, type);
     loadAnalysis(symbol, name, price, type);
     
-    // Auto-refresh indicators tiap 15 detik
     if (indicatorInterval) clearInterval(indicatorInterval);
     indicatorInterval = setInterval(() => {
         if (currentSymbol) updateIndicators(currentSymbol, currentType);
@@ -398,7 +454,7 @@ function loadTradingViewChart(symbol, type) {
             "popup_height": "650",
         });
     } else {
-        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">TradingView gagal dimuat. Cek koneksi internet.</div>';
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">TradingView gagal dimuat.</div>';
     }
 }
 
@@ -668,14 +724,6 @@ async function renderNews() {
     }
 }
 
-function getSentimentClass(label) {
-    if (!label) return 'neutral';
-    if (label.includes('Bullish')) return 'positive';
-    if (label.includes('Bearish')) return 'negative';
-    return 'neutral';
-}
-
-// Update formatTime buat handle Unix timestamp (detik)
 function formatTime(timeStr) {
     if (!timeStr) return '';
     const date = new Date(timeStr * 1000);
