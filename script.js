@@ -102,7 +102,7 @@ async function fetchFundamental(symbol, type) {
     }
 }
 
-// ============ FETCH CHART DATA ============
+// ============ FETCH CHART DATA (FIX YAHOO FINANCE FORMAT) ============
 async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
@@ -116,9 +116,44 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
-        return data.data || [];
+        
+        // 🔥 Handle Yahoo Finance format
+        if (data.chart && data.chart.result && data.chart.result[0]) {
+            const result = data.chart.result[0];
+            const timestamps = result.timestamp || [];
+            const quote = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
+            const opens = quote.open || [];
+            const highs = quote.high || [];
+            const lows = quote.low || [];
+            const closes = quote.close || [];
+            const volumes = quote.volume || [];
+            
+            const candles = [];
+            for (let i = 0; i < timestamps.length; i++) {
+                if (opens[i] == null || closes[i] == null) continue;
+                candles.push({
+                    time: timestamps[i],
+                    open: opens[i],
+                    high: highs[i],
+                    low: lows[i],
+                    close: closes[i],
+                    volume: volumes[i] || 0
+                });
+            }
+            
+            console.log('✅ Candles fetched:', candles.length);
+            return candles;
+        }
+        
+        // Fallback: kalau formatnya udah {data: [...]}
+        if (data.data && Array.isArray(data.data)) {
+            return data.data;
+        }
+        
+        console.warn('⚠️ Unknown chart format:', data);
+        return [];
     } catch (error) {
-        console.error('Error fetching chart data:', error);
+        console.error('❌ Error fetching chart data:', error);
         return [];
     }
 }
@@ -460,43 +495,35 @@ async function loadChartData(symbol, type, timeframe) {
     
     const candles = await fetchChartData(symbol, type, interval, range);
     
-    if (!candles || candles.length === 0 || !candleSeries) return;
+    if (!candles || candles.length === 0 || !candleSeries) {
+        console.warn('⚠️ No candle data for', symbol, timeframe);
+        return;
+    }
     
-    const formattedData = candles.map(c => {
-        const rawTime = c.time || c.date || c.t;
-        let timestamp;
-        if (typeof rawTime === 'number') {
-            timestamp = rawTime > 10000000000 ? Math.floor(rawTime / 1000) : rawTime;
-        } else {
-            timestamp = Math.floor(new Date(rawTime).getTime() / 1000);
-        }
-        return {
-            time: timestamp,
-            open: parseFloat(c.open || c.o),
-            high: parseFloat(c.high || c.h),
-            low: parseFloat(c.low || c.l),
-            close: parseFloat(c.close || c.c),
-        };
-    }).filter(d => !isNaN(d.time) && !isNaN(d.open) && !isNaN(d.close));
+    // Data udah diformat sama fetchChartData, tinggal pake langsung
+    const formattedData = candles.map(c => ({
+        time: c.time,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+    })).filter(d => 
+        d.time != null && 
+        !isNaN(d.open) && 
+        !isNaN(d.high) && 
+        !isNaN(d.low) && 
+        !isNaN(d.close)
+    );
     
-    const volumeData = candles.map(c => {
-        const rawTime = c.time || c.date || c.t;
-        let timestamp;
-        if (typeof rawTime === 'number') {
-            timestamp = rawTime > 10000000000 ? Math.floor(rawTime / 1000) : rawTime;
-        } else {
-            timestamp = Math.floor(new Date(rawTime).getTime() / 1000);
-        }
-        const close = parseFloat(c.close || c.c);
-        const open = parseFloat(c.open || c.o);
-        return {
-            time: timestamp,
-            value: parseFloat(c.volume || c.v || 0),
-            color: close >= open
-                ? 'rgba(255, 255, 255, 0.4)'
-                : 'rgba(168, 85, 247, 0.4)',
-        };
-    }).filter(d => !isNaN(d.time));
+    const volumeData = candles.map(c => ({
+        time: c.time,
+        value: c.volume || 0,
+        color: c.close >= c.open
+            ? 'rgba(255, 255, 255, 0.4)'
+            : 'rgba(168, 85, 247, 0.4)',
+    })).filter(d => d.time != null && !isNaN(d.value));
+    
+    console.log('📊 Formatted candles:', formattedData.length, 'Volume:', volumeData.length);
     
     candleSeries.setData(formattedData);
     volumeSeries.setData(volumeData);
@@ -536,7 +563,6 @@ function setupChartTypeButtons() {
 function applyChartType() {
     if (!currentChart || !currentSymbol || !currentType) return;
     
-    // Hapus series lama
     if (candleSeries) {
         currentChart.removeSeries(candleSeries);
         candleSeries = null;
