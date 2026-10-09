@@ -6,7 +6,7 @@ let indicatorInterval = null;
 let currentChart = null;
 let candleSeries = null;
 let volumeSeries = null;
-let currentTimeframe = 'D';
+let currentTimeframe = 'M';
 let currentChartType = 'candle';
 
 // ============ TAB NAV ============
@@ -88,7 +88,7 @@ async function fetchFundamental(symbol, type) {
 }
 
 // ============ FETCH CHART DATA ============
-async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
+async function fetchChartData(symbol, type, interval = '1mo', range = '20y') {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
             method: 'POST',
@@ -102,7 +102,6 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
-        // Format 1: { data: [...] } — INI FORMAT API LU!
         if (data.data && Array.isArray(data.data)) {
             return data.data.map(c => ({
                 time: c.time,
@@ -114,7 +113,6 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
             })).filter(c => !isNaN(c.open) && !isNaN(c.close));
         }
         
-        // Format 2: Yahoo Finance format (fallback)
         if (data.chart && data.chart.result && data.chart.result[0]) {
             const result = data.chart.result[0];
             const timestamps = result.timestamp || [];
@@ -336,10 +334,29 @@ function loadChart(symbol, type) {
             horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }
         },
         rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.25 } },
-        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: true, secondsVisible: false },
-        handleScroll: { mouseWheel: true, pressedMouseMove: true },
-        handleScale: { mouseWheel: true, pinch: true }
+        timeScale: { 
+            borderColor: 'rgba(255, 255, 255, 0.08)', 
+            timeVisible: true, 
+            secondsVisible: false,
+            rightOffset: 10,
+            barSpacing: 6,
+            fixLeftEdge: false,
+            fixRightEdge: false,
+            lockVisibleTimeRangeOnResize: false
+        },
+        handleScroll: { 
+            mouseWheel: true, 
+            pressedMouseMove: true,
+            horzTouchDrag: true,
+            vertTouchDrag: false
+        },
+        handleScale: { 
+            mouseWheel: true, 
+            pinch: true,
+            axisPressedMouseMove: true
+        }
     });
+    
     candleSeries = currentChart.addCandlestickSeries({
         upColor: '#ffffff', downColor: '#a855f7',
         borderUpColor: '#ffffff', borderDownColor: '#a855f7',
@@ -347,6 +364,7 @@ function loadChart(symbol, type) {
     });
     volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' });
     volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
+    
     loadChartData(symbol, type, currentTimeframe);
     setupTimeframeButtons();
     setupChartTypeButtons();
@@ -354,15 +372,28 @@ function loadChart(symbol, type) {
 }
 
 async function loadChartData(symbol, type, timeframe) {
-    const intervalMap = { '1': '1m', '30': '30m', '60': '1h', 'D': '1d', 'W': '1wk' };
-    const rangeMap = { '1': '1d', '30': '5d', '60': '1mo', 'D': '6mo', 'W': '2y' };
-    const interval = intervalMap[timeframe] || '1d';
-    const range = rangeMap[timeframe] || '6mo';
+    // 🕯️ M = monthly candle, 20 tahun data (~240 candle)
+    // 📈 1Y = daily, 2 tahun data (~500 candle)
+    // 📊 5Y = weekly, 20 tahun data (~1040 candle)
+    const intervalMap = { 
+        'M': '1mo',
+        '1Y': '1d',
+        '5Y': '1wk'
+    };
+    const rangeMap = { 
+        'M': '20y',
+        '1Y': '2y',
+        '5Y': '20y'
+    };
+    const interval = intervalMap[timeframe] || '1mo';
+    const range = rangeMap[timeframe] || '20y';
+    
     const candles = await fetchChartData(symbol, type, interval, range);
     if (!candles || candles.length === 0 || !candleSeries) {
         console.warn('⚠️ No candles for', symbol, timeframe);
         return;
     }
+    
     const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))
         .filter(d => d.time != null && !isNaN(d.open) && !isNaN(d.high) && !isNaN(d.low) && !isNaN(d.close));
     const volumeData = candles.map(c => ({
@@ -370,9 +401,22 @@ async function loadChartData(symbol, type, timeframe) {
         value: c.volume || 0,
         color: c.close >= c.open ? 'rgba(255, 255, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'
     })).filter(d => d.time != null && !isNaN(d.value));
+    
+    console.log('📊 Timeframe:', timeframe, '| Candles:', formattedData.length, '| Range:', range);
+    
     candleSeries.setData(formattedData);
     volumeSeries.setData(volumeData);
-    currentChart.timeScale().fitContent();
+    
+    // Set default zoom ke 100 candle terakhir biar fokus ke data terkini
+    const totalCandles = formattedData.length;
+    if (totalCandles > 100) {
+        currentChart.timeScale().setVisibleLogicalRange({
+            from: totalCandles - 100,
+            to: totalCandles + 5
+        });
+    } else {
+        currentChart.timeScale().fitContent();
+    }
 }
 
 function setupTimeframeButtons() {
@@ -387,6 +431,7 @@ function setupTimeframeButtons() {
         });
     });
 }
+
 function setupChartTypeButtons() {
     document.querySelectorAll('.ct-btn').forEach(btn => {
         const newBtn = btn.cloneNode(true);
@@ -395,20 +440,48 @@ function setupChartTypeButtons() {
             document.querySelectorAll('.ct-btn').forEach(b => b.classList.remove('active'));
             newBtn.classList.add('active');
             currentChartType = newBtn.dataset.ct;
+            
+            // 🕯️ Candle → auto Monthly
+            // 📈 Line → auto Yearly
+            if (currentChartType === 'candle') {
+                currentTimeframe = 'M';
+            } else if (currentChartType === 'line') {
+                currentTimeframe = '1Y';
+            }
+            
+            document.querySelectorAll('.tf-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.tf === currentTimeframe);
+            });
+            
             applyChartType();
         });
     });
 }
+
 function applyChartType() {
     if (!currentChart || !currentSymbol || !currentType) return;
     if (candleSeries) { currentChart.removeSeries(candleSeries); candleSeries = null; }
+    
     if (currentChartType === 'candle') {
-        candleSeries = currentChart.addCandlestickSeries({ upColor: '#ffffff', downColor: '#a855f7', borderUpColor: '#ffffff', borderDownColor: '#a855f7', wickUpColor: '#ffffff', wickDownColor: '#a855f7' });
-    } else if (currentChartType === 'bar') {
-        candleSeries = currentChart.addBarSeries({ upColor: '#ffffff', downColor: '#a855f7' });
+        candleSeries = currentChart.addCandlestickSeries({ 
+            upColor: '#ffffff', 
+            downColor: '#a855f7', 
+            borderUpColor: '#ffffff', 
+            borderDownColor: '#a855f7', 
+            wickUpColor: '#ffffff', 
+            wickDownColor: '#a855f7' 
+        });
+    } else if (currentChartType === 'line') {
+        candleSeries = currentChart.addLineSeries({ 
+            color: '#a855f7', 
+            lineWidth: 2,
+            priceLineVisible: true
+        });
     }
+    
     loadChartData(currentSymbol, currentType, currentTimeframe);
 }
+
 function resizeChart() {
     if (currentChart) {
         const container = document.getElementById('tradingviewContainer');
