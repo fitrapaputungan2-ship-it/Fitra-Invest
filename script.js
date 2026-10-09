@@ -87,8 +87,11 @@ async function fetchFundamental(symbol, type) {
     }
 }
 
-// ============ FETCH CHART DATA (FIX!) ============
+// ============ FETCH CHART DATA (FIX + ALERT DEBUG) ============
 async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
+    // 🔥 ALERT 1: Fungsi dipanggil apa enggak?
+    alert('🔵 fetchChartData DIPANGGIL\nSymbol: ' + symbol + '\nType: ' + type + '\nInterval: ' + interval + '\nRange: ' + range);
+    
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
             method: 'POST',
@@ -99,14 +102,22 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
             },
             body: JSON.stringify({ symbol, type, interval, range })
         });
+        
+        // 🔥 ALERT 2: Response status apa?
+        alert('🟡 RESPONSE STATUS: ' + response.status);
+        
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
+        // 🔥 ALERT 3: Isi response apa?
+        alert('🟢 RESPONSE DATA:\n' + JSON.stringify(data).substring(0, 500));
+        
         console.log('🔍 Chart API Response keys:', Object.keys(data));
         
-        // Format 1: { data: [...] } — INI FORMAT API LU!
+        // Format 1: { data: [...] }
         if (data.data && Array.isArray(data.data)) {
             console.log('✅ Format data.data, count:', data.data.length);
+            alert('✅ FORMAT data.data\nCount: ' + data.data.length);
             return data.data.map(c => ({
                 time: c.time,
                 open: parseFloat(c.open),
@@ -117,7 +128,7 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
             })).filter(c => !isNaN(c.open) && !isNaN(c.close));
         }
         
-        // Format 2: Yahoo Finance format
+        // Format 2: Yahoo Finance
         if (data.chart && data.chart.result && data.chart.result[0]) {
             const result = data.chart.result[0];
             const timestamps = result.timestamp || [];
@@ -137,13 +148,16 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
                 });
             }
             console.log('✅ Yahoo format, count:', candles.length);
+            alert('✅ FORMAT YAHOO\nCount: ' + candles.length);
             return candles;
         }
         
         console.warn('⚠️ Unknown format:', data);
+        alert('⚠️ UNKNOWN FORMAT!\n' + JSON.stringify(data).substring(0, 300));
         return [];
     } catch (error) {
         console.error('❌ Error fetchChartData:', error);
+        alert('❌ ERROR fetchChartData:\n' + error.message);
         return [];
     }
 }
@@ -324,6 +338,13 @@ function loadChart(symbol, type) {
     if (currentChart) { currentChart.remove(); currentChart = null; }
     const isMobile = window.innerWidth < 400;
     const chartHeight = isMobile ? 450 : 520;
+    
+    if (typeof LightweightCharts === 'undefined') {
+        alert('❌ LightweightCharts TIDAK KE-LOAD!');
+        container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library LightweightCharts gagal dimuat.</div>';
+        return;
+    }
+    
     currentChart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
         height: chartHeight,
@@ -358,7 +379,11 @@ async function loadChartData(symbol, type, timeframe) {
     const interval = intervalMap[timeframe] || '1d';
     const range = rangeMap[timeframe] || '6mo';
     const candles = await fetchChartData(symbol, type, interval, range);
-    if (!candles || candles.length === 0 || !candleSeries) { console.warn('⚠️ No candles for', symbol, timeframe); return; }
+    if (!candles || candles.length === 0 || !candleSeries) { 
+        console.warn('⚠️ No candles for', symbol, timeframe); 
+        alert('⚠️ GAK ADA CANDLE!\nSymbol: ' + symbol + '\nTimeframe: ' + timeframe + '\nCount: ' + (candles ? candles.length : 0));
+        return; 
+    }
     const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))
         .filter(d => d.time != null && !isNaN(d.open) && !isNaN(d.high) && !isNaN(d.low) && !isNaN(d.close));
     const volumeData = candles.map(c => ({
