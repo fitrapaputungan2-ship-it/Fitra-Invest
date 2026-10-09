@@ -7,7 +7,6 @@ let currentChart = null;
 let candleSeries = null;
 let volumeSeries = null;
 let currentTimeframe = 'Y';
-let currentChartType = 'candle';
 
 // ============ TAB NAV ============
 document.querySelectorAll('.tab').forEach(tab => {
@@ -88,7 +87,7 @@ async function fetchFundamental(symbol, type) {
 }
 
 // ============ FETCH CHART DATA ============
-async function fetchChartData(symbol, type, interval = '3mo', range = 'max') {
+async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
             method: 'POST',
@@ -379,24 +378,30 @@ async function loadChartData(symbol, type, timeframe) {
         'D':   '1d',     // 1 hari
         'W':   '1wk',    // 1 minggu
         'M':   '1mo',    // 1 bulan
-        'Y':   '3mo'     // 3 bulan (yearly = 4 candle per tahun)
+        'Y':   '1mo'     // 🔥 Fetch monthly, lalu aggregate ke yearly
     };
     const rangeMap = { 
-        '5M':  '5d',     // 5 hari data (5m interval)
-        '30M': '1mo',    // 1 bulan data
-        '1H':  '3mo',    // 3 bulan data
-        'D':   '1y',     // 1 tahun data
-        'W':   '5y',     // 5 tahun data
-        'M':   '20y',    // 20 tahun data
-        'Y':   'max'     // max data (semua sejarah)
+        '5M':  '5d',     // 5 hari
+        '30M': '1mo',    // 1 bulan
+        '1H':  '3mo',    // 3 bulan
+        'D':   '1y',     // 1 tahun
+        'W':   '5y',     // 5 tahun
+        'M':   '20y',    // 20 tahun
+        'Y':   'max'     // 🔥 Semua data (max)
     };
-    const interval = intervalMap[timeframe] || '3mo';
+    const interval = intervalMap[timeframe] || '1mo';
     const range = rangeMap[timeframe] || 'max';
     
-    const candles = await fetchChartData(symbol, type, interval, range);
+    let candles = await fetchChartData(symbol, type, interval, range);
     if (!candles || candles.length === 0 || !candleSeries) {
         console.warn('⚠️ No candles for', symbol, timeframe);
         return;
+    }
+    
+    // 🔥 KHUSUS TIMEFRAME "Y" — Aggregate monthly candles → yearly candles
+    if (timeframe === 'Y') {
+        candles = aggregateToYearly(candles);
+        console.log('📅 Aggregated to yearly:', candles.length, 'years');
     }
     
     const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))
@@ -412,7 +417,7 @@ async function loadChartData(symbol, type, timeframe) {
     candleSeries.setData(formattedData);
     volumeSeries.setData(volumeData);
     
-    // Set default zoom ke 100 candle terakhir biar fokus ke data terkini
+    // Set default zoom ke 100 candle terakhir
     const totalCandles = formattedData.length;
     if (totalCandles > 100) {
         currentChart.timeScale().setVisibleLogicalRange({
@@ -422,6 +427,54 @@ async function loadChartData(symbol, type, timeframe) {
     } else {
         currentChart.timeScale().fitContent();
     }
+}
+
+// 🔥 FUNGSI BARU: Aggregate monthly candles → yearly candles
+function aggregateToYearly(monthlyCandles) {
+    const yearlyMap = {};
+    
+    monthlyCandles.forEach(c => {
+        const date = new Date(c.time * 1000);
+        const year = date.getFullYear();
+        
+        if (!yearlyMap[year]) {
+            yearlyMap[year] = {
+                year: year,
+                open: c.open,
+                high: c.high,
+                low: c.low,
+                close: c.close,
+                volume: c.volume || 0,
+                firstTime: c.time,
+                lastTime: c.time
+            };
+        } else {
+            const y = yearlyMap[year];
+            // OPEN = bulan pertama, CLOSE = bulan terakhir
+            if (c.time < y.firstTime) {
+                y.open = c.open;
+                y.firstTime = c.time;
+            }
+            if (c.time > y.lastTime) {
+                y.close = c.close;
+                y.lastTime = c.time;
+            }
+            if (c.high > y.high) y.high = c.high;
+            if (c.low < y.low) y.low = c.low;
+            y.volume += c.volume || 0;
+        }
+    });
+    
+    return Object.values(yearlyMap)
+        .sort((a, b) => a.year - b.year)
+        .map(y => ({
+            time: y.firstTime,
+            open: y.open,
+            high: y.high,
+            low: y.low,
+            close: y.close,
+            volume: y.volume
+        }));
 }
 
 function setupTimeframeButtons() {
