@@ -160,6 +160,21 @@
                 </div>
             </div>
 
+            <!-- Chart Toolbar: Timeframe + Chart Type -->
+            <div class="chart-toolbar">
+                <div class="tf-group">
+                    <button class="tf-btn" data-tf="1">1m</button>
+                    <button class="tf-btn" data-tf="30">30m</button>
+                    <button class="tf-btn" data-tf="60">1h</button>
+                    <button class="tf-btn active" data-tf="D">D</button>
+                    <button class="tf-btn" data-tf="W">W</button>
+                </div>
+                <div class="chart-type-group">
+                    <button class="ct-btn active" data-ct="candle">🕯️</button>
+                    <button class="ct-btn" data-ct="bar">📊</button>
+                </div>
+            </div>
+
             <div id="tradingviewContainer" class="tradingview-container"></div>
 
             <div class="analysis-section">
@@ -244,7 +259,7 @@
         </div>
     </div>
 
-    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
