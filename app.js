@@ -6,7 +6,7 @@ let indicatorInterval = null;
 let currentChart = null;
 let candleSeries = null;
 let volumeSeries = null;
-let currentTimeframe = 'M';
+let currentTimeframe = 'Y';
 let currentChartType = 'candle';
 
 // ============ TAB NAV ============
@@ -88,7 +88,7 @@ async function fetchFundamental(symbol, type) {
 }
 
 // ============ FETCH CHART DATA ============
-async function fetchChartData(symbol, type, interval = '1mo', range = '20y') {
+async function fetchChartData(symbol, type, interval = '3mo', range = 'max') {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
             method: 'POST',
@@ -367,26 +367,31 @@ function loadChart(symbol, type) {
     
     loadChartData(symbol, type, currentTimeframe);
     setupTimeframeButtons();
-    setupChartTypeButtons();
     window.addEventListener('resize', resizeChart);
 }
 
 async function loadChartData(symbol, type, timeframe) {
-    // 🕯️ M = monthly candle, 20 tahun data (~240 candle)
-    // 📈 1Y = daily, 2 tahun data (~500 candle)
-    // 📊 5Y = weekly, 20 tahun data (~1040 candle)
+    // 7 TIMEFRAME: 5M, 30M, 1H, D, W, M, Y
     const intervalMap = { 
-        'M': '1mo',
-        '1Y': '1d',
-        '5Y': '1wk'
+        '5M':  '5m',     // 5 menit
+        '30M': '30m',    // 30 menit
+        '1H':  '1h',     // 1 jam
+        'D':   '1d',     // 1 hari
+        'W':   '1wk',    // 1 minggu
+        'M':   '1mo',    // 1 bulan
+        'Y':   '3mo'     // 3 bulan (yearly = 4 candle per tahun)
     };
     const rangeMap = { 
-        'M': '20y',
-        '1Y': '2y',
-        '5Y': '20y'
+        '5M':  '5d',     // 5 hari data (5m interval)
+        '30M': '1mo',    // 1 bulan data
+        '1H':  '3mo',    // 3 bulan data
+        'D':   '1y',     // 1 tahun data
+        'W':   '5y',     // 5 tahun data
+        'M':   '20y',    // 20 tahun data
+        'Y':   'max'     // max data (semua sejarah)
     };
-    const interval = intervalMap[timeframe] || '1mo';
-    const range = rangeMap[timeframe] || '20y';
+    const interval = intervalMap[timeframe] || '3mo';
+    const range = rangeMap[timeframe] || 'max';
     
     const candles = await fetchChartData(symbol, type, interval, range);
     if (!candles || candles.length === 0 || !candleSeries) {
@@ -402,7 +407,7 @@ async function loadChartData(symbol, type, timeframe) {
         color: c.close >= c.open ? 'rgba(255, 255, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'
     })).filter(d => d.time != null && !isNaN(d.value));
     
-    console.log('📊 Timeframe:', timeframe, '| Candles:', formattedData.length, '| Range:', range);
+    console.log('📊 Timeframe:', timeframe, '| Interval:', interval, '| Range:', range, '| Candles:', formattedData.length);
     
     candleSeries.setData(formattedData);
     volumeSeries.setData(volumeData);
@@ -430,56 +435,6 @@ function setupTimeframeButtons() {
             if (currentSymbol && currentType) loadChartData(currentSymbol, currentType, currentTimeframe);
         });
     });
-}
-
-function setupChartTypeButtons() {
-    document.querySelectorAll('.ct-btn').forEach(btn => {
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        newBtn.addEventListener('click', () => {
-            document.querySelectorAll('.ct-btn').forEach(b => b.classList.remove('active'));
-            newBtn.classList.add('active');
-            currentChartType = newBtn.dataset.ct;
-            
-            // 🕯️ Candle → auto Monthly
-            // 📈 Line → auto Yearly
-            if (currentChartType === 'candle') {
-                currentTimeframe = 'M';
-            } else if (currentChartType === 'line') {
-                currentTimeframe = '1Y';
-            }
-            
-            document.querySelectorAll('.tf-btn').forEach(b => {
-                b.classList.toggle('active', b.dataset.tf === currentTimeframe);
-            });
-            
-            applyChartType();
-        });
-    });
-}
-
-function applyChartType() {
-    if (!currentChart || !currentSymbol || !currentType) return;
-    if (candleSeries) { currentChart.removeSeries(candleSeries); candleSeries = null; }
-    
-    if (currentChartType === 'candle') {
-        candleSeries = currentChart.addCandlestickSeries({ 
-            upColor: '#ffffff', 
-            downColor: '#a855f7', 
-            borderUpColor: '#ffffff', 
-            borderDownColor: '#a855f7', 
-            wickUpColor: '#ffffff', 
-            wickDownColor: '#a855f7' 
-        });
-    } else if (currentChartType === 'line') {
-        candleSeries = currentChart.addLineSeries({ 
-            color: '#a855f7', 
-            lineWidth: 2,
-            priceLineVisible: true
-        });
-    }
-    
-    loadChartData(currentSymbol, currentType, currentTimeframe);
 }
 
 function resizeChart() {
