@@ -9,16 +9,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- 🔥 DEBUG OVERLAY - Hapus blok ini kalau udah beres -->
+    <!-- DEBUG OVERLAY -->
     <script>
         window.onerror = function(msg, url, line) {
             alert('🔴 ERROR: ' + msg + '\nLine: ' + line);
         };
-        
         const _origLog = console.log;
         const _origError = console.error;
         const _origWarn = console.warn;
-        
         function _showDebug(msg, color) {
             let d = document.getElementById('__debug__');
             if (!d) {
@@ -30,7 +28,6 @@
             d.innerHTML += '<div>' + msg + '</div>';
             d.scrollTop = d.scrollHeight;
         }
-        
         console.log = function(...args) {
             _origLog.apply(console, args);
             _showDebug('> ' + args.map(a => typeof a === 'object' ? JSON.stringify(a).substring(0, 200) : a).join(' '), '#0f0');
@@ -44,7 +41,7 @@
             _showDebug('⚠️ ' + args.map(a => typeof a === 'object' ? JSON.stringify(a).substring(0, 200) : a).join(' '), '#ff0');
         };
     </script>
-    <!-- 🔥 END DEBUG OVERLAY -->
+    <!-- END DEBUG OVERLAY -->
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -83,26 +80,11 @@
                 <h2>Screener</h2>
                 <p class="description">Filter saham global berdasarkan kriteria value investing.</p>
                 <div class="screener-filters">
-                    <div class="filter-group">
-                        <label>P/E Ratio max</label>
-                        <input type="number" id="peMax" value="25" step="0.1">
-                    </div>
-                    <div class="filter-group">
-                        <label>P/B Ratio max</label>
-                        <input type="number" id="pbMax" value="5" step="0.1">
-                    </div>
-                    <div class="filter-group">
-                        <label>ROE min (%)</label>
-                        <input type="number" id="roeMin" value="10" step="1">
-                    </div>
-                    <div class="filter-group">
-                        <label>DER max</label>
-                        <input type="number" id="derMax" value="3" step="0.1">
-                    </div>
-                    <div class="filter-group">
-                        <label>Dividend Yield min (%)</label>
-                        <input type="number" id="divMin" value="1" step="0.1">
-                    </div>
+                    <div class="filter-group"><label>P/E Ratio max</label><input type="number" id="peMax" value="25" step="0.1"></div>
+                    <div class="filter-group"><label>P/B Ratio max</label><input type="number" id="pbMax" value="5" step="0.1"></div>
+                    <div class="filter-group"><label>ROE min (%)</label><input type="number" id="roeMin" value="10" step="1"></div>
+                    <div class="filter-group"><label>DER max</label><input type="number" id="derMax" value="3" step="0.1"></div>
+                    <div class="filter-group"><label>Dividend Yield min (%)</label><input type="number" id="divMin" value="1" step="0.1"></div>
                 </div>
                 <button class="primary-btn" id="runScreener">Jalankan Screener</button>
                 <div class="screener-results" id="screenerResults"></div>
@@ -112,22 +94,10 @@
                 <h2>Portfolio</h2>
                 <p class="description">Track portofolio investasi global lu.</p>
                 <div class="portfolio-summary">
-                    <div class="summary-card">
-                        <span class="label">Total Value</span>
-                        <span class="value" id="totalValue">$ 0</span>
-                    </div>
-                    <div class="summary-card">
-                        <span class="label">Unrealized P/L</span>
-                        <span class="value" id="unrealizedPL">$ 0</span>
-                    </div>
-                    <div class="summary-card">
-                        <span class="label">Total Cost</span>
-                        <span class="value" id="totalCost">$ 0</span>
-                    </div>
-                    <div class="summary-card">
-                        <span class="label">Holdings</span>
-                        <span class="value" id="totalHoldings">0</span>
-                    </div>
+                    <div class="summary-card"><span class="label">Total Value</span><span class="value" id="totalValue">$ 0</span></div>
+                    <div class="summary-card"><span class="label">Unrealized P/L</span><span class="value" id="unrealizedPL">$ 0</span></div>
+                    <div class="summary-card"><span class="label">Total Cost</span><span class="value" id="totalCost">$ 0</span></div>
+                    <div class="summary-card"><span class="label">Holdings</span><span class="value" id="totalHoldings">0</span></div>
                 </div>
                 <button class="primary-btn" id="addHolding">＋ Tambah Holding</button>
                 <div class="holdings" id="holdings"></div>
@@ -136,14 +106,11 @@
             <section class="tab-content" id="tab-news">
                 <h2>News & Sentiment</h2>
                 <p class="description">Berita terkait aset global lu, dengan analisis sentimen AI.</p>
-                <div class="news-list" id="newsList">
-                    <div class="empty-state">Belum ada berita</div>
-                </div>
+                <div class="news-list" id="newsList"><div class="empty-state">Belum ada berita</div></div>
             </section>
         </main>
     </div>
 
-    <!-- Modal Chart + Analysis -->
     <div class="chart-modal" id="chartModal">
         <div class="chart-content">
             <div class="chart-header">
@@ -155,33 +122,15 @@
             </div>
 
             <div class="indicators-panel">
-                <div class="indicator-item">
-                    <span class="ind-label">HTF</span>
-                    <span class="ind-value" id="htfValue">-</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="ind-label">LTF</span>
-                    <span class="ind-value" id="ltfValue">-</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="ind-label">EMA20</span>
-                    <span class="ind-value" id="ema20Value">-</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="ind-label">RSI</span>
-                    <span class="ind-value" id="rsiValue">-</span>
-                </div>
+                <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
+                <div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div>
+                <div class="indicator-item"><span class="ind-label">EMA20</span><span class="ind-value" id="ema20Value">-</span></div>
+                <div class="indicator-item"><span class="ind-label">RSI</span><span class="ind-value" id="rsiValue">-</span></div>
             </div>
 
             <div class="bidask-panel">
-                <div class="bidask-item bid">
-                    <span class="bidask-label">BID</span>
-                    <span class="bidask-value" id="bidValue">-</span>
-                </div>
-                <div class="bidask-item ask">
-                    <span class="bidask-label">ASK</span>
-                    <span class="bidask-value" id="askValue">-</span>
-                </div>
+                <div class="bidask-item bid"><span class="bidask-label">BID</span><span class="bidask-value" id="bidValue">-</span></div>
+                <div class="bidask-item ask"><span class="bidask-label">ASK</span><span class="bidask-value" id="askValue">-</span></div>
             </div>
 
             <div class="sentiment-panel">
@@ -198,7 +147,6 @@
                 </div>
             </div>
 
-            <!-- Chart Toolbar: Timeframe + Chart Type -->
             <div class="chart-toolbar">
                 <div class="tf-group">
                     <button class="tf-btn" data-tf="1">1m</button>
@@ -225,75 +173,29 @@
         </div>
     </div>
 
-    <!-- Modal Tambah Asset ke Watchlist -->
     <div class="modal-overlay" id="assetModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Tambah ke Watchlist</h3>
-                <button class="modal-close" id="closeAssetModal">×</button>
-            </div>
+            <div class="modal-header"><h3>Tambah ke Watchlist</h3><button class="modal-close" id="closeAssetModal">×</button></div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Symbol (contoh: AAPL, BTC, GC=F)</label>
-                    <input type="text" id="assetSymbol" placeholder="AAPL" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label>Nama Aset</label>
-                    <input type="text" id="assetName" placeholder="Apple Inc." autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label>Tipe</label>
-                    <select id="assetType">
-                        <option value="stock">Stock</option>
-                        <option value="crypto">Crypto</option>
-                        <option value="commodity">Commodity</option>
-                    </select>
-                </div>
+                <div class="form-group"><label>Symbol (contoh: AAPL, BTC, GC=F)</label><input type="text" id="assetSymbol" placeholder="AAPL" autocomplete="off"></div>
+                <div class="form-group"><label>Nama Aset</label><input type="text" id="assetName" placeholder="Apple Inc." autocomplete="off"></div>
+                <div class="form-group"><label>Tipe</label><select id="assetType"><option value="stock">Stock</option><option value="crypto">Crypto</option><option value="commodity">Commodity</option></select></div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-cancel" id="cancelAsset">Batal</button>
-                <button class="btn-save" id="saveAsset">Tambah</button>
-            </div>
+            <div class="modal-footer"><button class="btn-cancel" id="cancelAsset">Batal</button><button class="btn-save" id="saveAsset">Tambah</button></div>
         </div>
     </div>
 
-    <!-- Modal Tambah Holding -->
     <div class="modal-overlay" id="holdingModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Tambah Holding</h3>
-                <button class="modal-close" id="closeHoldingModal">×</button>
-            </div>
+            <div class="modal-header"><h3>Tambah Holding</h3><button class="modal-close" id="closeHoldingModal">×</button></div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Symbol (contoh: AAPL, BTC, GC=F)</label>
-                    <input type="text" id="holdingSymbol" placeholder="AAPL" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label>Nama Aset</label>
-                    <input type="text" id="holdingName" placeholder="Apple Inc." autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label>Tipe</label>
-                    <select id="holdingType">
-                        <option value="stock">Stock</option>
-                        <option value="crypto">Crypto</option>
-                        <option value="commodity">Commodity</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Jumlah Saham</label>
-                    <input type="number" id="holdingShares" placeholder="10" step="any">
-                </div>
-                <div class="form-group">
-                    <label>Harga Beli Rata-rata (USD)</label>
-                    <input type="number" id="holdingAvgPrice" placeholder="150" step="any">
-                </div>
+                <div class="form-group"><label>Symbol (contoh: AAPL, BTC, GC=F)</label><input type="text" id="holdingSymbol" placeholder="AAPL" autocomplete="off"></div>
+                <div class="form-group"><label>Nama Aset</label><input type="text" id="holdingName" placeholder="Apple Inc." autocomplete="off"></div>
+                <div class="form-group"><label>Tipe</label><select id="holdingType"><option value="stock">Stock</option><option value="crypto">Crypto</option><option value="commodity">Commodity</option></select></div>
+                <div class="form-group"><label>Jumlah Saham</label><input type="number" id="holdingShares" placeholder="10" step="any"></div>
+                <div class="form-group"><label>Harga Beli Rata-rata (USD)</label><input type="number" id="holdingAvgPrice" placeholder="150" step="any"></div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-cancel" id="cancelHolding">Batal</button>
-                <button class="btn-save" id="saveHolding">Simpan</button>
-            </div>
+            <div class="modal-footer"><button class="btn-cancel" id="cancelHolding">Batal</button><button class="btn-save" id="saveHolding">Simpan</button></div>
         </div>
     </div>
 
