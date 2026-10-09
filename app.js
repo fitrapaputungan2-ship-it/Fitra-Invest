@@ -338,7 +338,7 @@ function loadChart(symbol, type) {
             timeVisible: true, 
             secondsVisible: false,
             rightOffset: 10,
-            barSpacing: 6,
+            barSpacing: 12,
             fixLeftEdge: false,
             fixRightEdge: false,
             lockVisibleTimeRangeOnResize: false
@@ -370,24 +370,23 @@ function loadChart(symbol, type) {
 }
 
 async function loadChartData(symbol, type, timeframe) {
-    // 7 TIMEFRAME: 5M, 30M, 1H, D, W, M, Y
     const intervalMap = { 
-        '5M':  '5m',     // 5 menit
-        '30M': '30m',    // 30 menit
-        '1H':  '1h',     // 1 jam
-        'D':   '1d',     // 1 hari
-        'W':   '1wk',    // 1 minggu
-        'M':   '1mo',    // 1 bulan
-        'Y':   '1mo'     // 🔥 Fetch monthly, lalu aggregate ke yearly
+        '5M':  '5m',
+        '30M': '30m',
+        '1H':  '1h',
+        'D':   '1d',
+        'W':   '1wk',
+        'M':   '1mo',
+        'Y':   '1mo'
     };
     const rangeMap = { 
-        '5M':  '5d',     // 5 hari
-        '30M': '1mo',    // 1 bulan
-        '1H':  '3mo',    // 3 bulan
-        'D':   '1y',     // 1 tahun
-        'W':   '5y',     // 5 tahun
-        'M':   '20y',    // 20 tahun
-        'Y':   'max'     // 🔥 Semua data (max)
+        '5M':  '5d',
+        '30M': '1mo',
+        '1H':  '3mo',
+        'D':   '1y',
+        'W':   '5y',
+        'M':   '20y',
+        'Y':   'max'
     };
     const interval = intervalMap[timeframe] || '1mo';
     const range = rangeMap[timeframe] || 'max';
@@ -398,10 +397,8 @@ async function loadChartData(symbol, type, timeframe) {
         return;
     }
     
-    // 🔥 KHUSUS TIMEFRAME "Y" — Aggregate monthly candles → yearly candles
     if (timeframe === 'Y') {
         candles = aggregateToYearly(candles);
-        console.log('📅 Aggregated to yearly:', candles.length, 'years');
     }
     
     const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))
@@ -412,12 +409,9 @@ async function loadChartData(symbol, type, timeframe) {
         color: c.close >= c.open ? 'rgba(255, 255, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'
     })).filter(d => d.time != null && !isNaN(d.value));
     
-    console.log('📊 Timeframe:', timeframe, '| Interval:', interval, '| Range:', range, '| Candles:', formattedData.length);
-    
     candleSeries.setData(formattedData);
     volumeSeries.setData(volumeData);
     
-    // Set default zoom ke 100 candle terakhir
     const totalCandles = formattedData.length;
     if (totalCandles > 100) {
         currentChart.timeScale().setVisibleLogicalRange({
@@ -429,7 +423,6 @@ async function loadChartData(symbol, type, timeframe) {
     }
 }
 
-// 🔥 FUNGSI BARU: Aggregate monthly candles → yearly candles
 function aggregateToYearly(monthlyCandles) {
     const yearlyMap = {};
     
@@ -450,7 +443,6 @@ function aggregateToYearly(monthlyCandles) {
             };
         } else {
             const y = yearlyMap[year];
-            // OPEN = bulan pertama, CLOSE = bulan terakhir
             if (c.time < y.firstTime) {
                 y.open = c.open;
                 y.firstTime = c.time;
