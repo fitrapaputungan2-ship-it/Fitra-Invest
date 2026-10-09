@@ -2,9 +2,6 @@
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
-// 🔥 DEBUG 1: Kalau app.js ke-load, background jadi MERAH
-document.body.style.background = '#FF0000';
-
 let indicatorInterval = null;
 let currentChart = null;
 let candleSeries = null;
@@ -90,11 +87,8 @@ async function fetchFundamental(symbol, type) {
     }
 }
 
-// ============ FETCH CHART DATA (FIX + COLOR DEBUG) ============
+// ============ FETCH CHART DATA ============
 async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
-    // 🔥 DEBUG 2: Fungsi kepanggil → background jadi ORANGE
-    document.body.style.background = '#FFAA00';
-    
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
             method: 'POST',
@@ -108,15 +102,8 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
-        // 🔥 DEBUG 3: Data berhasil di-fetch → background jadi HIJAU
-        document.body.style.background = '#00FF00';
-        
-        console.log('🔍 Chart API Response keys:', Object.keys(data));
-        console.log('🔍 Data preview:', JSON.stringify(data).substring(0, 300));
-        
         // Format 1: { data: [...] } — INI FORMAT API LU!
         if (data.data && Array.isArray(data.data)) {
-            console.log('✅ Format data.data, count:', data.data.length);
             return data.data.map(c => ({
                 time: c.time,
                 open: parseFloat(c.open),
@@ -127,7 +114,7 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
             })).filter(c => !isNaN(c.open) && !isNaN(c.close));
         }
         
-        // Format 2: Yahoo Finance format
+        // Format 2: Yahoo Finance format (fallback)
         if (data.chart && data.chart.result && data.chart.result[0]) {
             const result = data.chart.result[0];
             const timestamps = result.timestamp || [];
@@ -146,18 +133,12 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
                     volume: volumes[i] || 0
                 });
             }
-            console.log('✅ Yahoo format, count:', candles.length);
             return candles;
         }
         
-        console.warn('⚠️ Unknown format:', data);
-        // 🔥 DEBUG 4: Format aneh → background jadi BIRU
-        document.body.style.background = '#0000FF';
         return [];
     } catch (error) {
-        console.error('❌ Error fetchChartData:', error);
-        // 🔥 DEBUG 5: Error → background jadi UNGU
-        document.body.style.background = '#800080';
+        console.error('Error fetchChartData:', error);
         return [];
     }
 }
@@ -389,7 +370,6 @@ async function loadChartData(symbol, type, timeframe) {
         value: c.volume || 0,
         color: c.close >= c.open ? 'rgba(255, 255, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'
     })).filter(d => d.time != null && !isNaN(d.value));
-    console.log('📊 Setting', formattedData.length, 'candles +', volumeData.length, 'volume');
     candleSeries.setData(formattedData);
     volumeSeries.setData(volumeData);
     currentChart.timeScale().fitContent();
