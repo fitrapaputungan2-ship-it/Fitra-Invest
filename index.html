@@ -200,7 +200,10 @@
         </div>
     </div>
 
-    <script src="https://cdn.skypack.dev/lightweight-charts@4.1.0"></script>
+    <script type="module">
+import { createChart } from 'https://esm.sh/lightweight-charts@4.1.0';
+window.LightweightCharts = { createChart, CrosshairMode: { Normal: 0 } };
+</script>
     <script src="app.js"></script>
 </body>
 </html>
