@@ -2,6 +2,9 @@
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
+// 🔥 DEBUG 1: Kalau app.js ke-load, background jadi MERAH
+document.body.style.background = '#FF0000';
+
 let indicatorInterval = null;
 let currentChart = null;
 let candleSeries = null;
@@ -87,10 +90,10 @@ async function fetchFundamental(symbol, type) {
     }
 }
 
-// ============ FETCH CHART DATA (FIX + ALERT DEBUG) ============
+// ============ FETCH CHART DATA (FIX + COLOR DEBUG) ============
 async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
-    // 🔥 ALERT 1: Fungsi dipanggil apa enggak?
-    alert('🔵 fetchChartData DIPANGGIL\nSymbol: ' + symbol + '\nType: ' + type + '\nInterval: ' + interval + '\nRange: ' + range);
+    // 🔥 DEBUG 2: Fungsi kepanggil → background jadi ORANGE
+    document.body.style.background = '#FFAA00';
     
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
@@ -102,22 +105,18 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
             },
             body: JSON.stringify({ symbol, type, interval, range })
         });
-        
-        // 🔥 ALERT 2: Response status apa?
-        alert('🟡 RESPONSE STATUS: ' + response.status);
-        
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
-        // 🔥 ALERT 3: Isi response apa?
-        alert('🟢 RESPONSE DATA:\n' + JSON.stringify(data).substring(0, 500));
+        // 🔥 DEBUG 3: Data berhasil di-fetch → background jadi HIJAU
+        document.body.style.background = '#00FF00';
         
         console.log('🔍 Chart API Response keys:', Object.keys(data));
+        console.log('🔍 Data preview:', JSON.stringify(data).substring(0, 300));
         
-        // Format 1: { data: [...] }
+        // Format 1: { data: [...] } — INI FORMAT API LU!
         if (data.data && Array.isArray(data.data)) {
             console.log('✅ Format data.data, count:', data.data.length);
-            alert('✅ FORMAT data.data\nCount: ' + data.data.length);
             return data.data.map(c => ({
                 time: c.time,
                 open: parseFloat(c.open),
@@ -128,7 +127,7 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
             })).filter(c => !isNaN(c.open) && !isNaN(c.close));
         }
         
-        // Format 2: Yahoo Finance
+        // Format 2: Yahoo Finance format
         if (data.chart && data.chart.result && data.chart.result[0]) {
             const result = data.chart.result[0];
             const timestamps = result.timestamp || [];
@@ -148,16 +147,17 @@ async function fetchChartData(symbol, type, interval = '1d', range = '1mo') {
                 });
             }
             console.log('✅ Yahoo format, count:', candles.length);
-            alert('✅ FORMAT YAHOO\nCount: ' + candles.length);
             return candles;
         }
         
         console.warn('⚠️ Unknown format:', data);
-        alert('⚠️ UNKNOWN FORMAT!\n' + JSON.stringify(data).substring(0, 300));
+        // 🔥 DEBUG 4: Format aneh → background jadi BIRU
+        document.body.style.background = '#0000FF';
         return [];
     } catch (error) {
         console.error('❌ Error fetchChartData:', error);
-        alert('❌ ERROR fetchChartData:\n' + error.message);
+        // 🔥 DEBUG 5: Error → background jadi UNGU
+        document.body.style.background = '#800080';
         return [];
     }
 }
@@ -340,7 +340,6 @@ function loadChart(symbol, type) {
     const chartHeight = isMobile ? 450 : 520;
     
     if (typeof LightweightCharts === 'undefined') {
-        alert('❌ LightweightCharts TIDAK KE-LOAD!');
         container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library LightweightCharts gagal dimuat.</div>';
         return;
     }
@@ -379,10 +378,9 @@ async function loadChartData(symbol, type, timeframe) {
     const interval = intervalMap[timeframe] || '1d';
     const range = rangeMap[timeframe] || '6mo';
     const candles = await fetchChartData(symbol, type, interval, range);
-    if (!candles || candles.length === 0 || !candleSeries) { 
-        console.warn('⚠️ No candles for', symbol, timeframe); 
-        alert('⚠️ GAK ADA CANDLE!\nSymbol: ' + symbol + '\nTimeframe: ' + timeframe + '\nCount: ' + (candles ? candles.length : 0));
-        return; 
+    if (!candles || candles.length === 0 || !candleSeries) {
+        console.warn('⚠️ No candles for', symbol, timeframe);
+        return;
     }
     const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))
         .filter(d => d.time != null && !isNaN(d.open) && !isNaN(d.high) && !isNaN(d.low) && !isNaN(d.close));
