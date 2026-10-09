@@ -3,6 +3,11 @@ const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
 let indicatorInterval = null;
+let currentChart = null;
+let candleSeries = null;
+let volumeSeries = null;
+let currentTimeframe = 'D';
+let currentChartType = 'candle';
 
 // ============ TAB NAVIGATION ============
 document.querySelectorAll('.tab').forEach(tab => {
@@ -38,41 +43,6 @@ let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
 
 function savePortfolio() {
     localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio));
-}
-
-// ============ TRADINGVIEW SYMBOL MAPPING ============
-function getTradingViewSymbol(symbol, type) {
-    const upperSymbol = symbol.toUpperCase();
-    
-    if (type === 'crypto') {
-        const cryptoSymbols = {
-            'BTC': 'BINANCE:BTCUSDT',
-            'ETH': 'BINANCE:ETHUSDT',
-            'SOL': 'BINANCE:SOLUSDT',
-            'BNB': 'BINANCE:BNBUSDT',
-            'XRP': 'BINANCE:XRPUSDT',
-            'ADA': 'BINANCE:ADAUSDT',
-            'DOGE': 'BINANCE:DOGEUSDT',
-            'MATIC': 'BINANCE:MATICUSDT',
-        };
-        return cryptoSymbols[upperSymbol] || 'BINANCE:' + upperSymbol + 'USDT';
-    }
-    
-    if (type === 'commodity') {
-        const commoditySymbols = {
-            'GC=F': 'TVC:GOLD',
-            'SI=F': 'TVC:SILVER',
-            'CL=F': 'TVC:USOIL',
-            'NG=F': 'TVC:NATURALGAS',
-        };
-        return commoditySymbols[upperSymbol] || 'TVC:GOLD';
-    }
-    
-    const nyseStocks = ['JPM', 'V', 'WMT', 'DIS', 'KO', 'MCD', 'NKE', 'GS', 'AXP', 'BA', 'CAT', 'CVX', 'IBM', 'JNJ', 'MMM', 'PG', 'TRV', 'UNH', 'VZ', 'HD', 'HON', 'CRM'];
-    if (nyseStocks.includes(upperSymbol)) {
-        return 'NYSE:' + upperSymbol;
-    }
-    return 'NASDAQ:' + upperSymbol;
 }
 
 // ============ FETCH HARGA ============
@@ -380,7 +350,7 @@ async function openAssetDetail(symbol, name, price, change, type) {
     document.getElementById('buyerPct').textContent = '-';
     document.getElementById('sellerPct').textContent = '-';
     
-    loadTradingViewChart(symbol, type);
+    loadChart(symbol, type);
     updateIndicators(symbol, type);
     loadAnalysis(symbol, name, price, type);
     
@@ -398,63 +368,205 @@ function updateChartPrice() {
     priceEl.style.color = currentChange >= 0 ? '#10b981' : '#ef4444';
 }
 
-function loadTradingViewChart(symbol, type) {
+// ============ LIGHTWEIGHT CHARTS ============
+function loadChart(symbol, type) {
     const container = document.getElementById('tradingviewContainer');
     container.innerHTML = '';
     
-    const tvSymbol = getTradingViewSymbol(symbol, type);
-    const widgetId = 'tv_widget_' + Date.now();
+    if (currentChart) {
+        currentChart.remove();
+        currentChart = null;
+    }
     
-    const widgetDiv = document.createElement('div');
-    widgetDiv.id = widgetId;
-    widgetDiv.style.width = '100%';
-    widgetDiv.style.height = '100%';
-    container.appendChild(widgetDiv);
+    const isMobile = window.innerWidth < 400;
+    const chartHeight = isMobile ? 450 : 520;
     
-    if (typeof TradingView !== 'undefined') {
-        new TradingView.widget({
-            "autosize": true,
-            "symbol": tvSymbol,
-            "interval": "D",
-            "timezone": "Asia/Jakarta",
-            "theme": "dark",
-            "style": "1",
-            "locale": "id",
-            "enable_publishing": false,
-            "allow_symbol_change": false,
-            "save_image": false,
-            "container_id": widgetId,
-            "hide_side_toolbar": true,
-            "hide_top_toolbar": false,
-            "withdateranges": false,
-            "details": false,
-            "hotlist": false,
-            "calendar": false,
-            "studies": [],
-            "overrides": {
-                "mainSeriesProperties.candleStyle.upColor": "#ffffff",
-                "mainSeriesProperties.candleStyle.downColor": "#a855f7",
-                "mainSeriesProperties.candleStyle.borderUpColor": "#ffffff",
-                "mainSeriesProperties.candleStyle.borderDownColor": "#a855f7",
-                "mainSeriesProperties.candleStyle.wickUpColor": "#ffffff",
-                "mainSeriesProperties.candleStyle.wickDownColor": "#a855f7",
-                "mainSeriesProperties.candleStyle.drawBorder": true,
-                "mainSeriesProperties.candleStyle.drawWick": true,
-                "paneProperties.background": "#0a0a0f",
-                "paneProperties.backgroundType": "solid",
-                "paneProperties.vertGridProperties.color": "rgba(255, 255, 255, 0.04)",
-                "paneProperties.horzGridProperties.color": "rgba(255, 255, 255, 0.04)",
-                "scalesProperties.textColor": "rgba(255, 255, 255, 0.6)",
-                "scalesProperties.lineColor": "rgba(255, 255, 255, 0.08)",
-                "mainSeriesProperties.volumeStyle.upColor": "rgba(255, 255, 255, 0.5)",
-                "mainSeriesProperties.volumeStyle.downColor": "rgba(168, 85, 247, 0.5)"
-            },
-            "show_popup_button": false,
-            "popup_width": "1000",
-            "popup_height": "650",
+    currentChart = LightweightCharts.createChart(container, {
+        width: container.clientWidth,
+        height: chartHeight,
+        layout: {
+            background: { color: 'transparent' },
+            textColor: 'rgba(255, 255, 255, 0.6)',
+            fontFamily: 'Inter, sans-serif',
+        },
+        grid: {
+            vertLines: { color: 'rgba(255, 255, 255, 0.04)' },
+            horzLines: { color: 'rgba(255, 255, 255, 0.04)' },
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+            vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' },
+            horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' },
+        },
+        rightPriceScale: {
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            scaleMargins: { top: 0.1, bottom: 0.25 },
+        },
+        timeScale: {
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            timeVisible: true,
+            secondsVisible: false,
+        },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true },
+        handleScale: { mouseWheel: true, pinch: true },
+    });
+    
+    // 🔥 Candle Series — Putih (bullish) & Ungu (bearish)
+    candleSeries = currentChart.addCandlestickSeries({
+        upColor: '#ffffff',
+        downColor: '#a855f7',
+        borderUpColor: '#ffffff',
+        borderDownColor: '#a855f7',
+        wickUpColor: '#ffffff',
+        wickDownColor: '#a855f7',
+    });
+    
+    // 🔥 Volume Series — Putih (bullish) & Ungu (bearish)
+    volumeSeries = currentChart.addHistogramSeries({
+        priceFormat: { type: 'volume' },
+        priceScaleId: '',
+    });
+    
+    volumeSeries.priceScale().applyOptions({
+        scaleMargins: { top: 0.75, bottom: 0 },
+    });
+    
+    loadChartData(symbol, type, currentTimeframe);
+    setupTimeframeButtons();
+    setupChartTypeButtons();
+    
+    window.addEventListener('resize', resizeChart);
+}
+
+async function loadChartData(symbol, type, timeframe) {
+    const intervalMap = {
+        '1': '1m',
+        '30': '30m',
+        '60': '1h',
+        'D': '1d',
+        'W': '1wk',
+    };
+    
+    const rangeMap = {
+        '1': '1d',
+        '30': '5d',
+        '60': '1mo',
+        'D': '6mo',
+        'W': '2y',
+    };
+    
+    const interval = intervalMap[timeframe] || '1d';
+    const range = rangeMap[timeframe] || '6mo';
+    
+    const candles = await fetchChartData(symbol, type, interval, range);
+    
+    if (!candles || candles.length === 0 || !candleSeries) return;
+    
+    const formattedData = candles.map(c => {
+        const rawTime = c.time || c.date || c.t;
+        let timestamp;
+        if (typeof rawTime === 'number') {
+            timestamp = rawTime > 10000000000 ? Math.floor(rawTime / 1000) : rawTime;
+        } else {
+            timestamp = Math.floor(new Date(rawTime).getTime() / 1000);
+        }
+        return {
+            time: timestamp,
+            open: parseFloat(c.open || c.o),
+            high: parseFloat(c.high || c.h),
+            low: parseFloat(c.low || c.l),
+            close: parseFloat(c.close || c.c),
+        };
+    }).filter(d => !isNaN(d.time) && !isNaN(d.open) && !isNaN(d.close));
+    
+    const volumeData = candles.map(c => {
+        const rawTime = c.time || c.date || c.t;
+        let timestamp;
+        if (typeof rawTime === 'number') {
+            timestamp = rawTime > 10000000000 ? Math.floor(rawTime / 1000) : rawTime;
+        } else {
+            timestamp = Math.floor(new Date(rawTime).getTime() / 1000);
+        }
+        const close = parseFloat(c.close || c.c);
+        const open = parseFloat(c.open || c.o);
+        return {
+            time: timestamp,
+            value: parseFloat(c.volume || c.v || 0),
+            color: close >= open
+                ? 'rgba(255, 255, 255, 0.4)'
+                : 'rgba(168, 85, 247, 0.4)',
+        };
+    }).filter(d => !isNaN(d.time));
+    
+    candleSeries.setData(formattedData);
+    volumeSeries.setData(volumeData);
+    currentChart.timeScale().fitContent();
+}
+
+function setupTimeframeButtons() {
+    document.querySelectorAll('.tf-btn').forEach(btn => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', () => {
+            document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+            newBtn.classList.add('active');
+            currentTimeframe = newBtn.dataset.tf;
+            if (currentSymbol && currentType) {
+                loadChartData(currentSymbol, currentType, currentTimeframe);
+            }
         });
-    } else {
-        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);font-size:12px;">TradingView gagal dimuat.</div>';
+    });
+}
+
+function setupChartTypeButtons() {
+    document.querySelectorAll('.ct-btn').forEach(btn => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', () => {
+            document.querySelectorAll('.ct-btn').forEach(b => b.classList.remove('active'));
+            newBtn.classList.add('active');
+            currentChartType = newBtn.dataset.ct;
+            applyChartType();
+        });
+    });
+}
+
+function applyChartType() {
+    if (!currentChart || !currentSymbol || !currentType) return;
+    
+    // Hapus series lama
+    if (candleSeries) {
+        currentChart.removeSeries(candleSeries);
+        candleSeries = null;
+    }
+    
+    const type = currentChartType;
+    
+    if (type === 'candle') {
+        candleSeries = currentChart.addCandlestickSeries({
+            upColor: '#ffffff',
+            downColor: '#a855f7',
+            borderUpColor: '#ffffff',
+            borderDownColor: '#a855f7',
+            wickUpColor: '#ffffff',
+            wickDownColor: '#a855f7',
+        });
+    } else if (type === 'bar') {
+        candleSeries = currentChart.addBarSeries({
+            upColor: '#ffffff',
+            downColor: '#a855f7',
+        });
+    }
+    
+    loadChartData(currentSymbol, currentType, currentTimeframe);
+}
+
+function resizeChart() {
+    if (currentChart) {
+        const container = document.getElementById('tradingviewContainer');
+        currentChart.applyOptions({ width: container.clientWidth });
     }
 }
 
@@ -495,10 +607,20 @@ function formatAnalysis(text) {
 function closeAssetDetail() {
     document.getElementById('chartModal').classList.remove('active');
     document.getElementById('tradingviewContainer').innerHTML = '';
+    
+    if (currentChart) {
+        currentChart.remove();
+        currentChart = null;
+        candleSeries = null;
+        volumeSeries = null;
+    }
+    
     if (indicatorInterval) {
         clearInterval(indicatorInterval);
         indicatorInterval = null;
     }
+    
+    window.removeEventListener('resize', resizeChart);
 }
 
 document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
