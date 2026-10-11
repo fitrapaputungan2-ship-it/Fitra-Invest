@@ -4,131 +4,197 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0a0a0f">
-    <title>Global Indices — Fitra Invest</title>
+    <title>Fitra Invest</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="indeks.css">
 </head>
 <body>
     <div class="app">
-        <!-- HEADER -->
         <header class="header">
             <div class="header-left">
-                <a href="index.html" class="back-btn" aria-label="Kembali">←</a>
+                <div class="logo-mark">FI</div>
                 <div>
-                    <h1>Global Indices</h1>
-                    <p class="subtitle">Kinerja pasar saham dunia</p>
+                    <h1>Fitra Invest</h1>
+                    <p class="subtitle">Global Value Investing AI</p>
                 </div>
             </div>
-            <button class="menu-btn" id="refreshBtn" aria-label="Refresh">⟳</button>
+            <button class="menu-btn" id="menuBtn">⋮</button>
         </header>
 
-        <!-- INFO BANNER -->
-        <div class="indeks-banner">
-            <div class="indeks-banner-icon">🌍</div>
-            <div class="indeks-banner-text">
-                <strong>Pantau Pasar Global</strong>
-                <span>Lihat kinerja indeks saham utama dari berbagai negara secara real-time</span>
-            </div>
-        </div>
+        <nav class="tabs">
+            <button class="tab active" data-tab="dashboard">Dashboard</button>
+            <button class="tab" data-tab="screener">Screener</button>
+            <button class="tab" data-tab="portfolio">Portfolio</button>
+            <button class="tab" data-tab="news">News</button>
+            <a href="indeks.html" class="tab tab-link">🌍 Indeks</a>
+        </nav>
 
-        <!-- SEARCH BAR -->
-        <div class="indeks-search-bar">
-            <input type="text" id="indeksSearch" placeholder="🔍 Cari indeks... (contoh: S&P 500, Nikkei, DAX)" autocomplete="off">
-        </div>
-
-        <!-- REGION FILTER -->
-        <div class="indeks-filters" id="indeksFilters">
-            <button class="indeks-filter-btn active" data-region="all">🌍 Semua</button>
-            <button class="indeks-filter-btn" data-region="americas">🌎 Americas</button>
-            <button class="indeks-filter-btn" data-region="europe">🇪🇺 Europe</button>
-            <button class="indeks-filter-btn" data-region="asia">🌏 Asia</button>
-            <button class="indeks-filter-btn" data-region="oceania">🌊 Oceania</button>
-        </div>
-
-        <!-- INDICES LIST -->
         <main class="content" id="content">
-            <div class="indeks-list" id="indeksList">
-                <div class="indeks-loading">
-                    <div class="loading-spinner"></div>
-                    <p class="loading-text">Memuat indeks global...</p>
+            <section class="tab-content active" id="tab-dashboard">
+                <div class="section-header">
+                    <h2>Watchlist</h2>
+                    <div class="header-actions">
+                        <button class="browse-btn" id="browseStockBtn">🔍 Browse</button>
+                        <button class="add-btn" id="addAssetBtn">＋</button>
+                    </div>
                 </div>
-            </div>
+                <div class="watchlist" id="watchlist">
+                    <div class="empty-state">Memuat data...</div>
+                </div>
+            </section>
 
-            <!-- LAST UPDATED INFO -->
-            <div class="indeks-footer">
-                <span class="indeks-update-info" id="lastUpdated">Terakhir diupdate: --</span>
-            </div>
+            <section class="tab-content" id="tab-screener">
+                <h2>Screener</h2>
+                <p class="description">Filter saham global berdasarkan kriteria value investing.</p>
+                <div class="screener-filters">
+                    <div class="filter-group"><label>P/E Ratio max</label><input type="number" id="peMax" value="25" step="0.1"></div>
+                    <div class="filter-group"><label>P/B Ratio max</label><input type="number" id="pbMax" value="5" step="0.1"></div>
+                    <div class="filter-group"><label>ROE min (%)</label><input type="number" id="roeMin" value="10" step="1"></div>
+                    <div class="filter-group"><label>DER max</label><input type="number" id="derMax" value="3" step="0.1"></div>
+                    <div class="filter-group"><label>Dividend Yield min (%)</label><input type="number" id="divMin" value="1" step="0.1"></div>
+                </div>
+                <button class="primary-btn" id="runScreener">Jalankan Screener</button>
+                <div class="screener-results" id="screenerResults"></div>
+            </section>
+
+            <section class="tab-content" id="tab-portfolio">
+                <h2>Portfolio</h2>
+                <p class="description">Track portofolio investasi global lu.</p>
+                <div class="portfolio-summary">
+                    <div class="summary-card"><span class="label">Total Value</span><span class="value" id="totalValue">$ 0</span></div>
+                    <div class="summary-card"><span class="label">Unrealized P/L</span><span class="value" id="unrealizedPL">$ 0</span></div>
+                    <div class="summary-card"><span class="label">Total Cost</span><span class="value" id="totalCost">$ 0</span></div>
+                    <div class="summary-card"><span class="label">Holdings</span><span class="value" id="totalHoldings">0</span></div>
+                </div>
+                <button class="primary-btn" id="addHolding">＋ Tambah Holding</button>
+                <div class="holdings" id="holdings"></div>
+            </section>
+
+            <section class="tab-content" id="tab-news">
+                <h2>News & Sentiment</h2>
+                <p class="description">Berita terkait aset global lu, dengan analisis sentimen AI.</p>
+                <div class="news-list" id="newsList"><div class="empty-state">Belum ada berita</div></div>
+            </section>
         </main>
     </div>
 
-    <!-- FULLSCREEN DETAIL MODAL (untuk detail tiap indeks) -->
-    <div class="indeks-detail-modal" id="indeksDetailModal">
-        <div class="indeks-detail-content">
-            <div class="indeks-detail-header">
-                <div class="indeks-detail-title-wrap">
-                    <span class="indeks-detail-flag" id="detailFlag">🌍</span>
-                    <div>
-                        <h3 id="detailTitle">Indeks</h3>
-                        <p class="indeks-detail-subtitle" id="detailSubtitle">Region</p>
+    <div class="chart-modal" id="chartModal">
+        <div class="chart-content">
+            <div class="chart-header">
+                <div>
+                    <h3 id="chartTitle">Chart</h3>
+                    <p class="chart-subtitle" id="chartPrice">-</p>
+                </div>
+                <button class="analysis-close" id="closeChartModal">×</button>
+            </div>
+
+            <div class="indicators-panel">
+                <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
+                <div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div>
+                <div class="indicator-item"><span class="ind-label">EMA20</span><span class="ind-value" id="ema20Value">-</span></div>
+                <div class="indicator-item"><span class="ind-label">RSI</span><span class="ind-value" id="rsiValue">-</span></div>
+            </div>
+
+            <div class="bidask-panel">
+                <div class="bidask-item bid"><span class="bidask-label">BID</span><span class="bidask-value" id="bidValue">-</span></div>
+                <div class="bidask-item ask"><span class="bidask-label">ASK</span><span class="bidask-value" id="askValue">-</span></div>
+            </div>
+
+            <div class="sentiment-panel">
+                <div class="sentiment-header">
+                    <span class="sentiment-title">MARKET SENTIMENT</span>
+                    <div class="sentiment-stats">
+                        <span class="buy-stat">BUYERS: <span id="buyerPct">-</span>%</span>
+                        <span class="sell-stat">SELLERS: <span id="sellerPct">-</span>%</span>
                     </div>
                 </div>
-                <button class="analysis-close" id="closeDetailModal">×</button>
-            </div>
-
-            <!-- Detail price -->
-            <div class="indeks-detail-price-box">
-                <div class="indeks-detail-price" id="detailPrice">-</div>
-                <div class="indeks-detail-change" id="detailChange">-</div>
-            </div>
-
-            <!-- Detail stats grid -->
-            <div class="indeks-detail-stats">
-                <div class="indeks-stat-item">
-                    <span class="indeks-stat-label">DAY HIGH</span>
-                    <span class="indeks-stat-value up" id="detailHigh">-</span>
-                </div>
-                <div class="indeks-stat-item">
-                    <span class="indeks-stat-label">DAY LOW</span>
-                    <span class="indeks-stat-value down" id="detailLow">-</span>
-                </div>
-                <div class="indeks-stat-item">
-                    <span class="indeks-stat-label">PREV CLOSE</span>
-                    <span class="indeks-stat-value" id="detailPrevClose">-</span>
-                </div>
-                <div class="indeks-stat-item">
-                    <span class="indeks-stat-label">VOLUME</span>
-                    <span class="indeks-stat-value" id="detailVolume">-</span>
+                <div class="sentiment-bar">
+                    <div class="sentiment-fill buy" id="buyerBar" style="width: 50%"></div>
+                    <div class="sentiment-fill sell" id="sellerBar" style="width: 50%"></div>
                 </div>
             </div>
 
-            <!-- Sector breakdown -->
-            <div class="indeks-detail-sectors-section">
-                <h4 class="indeks-section-title">🏭 Sektor Breakdown</h4>
-                <div class="indeks-sectors-list" id="detailSectors">
-                    <!-- Will be filled by JS -->
+            <div class="chart-toolbar">
+                <div class="tf-group">
+                    <button class="tf-btn" data-tf="5M">5M</button>
+                    <button class="tf-btn" data-tf="30M">30M</button>
+                    <button class="tf-btn" data-tf="1H">1H</button>
+                    <button class="tf-btn" data-tf="D">D</button>
+                    <button class="tf-btn" data-tf="W">W</button>
+                    <button class="tf-btn" data-tf="M">M</button>
+                    <button class="tf-btn active" data-tf="Y">Y</button>
                 </div>
             </div>
 
-            <!-- Chart container -->
-            <div class="indeks-detail-chart-section">
-                <h4 class="indeks-section-title">📈 Chart 1 Tahun</h4>
-                <div id="indeksChartContainer" class="indeks-chart-container"></div>
-            </div>
+            <div id="tradingviewContainer" class="tradingview-container"></div>
 
-            <!-- Top constituents -->
-            <div class="indeks-detail-constituents-section">
-                <h4 class="indeks-section-title">🏆 Top Holdings</h4>
-                <div class="indeks-constituents-list" id="detailConstituents">
-                    <!-- Will be filled by JS -->
+            <div class="analysis-section">
+                <h3 class="analysis-title">🧠 Analisis AI Value Investing</h3>
+                <div id="analysisBody" class="analysis-body-inline">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay browse-modal" id="browseModal">
+        <div class="modal-content browse-content">
+            <div class="modal-header">
+                <h3>📚 Browse Stocks</h3>
+                <button class="modal-close" id="closeBrowseModal">×</button>
+            </div>
+            <div class="browse-search-bar">
+                <input type="text" id="browseSearch" placeholder="🔍 Cari saham... (contoh: AAPL, Tesla, Bank)" autocomplete="off">
+            </div>
+            <div class="browse-categories" id="browseCategories">
+                <button class="cat-btn active" data-cat="all">Semua</button>
+                <button class="cat-btn" data-cat="us-tech">US Tech</button>
+                <button class="cat-btn" data-cat="us-finance">Finance</button>
+                <button class="cat-btn" data-cat="us-healthcare">Healthcare</button>
+                <button class="cat-btn" data-cat="us-consumer">Consumer</button>
+                <button class="cat-btn" data-cat="us-industrial">Industrial</button>
+                <button class="cat-btn" data-cat="us-energy">Energy</button>
+                <button class="cat-btn" data-cat="international">International</button>
+                <button class="cat-btn" data-cat="crypto">Crypto</button>
+                <button class="cat-btn" data-cat="commodity">Commodity</button>
+                <button class="cat-btn" data-cat="index">Index</button>
+            </div>
+            <div class="browse-body" id="browseBody">
+                <div class="empty-state">Memuat katalog saham...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="assetModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Tambah ke Watchlist</h3><button class="modal-close" id="closeAssetModal">×</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>Symbol (contoh: AAPL, BTC, GC=F)</label><input type="text" id="assetSymbol" placeholder="AAPL" autocomplete="off"></div>
+                <div class="form-group"><label>Nama Aset</label><input type="text" id="assetName" placeholder="Apple Inc." autocomplete="off"></div>
+                <div class="form-group"><label>Tipe</label><select id="assetType"><option value="stock">Stock</option><option value="crypto">Crypto</option><option value="commodity">Commodity</option></select></div>
+            </div>
+            <div class="modal-footer"><button class="btn-cancel" id="cancelAsset">Batal</button><button class="btn-save" id="saveAsset">Tambah</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="holdingModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Tambah Holding</h3><button class="modal-close" id="closeHoldingModal">×</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>Symbol (contoh: AAPL, BTC, GC=F)</label><input type="text" id="holdingSymbol" placeholder="AAPL" autocomplete="off"></div>
+                <div class="form-group"><label>Nama Aset</label><input type="text" id="holdingName" placeholder="Apple Inc." autocomplete="off"></div>
+                <div class="form-group"><label>Tipe</label><select id="holdingType"><option value="stock">Stock</option><option value="crypto">Crypto</option><option value="commodity">Commodity</option></select></div>
+                <div class="form-group"><label>Jumlah Saham</label><input type="number" id="holdingShares" placeholder="10" step="any"></div>
+                <div class="form-group"><label>Harga Beli Rata-rata (USD)</label><input type="number" id="holdingAvgPrice" placeholder="150" step="any"></div>
+            </div>
+            <div class="modal-footer"><button class="btn-cancel" id="cancelHolding">Batal</button><button class="btn-save" id="saveHolding">Simpan</button></div>
         </div>
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="indeks.js"></script>
+    <script src="app.js?v=6000"></script>
 </body>
 </html>
