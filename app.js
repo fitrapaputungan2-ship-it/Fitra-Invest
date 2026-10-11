@@ -7,6 +7,153 @@ let currentChart = null;
 let candleSeries = null;
 let volumeSeries = null;
 let currentTimeframe = 'Y';
+let currentBrowseCategory = 'all';
+
+// ============ STOCK UNIVERSE (100+ SAHAM) ============
+const STOCK_UNIVERSE = [
+    // ============ US TECH ============
+    { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'AMZN', name: 'Amazon.com Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'META', name: 'Meta Platforms Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'AMD', name: 'Advanced Micro Devices', type: 'stock', category: 'us-tech' },
+    { symbol: 'INTC', name: 'Intel Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'ORCL', name: 'Oracle Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'CRM', name: 'Salesforce Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'ADBE', name: 'Adobe Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'NFLX', name: 'Netflix Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'AVGO', name: 'Broadcom Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'QCOM', name: 'Qualcomm Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'TXN', name: 'Texas Instruments', type: 'stock', category: 'us-tech' },
+    { symbol: 'CSCO', name: 'Cisco Systems', type: 'stock', category: 'us-tech' },
+    { symbol: 'IBM', name: 'IBM Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'NOW', name: 'ServiceNow Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'UBER', name: 'Uber Technologies', type: 'stock', category: 'us-tech' },
+    { symbol: 'SHOP', name: 'Shopify Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'SNOW', name: 'Snowflake Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'PLTR', name: 'Palantir Technologies', type: 'stock', category: 'us-tech' },
+    { symbol: 'SQ', name: 'Block Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'PYPL', name: 'PayPal Holdings', type: 'stock', category: 'us-tech' },
+
+    // ============ US FINANCE ============
+    { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'stock', category: 'us-finance' },
+    { symbol: 'BAC', name: 'Bank of America', type: 'stock', category: 'us-finance' },
+    { symbol: 'WFC', name: 'Wells Fargo & Co.', type: 'stock', category: 'us-finance' },
+    { symbol: 'GS', name: 'Goldman Sachs', type: 'stock', category: 'us-finance' },
+    { symbol: 'MS', name: 'Morgan Stanley', type: 'stock', category: 'us-finance' },
+    { symbol: 'V', name: 'Visa Inc.', type: 'stock', category: 'us-finance' },
+    { symbol: 'MA', name: 'Mastercard Inc.', type: 'stock', category: 'us-finance' },
+    { symbol: 'AXP', name: 'American Express', type: 'stock', category: 'us-finance' },
+    { symbol: 'BLK', name: 'BlackRock Inc.', type: 'stock', category: 'us-finance' },
+    { symbol: 'C', name: 'Citigroup Inc.', type: 'stock', category: 'us-finance' },
+    { symbol: 'SCHW', name: 'Charles Schwab', type: 'stock', category: 'us-finance' },
+    { symbol: 'BRK-B', name: 'Berkshire Hathaway B', type: 'stock', category: 'us-finance' },
+
+    // ============ US HEALTHCARE ============
+    { symbol: 'JNJ', name: 'Johnson & Johnson', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'PFE', name: 'Pfizer Inc.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'UNH', name: 'UnitedHealth Group', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'ABBV', name: 'AbbVie Inc.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'LLY', name: 'Eli Lilly and Co.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'MRK', name: 'Merck & Co.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'TMO', name: 'Thermo Fisher Scientific', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'ABT', name: 'Abbott Laboratories', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'DHR', name: 'Danaher Corp.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'BMY', name: 'Bristol-Myers Squibb', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'AMGN', name: 'Amgen Inc.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'GILD', name: 'Gilead Sciences', type: 'stock', category: 'us-healthcare' },
+
+    // ============ US CONSUMER ============
+    { symbol: 'WMT', name: 'Walmart Inc.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'COST', name: 'Costco Wholesale', type: 'stock', category: 'us-consumer' },
+    { symbol: 'HD', name: 'Home Depot Inc.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'MCD', name: 'McDonald\'s Corp.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'NKE', name: 'Nike Inc.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'SBUX', name: 'Starbucks Corp.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'KO', name: 'Coca-Cola Co.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'PEP', name: 'PepsiCo Inc.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'PG', name: 'Procter & Gamble', type: 'stock', category: 'us-consumer' },
+    { symbol: 'DIS', name: 'Walt Disney Co.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'TGT', name: 'Target Corp.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'LOW', name: 'Lowe\'s Companies', type: 'stock', category: 'us-consumer' },
+    { symbol: 'BKNG', name: 'Booking Holdings', type: 'stock', category: 'us-consumer' },
+    { symbol: 'LULU', name: 'Lululemon Athletica', type: 'stock', category: 'us-consumer' },
+
+    // ============ US INDUSTRIAL ============
+    { symbol: 'BA', name: 'Boeing Co.', type: 'stock', category: 'us-industrial' },
+    { symbol: 'CAT', name: 'Caterpillar Inc.', type: 'stock', category: 'us-industrial' },
+    { symbol: 'GE', name: 'General Electric', type: 'stock', category: 'us-industrial' },
+    { symbol: 'MMM', name: '3M Company', type: 'stock', category: 'us-industrial' },
+    { symbol: 'HON', name: 'Honeywell International', type: 'stock', category: 'us-industrial' },
+    { symbol: 'UPS', name: 'United Parcel Service', type: 'stock', category: 'us-industrial' },
+    { symbol: 'LMT', name: 'Lockheed Martin', type: 'stock', category: 'us-industrial' },
+    { symbol: 'RTX', name: 'Raytheon Technologies', type: 'stock', category: 'us-industrial' },
+    { symbol: 'DE', name: 'Deere & Company', type: 'stock', category: 'us-industrial' },
+    { symbol: 'F', name: 'Ford Motor Co.', type: 'stock', category: 'us-industrial' },
+    { symbol: 'GM', name: 'General Motors', type: 'stock', category: 'us-industrial' },
+
+    // ============ US ENERGY ============
+    { symbol: 'XOM', name: 'Exxon Mobil Corp.', type: 'stock', category: 'us-energy' },
+    { symbol: 'CVX', name: 'Chevron Corp.', type: 'stock', category: 'us-energy' },
+    { symbol: 'COP', name: 'ConocoPhillips', type: 'stock', category: 'us-energy' },
+    { symbol: 'SLB', name: 'Schlumberger Ltd.', type: 'stock', category: 'us-energy' },
+    { symbol: 'NEE', name: 'NextEra Energy', type: 'stock', category: 'us-energy' },
+    { symbol: 'OXY', name: 'Occidental Petroleum', type: 'stock', category: 'us-energy' },
+
+    // ============ INTERNATIONAL ============
+    { symbol: 'TSM', name: 'Taiwan Semiconductor', type: 'stock', category: 'international' },
+    { symbol: 'ASML', name: 'ASML Holding N.V.', type: 'stock', category: 'international' },
+    { symbol: 'BABA', name: 'Alibaba Group', type: 'stock', category: 'international' },
+    { symbol: 'TM', name: 'Toyota Motor Corp.', type: 'stock', category: 'international' },
+    { symbol: 'SONY', name: 'Sony Group Corp.', type: 'stock', category: 'international' },
+    { symbol: 'SAP', name: 'SAP SE', type: 'stock', category: 'international' },
+    { symbol: 'NESN.SW', name: 'Nestlé S.A.', type: 'stock', category: 'international' },
+    { symbol: 'LVMH.PA', name: 'LVMH Moët Hennessy', type: 'stock', category: 'international' },
+    { symbol: 'SHEL', name: 'Shell plc', type: 'stock', category: 'international' },
+    { symbol: 'AZN', name: 'AstraZeneca PLC', type: 'stock', category: 'international' },
+    { symbol: 'NVO', name: 'Novo Nordisk A/S', type: 'stock', category: 'international' },
+    { symbol: 'HSBC', name: 'HSBC Holdings', type: 'stock', category: 'international' },
+    { symbol: 'TCEHY', name: 'Tencent Holdings', type: 'stock', category: 'international' },
+
+    // ============ CRYPTO ============
+    { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', category: 'crypto' },
+    { symbol: 'ETH', name: 'Ethereum', type: 'crypto', category: 'crypto' },
+    { symbol: 'SOL', name: 'Solana', type: 'crypto', category: 'crypto' },
+    { symbol: 'BNB', name: 'Binance Coin', type: 'crypto', category: 'crypto' },
+    { symbol: 'XRP', name: 'Ripple', type: 'crypto', category: 'crypto' },
+    { symbol: 'ADA', name: 'Cardano', type: 'crypto', category: 'crypto' },
+    { symbol: 'DOGE', name: 'Dogecoin', type: 'crypto', category: 'crypto' },
+    { symbol: 'AVAX', name: 'Avalanche', type: 'crypto', category: 'crypto' },
+    { symbol: 'DOT', name: 'Polkadot', type: 'crypto', category: 'crypto' },
+    { symbol: 'MATIC', name: 'Polygon', type: 'crypto', category: 'crypto' },
+    { symbol: 'LINK', name: 'Chainlink', type: 'crypto', category: 'crypto' },
+    { symbol: 'LTC', name: 'Litecoin', type: 'crypto', category: 'crypto' },
+    { symbol: 'ATOM', name: 'Cosmos', type: 'crypto', category: 'crypto' },
+    { symbol: 'TRX', name: 'TRON', type: 'crypto', category: 'crypto' },
+
+    // ============ COMMODITY ============
+    { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'SI=F', name: 'Silver Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'CL=F', name: 'Crude Oil WTI', type: 'commodity', category: 'commodity' },
+    { symbol: 'NG=F', name: 'Natural Gas', type: 'commodity', category: 'commodity' },
+    { symbol: 'HG=F', name: 'Copper Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'PL=F', name: 'Platinum Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'ZC=F', name: 'Corn Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'ZW=F', name: 'Wheat Futures', type: 'commodity', category: 'commodity' },
+
+    // ============ INDEX ============
+    { symbol: '^GSPC', name: 'S&P 500', type: 'stock', category: 'index' },
+    { symbol: '^DJI', name: 'Dow Jones Industrial', type: 'stock', category: 'index' },
+    { symbol: '^IXIC', name: 'NASDAQ Composite', type: 'stock', category: 'index' },
+    { symbol: '^RUT', name: 'Russell 2000', type: 'stock', category: 'index' },
+    { symbol: '^N225', name: 'Nikkei 225', type: 'stock', category: 'index' },
+    { symbol: '^HSI', name: 'Hang Seng Index', type: 'stock', category: 'index' },
+    { symbol: '^FTSE', name: 'FTSE 100', type: 'stock', category: 'index' },
+    { symbol: '^GDAXI', name: 'DAX Index', type: 'stock', category: 'index' },
+];
 
 // ============ TAB NAV ============
 document.querySelectorAll('.tab').forEach(tab => {
@@ -36,6 +183,78 @@ function saveWatchlist() { localStorage.setItem('fitraWatchlist', JSON.stringify
 // ============ DATA PORTFOLIO ============
 let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
 function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
+
+// ============ BROWSE STOCK ============
+function openBrowseModal() {
+    document.getElementById('browseModal').classList.add('active');
+    renderBrowseStocks();
+}
+function closeBrowseModal() {
+    document.getElementById('browseModal').classList.remove('active');
+}
+function renderBrowseStocks() {
+    const body = document.getElementById('browseBody');
+    const search = (document.getElementById('browseSearch').value || '').toLowerCase().trim();
+    const cat = currentBrowseCategory;
+    
+    let filtered = STOCK_UNIVERSE;
+    if (cat !== 'all') {
+        filtered = filtered.filter(s => s.category === cat);
+    }
+    if (search) {
+        filtered = filtered.filter(s => 
+            s.symbol.toLowerCase().includes(search) || 
+            s.name.toLowerCase().includes(search)
+        );
+    }
+    
+    if (filtered.length === 0) {
+        body.innerHTML = '<div class="empty-state">Gak ada saham yang match. Coba kata kunci lain.</div>';
+        return;
+    }
+    
+    body.innerHTML = filtered.map(stock => {
+        const inWatchlist = watchlist.some(w => w.symbol === stock.symbol);
+        return `
+            <div class="browse-item ${inWatchlist ? 'in-watchlist' : ''}" onclick="toggleFromBrowse('${stock.symbol}', '${stock.name.replace(/'/g, "\\'")}', '${stock.type}')">
+                <div class="browse-item-info">
+                    <span class="browse-symbol">${stock.symbol}</span>
+                    <span class="browse-name">${stock.name}</span>
+                </div>
+                <div class="browse-item-action">
+                    ${inWatchlist 
+                        ? '<span class="browse-badge added">✓ Added</span>' 
+                        : '<span class="browse-badge add">+ Add</span>'}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+function toggleFromBrowse(symbol, name, type) {
+    const idx = watchlist.findIndex(w => w.symbol === symbol);
+    if (idx >= 0) {
+        // Sudah ada → hapus
+        watchlist.splice(idx, 1);
+    } else {
+        // Belum ada → tambah
+        watchlist.push({ symbol, name, type });
+    }
+    saveWatchlist();
+    renderBrowseStocks();
+    renderWatchlist();
+}
+
+document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
+document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
+document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
+document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentBrowseCategory = btn.dataset.cat;
+        renderBrowseStocks();
+    });
+});
 
 // ============ FETCH PRICE ============
 async function fetchPrice(symbol, type) {
@@ -145,7 +364,7 @@ async function renderWatchlist() {
     const container = document.getElementById('watchlist');
     container.innerHTML = '<div class="empty-state">Memuat data...</div>';
     if (watchlist.length === 0) {
-        container.innerHTML = '<div class="empty-state">Watchlist kosong. Klik ＋ buat nambah aset.</div>';
+        container.innerHTML = '<div class="empty-state">Watchlist kosong. Klik 🔍 Browse atau ＋ buat nambah aset.</div>';
         return;
     }
     const results = await Promise.all(watchlist.map(async (asset) => {
@@ -371,22 +590,12 @@ function loadChart(symbol, type) {
 
 async function loadChartData(symbol, type, timeframe) {
     const intervalMap = { 
-        '5M':  '5m',
-        '30M': '30m',
-        '1H':  '1h',
-        'D':   '1d',
-        'W':   '1wk',
-        'M':   '1mo',
-        'Y':   '1mo'
+        '5M':  '5m', '30M': '30m', '1H':  '1h',
+        'D':   '1d', 'W':   '1wk', 'M':   '1mo', 'Y':   '1mo'
     };
     const rangeMap = { 
-        '5M':  '5d',
-        '30M': '1mo',
-        '1H':  '3mo',
-        'D':   '1y',
-        'W':   '5y',
-        'M':   '20y',
-        'Y':   'max'
+        '5M':  '5d', '30M': '1mo', '1H':  '3mo',
+        'D':   '1y', 'W':   '5y', 'M':   '20y', 'Y':   'max'
     };
     const interval = intervalMap[timeframe] || '1mo';
     const range = rangeMap[timeframe] || 'max';
@@ -425,48 +634,25 @@ async function loadChartData(symbol, type, timeframe) {
 
 function aggregateToYearly(monthlyCandles) {
     const yearlyMap = {};
-    
     monthlyCandles.forEach(c => {
         const date = new Date(c.time * 1000);
         const year = date.getFullYear();
-        
         if (!yearlyMap[year]) {
             yearlyMap[year] = {
-                year: year,
-                open: c.open,
-                high: c.high,
-                low: c.low,
-                close: c.close,
-                volume: c.volume || 0,
-                firstTime: c.time,
-                lastTime: c.time
+                year, open: c.open, high: c.high, low: c.low, close: c.close,
+                volume: c.volume || 0, firstTime: c.time, lastTime: c.time
             };
         } else {
             const y = yearlyMap[year];
-            if (c.time < y.firstTime) {
-                y.open = c.open;
-                y.firstTime = c.time;
-            }
-            if (c.time > y.lastTime) {
-                y.close = c.close;
-                y.lastTime = c.time;
-            }
+            if (c.time < y.firstTime) { y.open = c.open; y.firstTime = c.time; }
+            if (c.time > y.lastTime) { y.close = c.close; y.lastTime = c.time; }
             if (c.high > y.high) y.high = c.high;
             if (c.low < y.low) y.low = c.low;
             y.volume += c.volume || 0;
         }
     });
-    
-    return Object.values(yearlyMap)
-        .sort((a, b) => a.year - b.year)
-        .map(y => ({
-            time: y.firstTime,
-            open: y.open,
-            high: y.high,
-            low: y.low,
-            close: y.close,
-            volume: y.volume
-        }));
+    return Object.values(yearlyMap).sort((a, b) => a.year - b.year)
+        .map(y => ({ time: y.firstTime, open: y.open, high: y.high, low: y.low, close: y.close, volume: y.volume }));
 }
 
 function setupTimeframeButtons() {
