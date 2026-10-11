@@ -21,8 +21,10 @@ jobs:
         cd fitra-invest-app
         cordova platform add android
         cp ../index.html www/index.html
+        cp ../indeks.html www/indeks.html
         cp ../style.css www/style.css
         cp ../app.js www/app.js
+        cp ../indeks.js www/indeks.js
         cp ../lightweight-charts.js www/lightweight-charts.js
     - name: Build APK
       run: |
