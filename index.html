@@ -34,7 +34,10 @@
             <section class="tab-content active" id="tab-dashboard">
                 <div class="section-header">
                     <h2>Watchlist</h2>
-                    <button class="add-btn" id="addAssetBtn">＋</button>
+                    <div class="header-actions">
+                        <button class="browse-btn" id="browseStockBtn">🔍 Browse</button>
+                        <button class="add-btn" id="addAssetBtn">＋</button>
+                    </div>
                 </div>
                 <div class="watchlist" id="watchlist">
                     <div class="empty-state">Memuat data...</div>
@@ -136,6 +139,35 @@
         </div>
     </div>
 
+    <!-- BROWSE STOCK MODAL -->
+    <div class="modal-overlay browse-modal" id="browseModal">
+        <div class="modal-content browse-content">
+            <div class="modal-header">
+                <h3>📚 Browse Stocks</h3>
+                <button class="modal-close" id="closeBrowseModal">×</button>
+            </div>
+            <div class="browse-search-bar">
+                <input type="text" id="browseSearch" placeholder="🔍 Cari saham... (contoh: AAPL, Tesla, Bank)" autocomplete="off">
+            </div>
+            <div class="browse-categories" id="browseCategories">
+                <button class="cat-btn active" data-cat="all">Semua</button>
+                <button class="cat-btn" data-cat="us-tech">US Tech</button>
+                <button class="cat-btn" data-cat="us-finance">Finance</button>
+                <button class="cat-btn" data-cat="us-healthcare">Healthcare</button>
+                <button class="cat-btn" data-cat="us-consumer">Consumer</button>
+                <button class="cat-btn" data-cat="us-industrial">Industrial</button>
+                <button class="cat-btn" data-cat="us-energy">Energy</button>
+                <button class="cat-btn" data-cat="international">International</button>
+                <button class="cat-btn" data-cat="crypto">Crypto</button>
+                <button class="cat-btn" data-cat="commodity">Commodity</button>
+                <button class="cat-btn" data-cat="index">Index</button>
+            </div>
+            <div class="browse-body" id="browseBody">
+                <div class="empty-state">Memuat katalog saham...</div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="assetModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Tambah ke Watchlist</h3><button class="modal-close" id="closeAssetModal">×</button></div>
@@ -163,6 +195,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=3000"></script>
+    <script src="app.js?v=5000"></script>
 </body>
-</html>
+                    </html>
