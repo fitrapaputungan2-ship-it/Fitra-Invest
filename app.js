@@ -2,262 +2,370 @@
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
-let indicatorInterval = null;
-let currentChart = null;
-let candleSeries = null;
-let volumeSeries = null;
-let currentTimeframe = 'Y';
-let currentBrowseCategory = 'all';
+let currentFilter = 'all';
+let currentSearch = '';
+let currentDetailChart = null;
+let currentDetailSymbol = null;
 
-// ============ STOCK UNIVERSE (100+ SAHAM) ============
-const STOCK_UNIVERSE = [
-    // ============ US TECH ============
-    { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', category: 'us-tech' },
-    { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'AMZN', name: 'Amazon.com Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'META', name: 'Meta Platforms Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock', category: 'us-tech' },
-    { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'AMD', name: 'Advanced Micro Devices', type: 'stock', category: 'us-tech' },
-    { symbol: 'INTC', name: 'Intel Corp.', type: 'stock', category: 'us-tech' },
-    { symbol: 'ORCL', name: 'Oracle Corp.', type: 'stock', category: 'us-tech' },
-    { symbol: 'CRM', name: 'Salesforce Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'ADBE', name: 'Adobe Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'NFLX', name: 'Netflix Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'AVGO', name: 'Broadcom Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'QCOM', name: 'Qualcomm Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'TXN', name: 'Texas Instruments', type: 'stock', category: 'us-tech' },
-    { symbol: 'CSCO', name: 'Cisco Systems', type: 'stock', category: 'us-tech' },
-    { symbol: 'IBM', name: 'IBM Corp.', type: 'stock', category: 'us-tech' },
-    { symbol: 'NOW', name: 'ServiceNow Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'UBER', name: 'Uber Technologies', type: 'stock', category: 'us-tech' },
-    { symbol: 'SHOP', name: 'Shopify Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'SNOW', name: 'Snowflake Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'PLTR', name: 'Palantir Technologies', type: 'stock', category: 'us-tech' },
-    { symbol: 'SQ', name: 'Block Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'PYPL', name: 'PayPal Holdings', type: 'stock', category: 'us-tech' },
+// ============ DATABASE INDEKS GLOBAL ============
+const GLOBAL_INDICES = [
+    // ============ AMERICAS ============
+    {
+        symbol: '^GSPC',
+        name: 'S&P 500',
+        country: 'United States',
+        region: 'americas',
+        flag: '🇺🇸',
+        sectors: [
+            { name: 'Technology', pct: 29.5, color: '#22d3ee' },
+            { name: 'Financials', pct: 13.2, color: '#fbbf24' },
+            { name: 'Healthcare', pct: 12.8, color: '#10b981' },
+            { name: 'Consumer Discretionary', pct: 10.5, color: '#a855f7' },
+            { name: 'Communication', pct: 9.4, color: '#ec4899' },
+            { name: 'Industrials', pct: 7.8, color: '#f97316' },
+            { name: 'Others', pct: 16.8, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'AAPL', name: 'Apple Inc.' },
+            { symbol: 'MSFT', name: 'Microsoft Corp.' },
+            { symbol: 'NVDA', name: 'NVIDIA Corp.' },
+            { symbol: 'AMZN', name: 'Amazon.com Inc.' },
+            { symbol: 'META', name: 'Meta Platforms Inc.' }
+        ]
+    },
+    {
+        symbol: '^DJI',
+        name: 'Dow Jones',
+        country: 'United States',
+        region: 'americas',
+        flag: '🇺🇸',
+        sectors: [
+            { name: 'Technology', pct: 22.1, color: '#22d3ee' },
+            { name: 'Financials', pct: 17.4, color: '#fbbf24' },
+            { name: 'Healthcare', pct: 15.2, color: '#10b981' },
+            { name: 'Industrials', pct: 14.8, color: '#f97316' },
+            { name: 'Consumer Discretionary', pct: 12.3, color: '#a855f7' },
+            { name: 'Others', pct: 18.2, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'UNH', name: 'UnitedHealth' },
+            { symbol: 'GS', name: 'Goldman Sachs' },
+            { symbol: 'MSFT', name: 'Microsoft' },
+            { symbol: 'HD', name: 'Home Depot' },
+            { symbol: 'MCD', name: 'McDonald\'s' }
+        ]
+    },
+    {
+        symbol: '^IXIC',
+        name: 'NASDAQ Composite',
+        country: 'United States',
+        region: 'americas',
+        flag: '🇺🇸',
+        sectors: [
+            { name: 'Technology', pct: 51.2, color: '#22d3ee' },
+            { name: 'Communication', pct: 15.6, color: '#ec4899' },
+            { name: 'Consumer Discretionary', pct: 12.4, color: '#a855f7' },
+            { name: 'Healthcare', pct: 7.8, color: '#10b981' },
+            { name: 'Financials', pct: 6.2, color: '#fbbf24' },
+            { name: 'Others', pct: 6.8, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'AAPL', name: 'Apple' },
+            { symbol: 'MSFT', name: 'Microsoft' },
+            { symbol: 'NVDA', name: 'NVIDIA' },
+            { symbol: 'AMZN', name: 'Amazon' },
+            { symbol: 'AVGO', name: 'Broadcom' }
+        ]
+    },
+    {
+        symbol: '^RUT',
+        name: 'Russell 2000',
+        country: 'United States',
+        region: 'americas',
+        flag: '🇺🇸',
+        sectors: [
+            { name: 'Financials', pct: 18.4, color: '#fbbf24' },
+            { name: 'Healthcare', pct: 17.2, color: '#10b981' },
+            { name: 'Industrials', pct: 15.8, color: '#f97316' },
+            { name: 'Technology', pct: 14.6, color: '#22d3ee' },
+            { name: 'Consumer Discretionary', pct: 12.1, color: '#a855f7' },
+            { name: 'Others', pct: 21.9, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'SMCI', name: 'Super Micro Computer' },
+            { symbol: 'INSM', name: 'Insmed Inc.' },
+            { symbol: 'FN', name: 'Fabrinet' },
+            { symbol: 'ONTO', name: 'Onto Innovation' },
+            { symbol: 'MSTR', name: 'MicroStrategy' }
+        ]
+    },
+    {
+        symbol: '^BVSP',
+        name: 'Bovespa',
+        country: 'Brazil',
+        region: 'americas',
+        flag: '🇧🇷',
+        sectors: [
+            { name: 'Financials', pct: 24.8, color: '#fbbf24' },
+            { name: 'Materials', pct: 18.2, color: '#f97316' },
+            { name: 'Energy', pct: 14.5, color: '#ef4444' },
+            { name: 'Consumer Staples', pct: 11.6, color: '#10b981' },
+            { name: 'Utilities', pct: 8.4, color: '#22d3ee' },
+            { name: 'Others', pct: 22.5, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'VALE3.SA', name: 'Vale S.A.' },
+            { symbol: 'PETR4.SA', name: 'Petrobras' },
+            { symbol: 'ITUB4.SA', name: 'Itaú Unibanco' },
+            { symbol: 'BBDC4.SA', name: 'Banco Bradesco' },
+            { symbol: 'ABEV3.SA', name: 'Ambev' }
+        ]
+    },
+    {
+        symbol: '^GSPTSE',
+        name: 'S&P/TSX',
+        country: 'Canada',
+        region: 'americas',
+        flag: '🇨🇦',
+        sectors: [
+            { name: 'Financials', pct: 32.4, color: '#fbbf24' },
+            { name: 'Energy', pct: 17.8, color: '#ef4444' },
+            { name: 'Industrials', pct: 12.6, color: '#f97316' },
+            { name: 'Materials', pct: 11.2, color: '#a855f7' },
+            { name: 'Technology', pct: 7.8, color: '#22d3ee' },
+            { name: 'Others', pct: 18.2, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'RY.TO', name: 'Royal Bank of Canada' },
+            { symbol: 'TD.TO', name: 'Toronto-Dominion Bank' },
+            { symbol: 'SHOP.TO', name: 'Shopify Inc.' },
+            { symbol: 'ENB.TO', name: 'Enbridge Inc.' },
+            { symbol: 'CNR.TO', name: 'Canadian National Railway' }
+        ]
+    },
 
-    // ============ US FINANCE ============
-    { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'stock', category: 'us-finance' },
-    { symbol: 'BAC', name: 'Bank of America', type: 'stock', category: 'us-finance' },
-    { symbol: 'WFC', name: 'Wells Fargo & Co.', type: 'stock', category: 'us-finance' },
-    { symbol: 'GS', name: 'Goldman Sachs', type: 'stock', category: 'us-finance' },
-    { symbol: 'MS', name: 'Morgan Stanley', type: 'stock', category: 'us-finance' },
-    { symbol: 'V', name: 'Visa Inc.', type: 'stock', category: 'us-finance' },
-    { symbol: 'MA', name: 'Mastercard Inc.', type: 'stock', category: 'us-finance' },
-    { symbol: 'AXP', name: 'American Express', type: 'stock', category: 'us-finance' },
-    { symbol: 'BLK', name: 'BlackRock Inc.', type: 'stock', category: 'us-finance' },
-    { symbol: 'C', name: 'Citigroup Inc.', type: 'stock', category: 'us-finance' },
-    { symbol: 'SCHW', name: 'Charles Schwab', type: 'stock', category: 'us-finance' },
-    { symbol: 'BRK-B', name: 'Berkshire Hathaway B', type: 'stock', category: 'us-finance' },
+    // ============ EUROPE ============
+    {
+        symbol: '^FTSE',
+        name: 'FTSE 100',
+        country: 'United Kingdom',
+        region: 'europe',
+        flag: '🇬🇧',
+        sectors: [
+            { name: 'Financials', pct: 20.5, color: '#fbbf24' },
+            { name: 'Consumer Staples', pct: 16.4, color: '#10b981' },
+            { name: 'Energy', pct: 13.8, color: '#ef4444' },
+            { name: 'Healthcare', pct: 12.2, color: '#22d3ee' },
+            { name: 'Industrials', pct: 11.6, color: '#f97316' },
+            { name: 'Others', pct: 25.5, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'SHEL.L', name: 'Shell plc' },
+            { symbol: 'AZN.L', name: 'AstraZeneca' },
+            { symbol: 'HSBA.L', name: 'HSBC Holdings' },
+            { symbol: 'ULVR.L', name: 'Unilever' },
+            { symbol: 'BP.L', name: 'BP plc' }
+        ]
+    },
+    {
+        symbol: '^GDAXI',
+        name: 'DAX',
+        country: 'Germany',
+        region: 'europe',
+        flag: '🇩🇪',
+        sectors: [
+            { name: 'Industrials', pct: 22.4, color: '#f97316' },
+            { name: 'Technology', pct: 18.6, color: '#22d3ee' },
+            { name: 'Financials', pct: 16.8, color: '#fbbf24' },
+            { name: 'Consumer Discretionary', pct: 14.2, color: '#a855f7' },
+            { name: 'Healthcare', pct: 12.1, color: '#10b981' },
+            { name: 'Others', pct: 15.9, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'SAP.DE', name: 'SAP SE' },
+            { symbol: 'SIE.DE', name: 'Siemens AG' },
+            { symbol: 'ALV.DE', name: 'Allianz SE' },
+            { symbol: 'DTE.DE', name: 'Deutsche Telekom' },
+            { symbol: 'AIR.DE', name: 'Airbus SE' }
+        ]
+    },
+    {
+        symbol: '^FCHI',
+        name: 'CAC 40',
+        country: 'France',
+        region: 'europe',
+        flag: '🇫🇷',
+        sectors: [
+            { name: 'Consumer Discretionary', pct: 20.8, color: '#a855f7' },
+            { name: 'Industrials', pct: 18.2, color: '#f97316' },
+            { name: 'Financials', pct: 15.6, color: '#fbbf24' },
+            { name: 'Consumer Staples', pct: 14.4, color: '#10b981' },
+            { name: 'Healthcare', pct: 11.8, color: '#22d3ee' },
+            { name: 'Others', pct: 19.2, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'MC.PA', name: 'LVMH' },
+            { symbol: 'OR.PA', name: 'L\'Oréal' },
+            { symbol: 'TTE.PA', name: 'TotalEnergies' },
+            { symbol: 'RMS.PA', name: 'Hermès' },
+            { symbol: 'SAN.PA', name: 'Sanofi' }
+        ]
+    },
+    {
+        symbol: '^STOXX50E',
+        name: 'Euro Stoxx 50',
+        country: 'Eurozone',
+        region: 'europe',
+        flag: '🇪🇺',
+        sectors: [
+            { name: 'Financials', pct: 21.2, color: '#fbbf24' },
+            { name: 'Industrials', pct: 17.4, color: '#f97316' },
+            { name: 'Consumer Discretionary', pct: 15.8, color: '#a855f7' },
+            { name: 'Technology', pct: 14.6, color: '#22d3ee' },
+            { name: 'Healthcare', pct: 12.2, color: '#10b981' },
+            { name: 'Others', pct: 18.8, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'ASML.AS', name: 'ASML Holding' },
+            { symbol: 'MC.PA', name: 'LVMH' },
+            { symbol: 'SAP.DE', name: 'SAP SE' },
+            { symbol: 'NESN.SW', name: 'Nestlé' },
+            { symbol: 'SIE.DE', name: 'Siemens' }
+        ]
+    },
 
-    // ============ US HEALTHCARE ============
-    { symbol: 'JNJ', name: 'Johnson & Johnson', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'PFE', name: 'Pfizer Inc.', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'UNH', name: 'UnitedHealth Group', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'ABBV', name: 'AbbVie Inc.', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'LLY', name: 'Eli Lilly and Co.', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'MRK', name: 'Merck & Co.', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'TMO', name: 'Thermo Fisher Scientific', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'ABT', name: 'Abbott Laboratories', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'DHR', name: 'Danaher Corp.', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'BMY', name: 'Bristol-Myers Squibb', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'AMGN', name: 'Amgen Inc.', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'GILD', name: 'Gilead Sciences', type: 'stock', category: 'us-healthcare' },
+    // ============ ASIA ============
+    {
+        symbol: '^N225',
+        name: 'Nikkei 225',
+        country: 'Japan',
+        region: 'asia',
+        flag: '🇯🇵',
+        sectors: [
+            { name: 'Technology', pct: 24.5, color: '#22d3ee' },
+            { name: 'Industrials', pct: 18.4, color: '#f97316' },
+            { name: 'Consumer Discretionary', pct: 16.2, color: '#a855f7' },
+            { name: 'Financials', pct: 13.8, color: '#fbbf24' },
+            { name: 'Healthcare', pct: 10.4, color: '#10b981' },
+            { name: 'Others', pct: 16.7, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: '7203.T', name: 'Toyota Motor' },
+            { symbol: '6758.T', name: 'Sony Group' },
+            { symbol: '6861.T', name: 'Keyence' },
+            { symbol: '9984.T', name: 'SoftBank Group' },
+            { symbol: '8306.T', name: 'Mitsubishi UFJ' }
+        ]
+    },
+    {
+        symbol: '^HSI',
+        name: 'Hang Seng',
+        country: 'Hong Kong',
+        region: 'asia',
+        flag: '🇭🇰',
+        sectors: [
+            { name: 'Financials', pct: 32.6, color: '#fbbf24' },
+            { name: 'Technology', pct: 21.4, color: '#22d3ee' },
+            { name: 'Consumer Discretionary', pct: 15.2, color: '#a855f7' },
+            { name: 'Real Estate', pct: 11.8, color: '#ef4444' },
+            { name: 'Telecom', pct: 8.4, color: '#10b981' },
+            { name: 'Others', pct: 10.6, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: '0700.HK', name: 'Tencent Holdings' },
+            { symbol: '0005.HK', name: 'HSBC Holdings' },
+            { symbol: '9988.HK', name: 'Alibaba Group' },
+            { symbol: '1299.HK', name: 'AIA Group' },
+            { symbol: '3690.HK', name: 'Meituan' }
+        ]
+    },
+    {
+        symbol: '000001.SS',
+        name: 'Shanghai Composite',
+        country: 'China',
+        region: 'asia',
+        flag: '🇨🇳',
+        sectors: [
+            { name: 'Financials', pct: 28.4, color: '#fbbf24' },
+            { name: 'Industrials', pct: 18.6, color: '#f97316' },
+            { name: 'Consumer Staples', pct: 14.2, color: '#10b981' },
+            { name: 'Materials', pct: 12.8, color: '#a855f7' },
+            { name: 'Technology', pct: 10.4, color: '#22d3ee' },
+            { name: 'Others', pct: 15.6, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: '601398.SS', name: 'ICBC' },
+            { symbol: '600519.SS', name: 'Kweichow Moutai' },
+            { symbol: '601857.SS', name: 'PetroChina' },
+            { symbol: '601288.SS', name: 'Agricultural Bank of China' },
+            { symbol: '600036.SS', name: 'China Merchants Bank' }
+        ]
+    },
+    {
+        symbol: '^NSEI',
+        name: 'NIFTY 50',
+        country: 'India',
+        region: 'asia',
+        flag: '🇮🇳',
+        sectors: [
+            { name: 'Financials', pct: 34.8, color: '#fbbf24' },
+            { name: 'Technology', pct: 16.4, color: '#22d3ee' },
+            { name: 'Energy', pct: 12.6, color: '#ef4444' },
+            { name: 'Consumer Goods', pct: 11.2, color: '#10b981' },
+            { name: 'Auto', pct: 8.4, color: '#a855f7' },
+            { name: 'Others', pct: 16.6, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'RELIANCE.NS', name: 'Reliance Industries' },
+            { symbol: 'TCS.NS', name: 'Tata Consultancy' },
+            { symbol: 'HDFCBANK.NS', name: 'HDFC Bank' },
+            { symbol: 'INFY.NS', name: 'Infosys' },
+            { symbol: 'ICICIBANK.NS', name: 'ICICI Bank' }
+        ]
+    },
 
-    // ============ US CONSUMER ============
-    { symbol: 'WMT', name: 'Walmart Inc.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'COST', name: 'Costco Wholesale', type: 'stock', category: 'us-consumer' },
-    { symbol: 'HD', name: 'Home Depot Inc.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'MCD', name: 'McDonald\'s Corp.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'NKE', name: 'Nike Inc.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'SBUX', name: 'Starbucks Corp.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'KO', name: 'Coca-Cola Co.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'PEP', name: 'PepsiCo Inc.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'PG', name: 'Procter & Gamble', type: 'stock', category: 'us-consumer' },
-    { symbol: 'DIS', name: 'Walt Disney Co.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'TGT', name: 'Target Corp.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'LOW', name: 'Lowe\'s Companies', type: 'stock', category: 'us-consumer' },
-    { symbol: 'BKNG', name: 'Booking Holdings', type: 'stock', category: 'us-consumer' },
-    { symbol: 'LULU', name: 'Lululemon Athletica', type: 'stock', category: 'us-consumer' },
-
-    // ============ US INDUSTRIAL ============
-    { symbol: 'BA', name: 'Boeing Co.', type: 'stock', category: 'us-industrial' },
-    { symbol: 'CAT', name: 'Caterpillar Inc.', type: 'stock', category: 'us-industrial' },
-    { symbol: 'GE', name: 'General Electric', type: 'stock', category: 'us-industrial' },
-    { symbol: 'MMM', name: '3M Company', type: 'stock', category: 'us-industrial' },
-    { symbol: 'HON', name: 'Honeywell International', type: 'stock', category: 'us-industrial' },
-    { symbol: 'UPS', name: 'United Parcel Service', type: 'stock', category: 'us-industrial' },
-    { symbol: 'LMT', name: 'Lockheed Martin', type: 'stock', category: 'us-industrial' },
-    { symbol: 'RTX', name: 'Raytheon Technologies', type: 'stock', category: 'us-industrial' },
-    { symbol: 'DE', name: 'Deere & Company', type: 'stock', category: 'us-industrial' },
-    { symbol: 'F', name: 'Ford Motor Co.', type: 'stock', category: 'us-industrial' },
-    { symbol: 'GM', name: 'General Motors', type: 'stock', category: 'us-industrial' },
-
-    // ============ US ENERGY ============
-    { symbol: 'XOM', name: 'Exxon Mobil Corp.', type: 'stock', category: 'us-energy' },
-    { symbol: 'CVX', name: 'Chevron Corp.', type: 'stock', category: 'us-energy' },
-    { symbol: 'COP', name: 'ConocoPhillips', type: 'stock', category: 'us-energy' },
-    { symbol: 'SLB', name: 'Schlumberger Ltd.', type: 'stock', category: 'us-energy' },
-    { symbol: 'NEE', name: 'NextEra Energy', type: 'stock', category: 'us-energy' },
-    { symbol: 'OXY', name: 'Occidental Petroleum', type: 'stock', category: 'us-energy' },
-
-    // ============ INTERNATIONAL ============
-    { symbol: 'TSM', name: 'Taiwan Semiconductor', type: 'stock', category: 'international' },
-    { symbol: 'ASML', name: 'ASML Holding N.V.', type: 'stock', category: 'international' },
-    { symbol: 'BABA', name: 'Alibaba Group', type: 'stock', category: 'international' },
-    { symbol: 'TM', name: 'Toyota Motor Corp.', type: 'stock', category: 'international' },
-    { symbol: 'SONY', name: 'Sony Group Corp.', type: 'stock', category: 'international' },
-    { symbol: 'SAP', name: 'SAP SE', type: 'stock', category: 'international' },
-    { symbol: 'NESN.SW', name: 'Nestlé S.A.', type: 'stock', category: 'international' },
-    { symbol: 'LVMH.PA', name: 'LVMH Moët Hennessy', type: 'stock', category: 'international' },
-    { symbol: 'SHEL', name: 'Shell plc', type: 'stock', category: 'international' },
-    { symbol: 'AZN', name: 'AstraZeneca PLC', type: 'stock', category: 'international' },
-    { symbol: 'NVO', name: 'Novo Nordisk A/S', type: 'stock', category: 'international' },
-    { symbol: 'HSBC', name: 'HSBC Holdings', type: 'stock', category: 'international' },
-    { symbol: 'TCEHY', name: 'Tencent Holdings', type: 'stock', category: 'international' },
-
-    // ============ CRYPTO ============
-    { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', category: 'crypto' },
-    { symbol: 'ETH', name: 'Ethereum', type: 'crypto', category: 'crypto' },
-    { symbol: 'SOL', name: 'Solana', type: 'crypto', category: 'crypto' },
-    { symbol: 'BNB', name: 'Binance Coin', type: 'crypto', category: 'crypto' },
-    { symbol: 'XRP', name: 'Ripple', type: 'crypto', category: 'crypto' },
-    { symbol: 'ADA', name: 'Cardano', type: 'crypto', category: 'crypto' },
-    { symbol: 'DOGE', name: 'Dogecoin', type: 'crypto', category: 'crypto' },
-    { symbol: 'AVAX', name: 'Avalanche', type: 'crypto', category: 'crypto' },
-    { symbol: 'DOT', name: 'Polkadot', type: 'crypto', category: 'crypto' },
-    { symbol: 'MATIC', name: 'Polygon', type: 'crypto', category: 'crypto' },
-    { symbol: 'LINK', name: 'Chainlink', type: 'crypto', category: 'crypto' },
-    { symbol: 'LTC', name: 'Litecoin', type: 'crypto', category: 'crypto' },
-    { symbol: 'ATOM', name: 'Cosmos', type: 'crypto', category: 'crypto' },
-    { symbol: 'TRX', name: 'TRON', type: 'crypto', category: 'crypto' },
-
-    // ============ COMMODITY ============
-    { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity', category: 'commodity' },
-    { symbol: 'SI=F', name: 'Silver Futures', type: 'commodity', category: 'commodity' },
-    { symbol: 'CL=F', name: 'Crude Oil WTI', type: 'commodity', category: 'commodity' },
-    { symbol: 'NG=F', name: 'Natural Gas', type: 'commodity', category: 'commodity' },
-    { symbol: 'HG=F', name: 'Copper Futures', type: 'commodity', category: 'commodity' },
-    { symbol: 'PL=F', name: 'Platinum Futures', type: 'commodity', category: 'commodity' },
-    { symbol: 'ZC=F', name: 'Corn Futures', type: 'commodity', category: 'commodity' },
-    { symbol: 'ZW=F', name: 'Wheat Futures', type: 'commodity', category: 'commodity' },
-
-    // ============ INDEX ============
-    { symbol: '^GSPC', name: 'S&P 500', type: 'stock', category: 'index' },
-    { symbol: '^DJI', name: 'Dow Jones Industrial', type: 'stock', category: 'index' },
-    { symbol: '^IXIC', name: 'NASDAQ Composite', type: 'stock', category: 'index' },
-    { symbol: '^RUT', name: 'Russell 2000', type: 'stock', category: 'index' },
-    { symbol: '^N225', name: 'Nikkei 225', type: 'stock', category: 'index' },
-    { symbol: '^HSI', name: 'Hang Seng Index', type: 'stock', category: 'index' },
-    { symbol: '^FTSE', name: 'FTSE 100', type: 'stock', category: 'index' },
-    { symbol: '^GDAXI', name: 'DAX Index', type: 'stock', category: 'index' },
+    // ============ OCEANIA ============
+    {
+        symbol: '^AXJO',
+        name: 'ASX 200',
+        country: 'Australia',
+        region: 'oceania',
+        flag: '🇦🇺',
+        sectors: [
+            { name: 'Financials', pct: 30.2, color: '#fbbf24' },
+            { name: 'Materials', pct: 19.4, color: '#a855f7' },
+            { name: 'Healthcare', pct: 11.8, color: '#10b981' },
+            { name: 'Consumer Discretionary', pct: 10.4, color: '#22d3ee' },
+            { name: 'Industrials', pct: 9.6, color: '#f97316' },
+            { name: 'Others', pct: 18.6, color: '#64748b' }
+        ],
+        topHoldings: [
+            { symbol: 'BHP.AX', name: 'BHP Group' },
+            { symbol: 'CBA.AX', name: 'Commonwealth Bank' },
+            { symbol: 'CSL.AX', name: 'CSL Limited' },
+            { symbol: 'NAB.AX', name: 'National Australia Bank' },
+            { symbol: 'WBC.AX', name: 'Westpac Banking' }
+        ]
+    }
 ];
 
-// ============ TAB NAV ============
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-        if (tab.dataset.tab === 'news') renderNews();
-        if (tab.dataset.tab === 'portfolio') renderPortfolio();
-    });
-});
-
-// ============ DATA WATCHLIST ============
-let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
-    { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock' },
-    { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock' },
-    { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock' },
-    { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock' },
-    { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock' },
-    { symbol: 'BTC', name: 'Bitcoin', type: 'crypto' },
-    { symbol: 'ETH', name: 'Ethereum', type: 'crypto' },
-    { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity' },
-];
-function saveWatchlist() { localStorage.setItem('fitraWatchlist', JSON.stringify(watchlist)); }
-
-// ============ DATA PORTFOLIO ============
-let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
-function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
-
-// ============ BROWSE STOCK ============
-function openBrowseModal() {
-    document.getElementById('browseModal').classList.add('active');
-    renderBrowseStocks();
-}
-function closeBrowseModal() {
-    document.getElementById('browseModal').classList.remove('active');
-}
-function renderBrowseStocks() {
-    const body = document.getElementById('browseBody');
-    const search = (document.getElementById('browseSearch').value || '').toLowerCase().trim();
-    const cat = currentBrowseCategory;
-    
-    let filtered = STOCK_UNIVERSE;
-    if (cat !== 'all') {
-        filtered = filtered.filter(s => s.category === cat);
-    }
-    if (search) {
-        filtered = filtered.filter(s => 
-            s.symbol.toLowerCase().includes(search) || 
-            s.name.toLowerCase().includes(search)
-        );
-    }
-    
-    if (filtered.length === 0) {
-        body.innerHTML = '<div class="empty-state">Gak ada saham yang match. Coba kata kunci lain.</div>';
-        return;
-    }
-    
-    body.innerHTML = filtered.map(stock => {
-        const inWatchlist = watchlist.some(w => w.symbol === stock.symbol);
-        return `
-            <div class="browse-item ${inWatchlist ? 'in-watchlist' : ''}" onclick="toggleFromBrowse('${stock.symbol}', '${stock.name.replace(/'/g, "\\'")}', '${stock.type}')">
-                <div class="browse-item-info">
-                    <span class="browse-symbol">${stock.symbol}</span>
-                    <span class="browse-name">${stock.name}</span>
-                </div>
-                <div class="browse-item-action">
-                    ${inWatchlist 
-                        ? '<span class="browse-badge added">✓ Added</span>' 
-                        : '<span class="browse-badge add">+ Add</span>'}
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-function toggleFromBrowse(symbol, name, type) {
-    const idx = watchlist.findIndex(w => w.symbol === symbol);
-    if (idx >= 0) {
-        // Sudah ada → hapus
-        watchlist.splice(idx, 1);
-    } else {
-        // Belum ada → tambah
-        watchlist.push({ symbol, name, type });
-    }
-    saveWatchlist();
-    renderBrowseStocks();
-    renderWatchlist();
+// ============ UTILITIES ============
+function formatNumber(num, decimals = 2) {
+    if (num == null || isNaN(num)) return '-';
+    return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
-document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
-document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
-document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentBrowseCategory = btn.dataset.cat;
-        renderBrowseStocks();
-    });
-});
+function formatVolume(vol) {
+    if (!vol || vol === 0) return '-';
+    if (vol >= 1e12) return (vol / 1e12).toFixed(2) + ' T';
+    if (vol >= 1e9) return (vol / 1e9).toFixed(2) + ' B';
+    if (vol >= 1e6) return (vol / 1e6).toFixed(2) + ' M';
+    if (vol >= 1e3) return (vol / 1e3).toFixed(2) + ' K';
+    return vol.toString();
+}
 
-// ============ FETCH PRICE ============
-async function fetchPrice(symbol, type) {
+// ============ FETCH INDEX DATA ============
+async function fetchIndexData(symbol) {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-price`, {
             method: 'POST',
@@ -266,47 +374,44 @@ async function fetchPrice(symbol, type) {
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                 'apikey': SUPABASE_ANON_KEY
             },
-            body: JSON.stringify({ symbol, type })
+            body: JSON.stringify({ symbol, type: 'stock' })
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
-        if (type === 'crypto' && data.price) {
-            return { price: data.price, currency: 'USD', change: data.change || 0, name: data.name || symbol };
-        }
-        if (type !== 'crypto' && data.chart && data.chart.result) {
-            const meta = data.chart.result[0].meta;
-            return { price: meta.regularMarketPrice, currency: meta.currency, change: meta.regularMarketChangePercent || 0, name: meta.longName || meta.shortName };
+        
+        if (data.chart && data.chart.result && data.chart.result[0]) {
+            const result = data.chart.result[0];
+            const meta = result.meta;
+            const quote = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
+            const volumes = quote.volume || [];
+            
+            // Ambil volume terakhir yang ada
+            let lastVolume = 0;
+            for (let i = volumes.length - 1; i >= 0; i--) {
+                if (volumes[i] != null && volumes[i] > 0) { lastVolume = volumes[i]; break; }
+            }
+            
+            return {
+                price: meta.regularMarketPrice,
+                change: meta.regularMarketChangePercent || 0,
+                changeNominal: meta.regularMarketChange || 0,
+                high: meta.regularMarketDayHigh,
+                low: meta.regularMarketDayLow,
+                prevClose: meta.chartPreviousClose || meta.previousClose,
+                volume: meta.regularMarketVolume || lastVolume,
+                currency: meta.currency,
+                name: meta.longName || meta.shortName
+            };
         }
         return null;
     } catch (error) {
-        console.error('Error fetchPrice:', error);
+        console.error('Error fetchIndexData (' + symbol + '):', error);
         return null;
-    }
-}
-
-// ============ FETCH FUNDAMENTAL ============
-async function fetchFundamental(symbol, type) {
-    try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-fundamental`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'apikey': SUPABASE_ANON_KEY
-            },
-            body: JSON.stringify({ symbol, type })
-        });
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        return data.fundamental || {};
-    } catch (error) {
-        console.error('Error fetchFundamental:', error);
-        return {};
     }
 }
 
 // ============ FETCH CHART DATA ============
-async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
+async function fetchIndexChartData(symbol, interval = '1d', range = '1y') {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
             method: 'POST',
@@ -315,7 +420,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                 'apikey': SUPABASE_ANON_KEY
             },
-            body: JSON.stringify({ symbol, type, interval, range })
+            body: JSON.stringify({ symbol, type: 'stock', interval, range })
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
@@ -351,503 +456,351 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
             }
             return candles;
         }
-        
         return [];
     } catch (error) {
-        console.error('Error fetchChartData:', error);
+        console.error('Error fetchIndexChartData:', error);
         return [];
     }
 }
 
-// ============ RENDER WATCHLIST ============
-async function renderWatchlist() {
-    const container = document.getElementById('watchlist');
-    container.innerHTML = '<div class="empty-state">Memuat data...</div>';
-    if (watchlist.length === 0) {
-        container.innerHTML = '<div class="empty-state">Watchlist kosong. Klik 🔍 Browse atau ＋ buat nambah aset.</div>';
+// ============ RENDER INDICES LIST ============
+async function renderIndices() {
+    const list = document.getElementById('indeksList');
+    list.innerHTML = `
+        <div class="indeks-loading">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Memuat indeks global...</p>
+        </div>
+    `;
+    
+    // Filter dulu berdasarkan region & search
+    let filtered = GLOBAL_INDICES;
+    if (currentFilter !== 'all') {
+        filtered = filtered.filter(i => i.region === currentFilter);
+    }
+    if (currentSearch) {
+        const q = currentSearch.toLowerCase();
+        filtered = filtered.filter(i => 
+            i.name.toLowerCase().includes(q) || 
+            i.symbol.toLowerCase().includes(q) ||
+            i.country.toLowerCase().includes(q)
+        );
+    }
+    
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state">Gak ada indeks yang match. Coba kata kunci lain.</div>';
         return;
     }
-    const results = await Promise.all(watchlist.map(async (asset) => {
-        const priceData = await fetchPrice(asset.symbol, asset.type);
-        return { ...asset, priceData };
-    }));
-    container.innerHTML = results.map((asset, index) => {
-        const p = asset.priceData;
-        if (!p) return `
-            <div class="watchlist-card-wrapper">
-                <div class="asset-card">
-                    <div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div>
-                    <div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div>
-                </div>
-                <button class="watchlist-delete" onclick="deleteFromWatchlist(${index})">×</button>
-            </div>
-        `;
-        const trend = p.change >= 0 ? 'up' : 'down';
-        const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
-        const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    
+    // Fetch semua data paralel
+    const withData = await Promise.all(
+        filtered.map(async (idx) => {
+            const data = await fetchIndexData(idx.symbol);
+            return { ...idx, data };
+        })
+    );
+    
+    list.innerHTML = withData.map(idx => renderIndeksCard(idx)).join('');
+    
+    // Update last update time
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent = 'Terakhir diupdate: ' + 
+        now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+// ============ RENDER SINGLE CARD ============
+function renderIndeksCard(idx) {
+    const d = idx.data;
+    
+    if (!d || d.price == null) {
         return `
-            <div class="watchlist-card-wrapper">
-                <div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
-                    <div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div>
-                    <div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div>
+            <div class="indeks-card" onclick="openIndeksDetail('${idx.symbol}')">
+                <div class="indeks-card-header">
+                    <div class="indeks-card-title">
+                        <span class="indeks-card-flag">${idx.flag}</span>
+                        <div class="indeks-card-name-wrap">
+                            <span class="indeks-card-name">${idx.name}</span>
+                            <span class="indeks-card-country">${idx.country}</span>
+                        </div>
+                    </div>
+                    <div class="indeks-card-price-wrap">
+                        <div class="indeks-card-price">-</div>
+                        <div class="indeks-card-change">Gagal memuat</div>
+                    </div>
                 </div>
-                <button class="watchlist-delete" onclick="deleteFromWatchlist(${index})">×</button>
             </div>
         `;
-    }).join('');
-}
-
-function deleteFromWatchlist(index) {
-    const asset = watchlist[index];
-    if (!confirm(`Hapus ${asset.symbol} dari watchlist?`)) return;
-    watchlist.splice(index, 1);
-    saveWatchlist();
-    renderWatchlist();
-}
-
-// ============ MODAL ASSET ============
-const assetModal = document.getElementById('assetModal');
-document.getElementById('addAssetBtn').addEventListener('click', () => assetModal.classList.add('active'));
-document.getElementById('closeAssetModal').addEventListener('click', () => assetModal.classList.remove('active'));
-document.getElementById('cancelAsset').addEventListener('click', () => assetModal.classList.remove('active'));
-document.getElementById('saveAsset').addEventListener('click', () => {
-    const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase();
-    const name = document.getElementById('assetName').value.trim();
-    const type = document.getElementById('assetType').value;
-    if (!symbol || !name) { alert('Isi semua field dulu!'); return; }
-    if (watchlist.some(a => a.symbol === symbol)) { alert(`${symbol} udah ada!`); return; }
-    watchlist.push({ symbol, name, type });
-    saveWatchlist();
-    assetModal.classList.remove('active');
-    document.getElementById('assetSymbol').value = '';
-    document.getElementById('assetName').value = '';
-    renderWatchlist();
-});
-
-// ============ INDIKATOR ============
-function calcEMA(closes, period) {
-    if (closes.length < period) return closes[closes.length - 1] || 0;
-    const k = 2 / (period + 1);
-    let ema = closes[0];
-    for (let i = 1; i < closes.length; i++) ema = closes[i] * k + ema * (1 - k);
-    return ema;
-}
-function calcRSI(closes, period = 14) {
-    if (closes.length < period + 1) return 50;
-    let gains = 0, losses = 0;
-    for (let i = 1; i <= period; i++) {
-        const diff = closes[i] - closes[i - 1];
-        if (diff >= 0) gains += diff; else losses -= diff;
     }
-    let avgGain = gains / period, avgLoss = losses / period;
-    for (let i = period + 1; i < closes.length; i++) {
-        const diff = closes[i] - closes[i - 1];
-        avgGain = (avgGain * (period - 1) + (diff > 0 ? diff : 0)) / period;
-        avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period;
+    
+    const trend = d.change >= 0 ? 'up' : 'down';
+    const sign = d.change >= 0 ? '+' : '';
+    const changeStr = `${sign}${d.change.toFixed(2)}%`;
+    const changeNominalStr = `${sign}${d.changeNominal.toFixed(2)}`;
+    const priceStr = formatNumber(d.price, 2);
+    
+    // Mini sector bars (ambil 5 teratas)
+    const sectorBars = idx.sectors.slice(0, 5).map(s => 
+        `<div class="indeks-sector-mini-bar" style="flex:${s.pct}; background:${s.color};"></div>`
+    ).join('');
+    
+    return `
+        <div class="indeks-card" onclick="openIndeksDetail('${idx.symbol}')">
+            <div class="indeks-card-header">
+                <div class="indeks-card-title">
+                    <span class="indeks-card-flag">${idx.flag}</span>
+                    <div class="indeks-card-name-wrap">
+                        <span class="indeks-card-name">${idx.name}</span>
+                        <span class="indeks-card-country">${idx.country}</span>
+                    </div>
+                </div>
+                <div class="indeks-card-price-wrap">
+                    <div class="indeks-card-price">${priceStr}</div>
+                    <div class="indeks-card-change ${trend}">${changeStr} (${changeNominalStr})</div>
+                </div>
+            </div>
+            <div class="indeks-card-stats">
+                <div class="indeks-stat-cell">
+                    <span class="indeks-stat-cell-label">High</span>
+                    <span class="indeks-stat-cell-value up">${formatNumber(d.high, 2)}</span>
+                </div>
+                <div class="indeks-stat-cell">
+                    <span class="indeks-stat-cell-label">Low</span>
+                    <span class="indeks-stat-cell-value down">${formatNumber(d.low, 2)}</span>
+                </div>
+                <div class="indeks-stat-cell">
+                    <span class="indeks-stat-cell-label">Volume</span>
+                    <span class="indeks-stat-cell-value">${formatVolume(d.volume)}</span>
+                </div>
+            </div>
+            <div class="indeks-card-sectors">${sectorBars}</div>
+        </div>
+    `;
+}
+
+// ============ OPEN DETAIL MODAL ============
+async function openIndeksDetail(symbol) {
+    const idx = GLOBAL_INDICES.find(i => i.symbol === symbol);
+    if (!idx) return;
+    
+    currentDetailSymbol = symbol;
+    const modal = document.getElementById('indeksDetailModal');
+    modal.classList.add('active');
+    
+    // Set header
+    document.getElementById('detailFlag').textContent = idx.flag;
+    document.getElementById('detailTitle').textContent = idx.name;
+    document.getElementById('detailSubtitle').textContent = idx.country;
+    
+    // Reset values
+    document.getElementById('detailPrice').textContent = '-';
+    document.getElementById('detailChange').textContent = '-';
+    document.getElementById('detailChange').className = 'indeks-detail-change';
+    document.getElementById('detailHigh').textContent = '-';
+    document.getElementById('detailLow').textContent = '-';
+    document.getElementById('detailPrevClose').textContent = '-';
+    document.getElementById('detailVolume').textContent = '-';
+    
+    // Render sectors (dari data statis)
+    renderSectors(idx.sectors);
+    
+    // Render top holdings (dari data statis, harga bakal di-fetch)
+    renderTopHoldings(idx.topHoldings);
+    
+    // Fetch live data
+    const data = await fetchIndexData(symbol);
+    if (data && data.price != null) {
+        const trend = data.change >= 0 ? 'up' : 'down';
+        const sign = data.change >= 0 ? '+' : '';
+        
+        document.getElementById('detailPrice').textContent = formatNumber(data.price, 2);
+        const changeEl = document.getElementById('detailChange');
+        changeEl.textContent = `${sign}${data.change.toFixed(2)}%  (${sign}${data.changeNominal.toFixed(2)})`;
+        changeEl.className = 'indeks-detail-change ' + trend;
+        
+        document.getElementById('detailHigh').textContent = formatNumber(data.high, 2);
+        document.getElementById('detailLow').textContent = formatNumber(data.low, 2);
+        document.getElementById('detailPrevClose').textContent = formatNumber(data.prevClose, 2);
+        document.getElementById('detailVolume').textContent = formatVolume(data.volume);
     }
-    if (avgLoss === 0) return 100;
-    const rs = avgGain / avgLoss;
-    return 100 - 100 / (1 + rs);
-}
-function calcSentiment(candles) {
-    const recent = candles.slice(-20);
-    let buyVol = 0, sellVol = 0;
-    recent.forEach(c => { if (c.close >= c.open) buyVol += c.volume || 0; else sellVol += c.volume || 0; });
-    const total = buyVol + sellVol;
-    if (total === 0) return { buyPct: 50, sellPct: 50 };
-    const buyPct = (buyVol / total) * 100;
-    return { buyPct, sellPct: 100 - buyPct };
-}
-async function updateIndicators(symbol, type) {
-    const candles = await fetchChartData(symbol, type, '1d', '3mo');
-    if (candles.length < 20) return;
-    const closes = candles.map(c => c.close).filter(c => c);
-    const currentPrice = closes[closes.length - 1];
-    const ema20 = calcEMA(closes, 20);
-    const ema5 = calcEMA(closes, 5);
-    const rsi = calcRSI(closes, 14);
-    const htf = currentPrice > ema20 ? 'BULLISH' : 'BEARISH';
-    const ltf = ema5 > ema20 ? 'BULLISH' : 'BEARISH';
-    const htfEl = document.getElementById('htfValue');
-    const ltfEl = document.getElementById('ltfValue');
-    const emaEl = document.getElementById('ema20Value');
-    const rsiEl = document.getElementById('rsiValue');
-    const bidEl = document.getElementById('bidValue');
-    const askEl = document.getElementById('askValue');
-    htfEl.textContent = htf;
-    htfEl.className = 'ind-value ' + (htf === 'BULLISH' ? 'bullish' : 'bearish');
-    ltfEl.textContent = ltf;
-    ltfEl.className = 'ind-value ' + (ltf === 'BULLISH' ? 'bullish' : 'bearish');
-    emaEl.textContent = ema20.toFixed(2);
-    emaEl.className = 'ind-value neutral';
-    rsiEl.textContent = rsi.toFixed(0);
-    if (rsi >= 70) rsiEl.className = 'ind-value bearish';
-    else if (rsi <= 30) rsiEl.className = 'ind-value bullish';
-    else rsiEl.className = 'ind-value neutral';
-    const bid = currentPrice - (currentPrice * 0.0001);
-    const ask = currentPrice + (currentPrice * 0.0001);
-    bidEl.textContent = '$' + bid.toFixed(2);
-    askEl.textContent = '$' + ask.toFixed(2);
-    const sentiment = calcSentiment(candles);
-    document.getElementById('buyerPct').textContent = sentiment.buyPct.toFixed(0);
-    document.getElementById('sellerPct').textContent = sentiment.sellPct.toFixed(0);
-    document.getElementById('buyerBar').style.width = sentiment.buyPct + '%';
-    document.getElementById('sellerBar').style.width = sentiment.sellPct + '%';
+    
+    // Fetch chart 1 tahun
+    loadIndeksChart(symbol);
+    
+    // Fetch live prices untuk top holdings
+    loadTopHoldingsPrices(idx.topHoldings);
 }
 
-// ============ ASSET DETAIL ============
-let currentSymbol = null, currentType = null, currentPrice = 0, currentChange = 0;
-async function openAssetDetail(symbol, name, price, change, type) {
-    currentSymbol = symbol;
-    currentType = type;
-    currentPrice = price;
-    currentChange = change;
-    document.getElementById('chartModal').classList.add('active');
-    document.getElementById('chartTitle').textContent = symbol + ' — ' + name;
-    updateChartPrice();
-    document.getElementById('analysisBody').innerHTML = `<div class="loading-spinner"></div><p class="loading-text">Mengambil data fundamental...</p>`;
-    document.getElementById('htfValue').textContent = '-';
-    document.getElementById('ltfValue').textContent = '-';
-    document.getElementById('ema20Value').textContent = '-';
-    document.getElementById('rsiValue').textContent = '-';
-    document.getElementById('bidValue').textContent = '-';
-    document.getElementById('askValue').textContent = '-';
-    document.getElementById('buyerPct').textContent = '-';
-    document.getElementById('sellerPct').textContent = '-';
-    loadChart(symbol, type);
-    updateIndicators(symbol, type);
-    loadAnalysis(symbol, name, price, type);
-    if (indicatorInterval) clearInterval(indicatorInterval);
-    indicatorInterval = setInterval(() => { if (currentSymbol) updateIndicators(currentSymbol, currentType); }, 15000);
-}
-function updateChartPrice() {
-    const changeStr = (currentChange >= 0 ? '+' : '') + currentChange.toFixed(2) + '%';
-    const priceStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    const priceEl = document.getElementById('chartPrice');
-    priceEl.textContent = priceStr + '  ' + changeStr;
-    priceEl.style.color = currentChange >= 0 ? '#10b981' : '#ef4444';
+// ============ RENDER SECTORS ============
+function renderSectors(sectors) {
+    const container = document.getElementById('detailSectors');
+    container.innerHTML = sectors.map(s => `
+        <div class="indeks-sector-row">
+            <div class="indeks-sector-row-top">
+                <span class="indeks-sector-name">${s.name}</span>
+                <span class="indeks-sector-pct">${s.pct.toFixed(1)}%</span>
+            </div>
+            <div class="indeks-sector-bar-bg">
+                <div class="indeks-sector-bar-fill" style="width: ${s.pct}%; background: ${s.color};"></div>
+            </div>
+        </div>
+    `).join('');
 }
 
-// ============ LIGHTWEIGHT CHARTS ============
-function loadChart(symbol, type) {
-    const container = document.getElementById('tradingviewContainer');
+// ============ RENDER TOP HOLDINGS ============
+function renderTopHoldings(holdings) {
+    const container = document.getElementById('detailConstituents');
+    container.innerHTML = holdings.map(h => `
+        <div class="indeks-constituent-item" data-symbol="${h.symbol}">
+            <div class="indeks-constituent-left">
+                <span class="indeks-constituent-symbol">${h.symbol}</span>
+                <span class="indeks-constituent-name">${h.name}</span>
+            </div>
+            <div class="indeks-constituent-right">
+                <span class="indeks-constituent-price" id="const-price-${h.symbol}">-</span>
+                <span class="indeks-constituent-change" id="const-change-${h.symbol}">-</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ============ LOAD TOP HOLDINGS PRICES ============
+async function loadTopHoldingsPrices(holdings) {
+    await Promise.all(holdings.map(async (h) => {
+        try {
+            const data = await fetchIndexData(h.symbol);
+            const priceEl = document.getElementById('const-price-' + h.symbol);
+            const changeEl = document.getElementById('const-change-' + h.symbol);
+            
+            if (!priceEl || !changeEl) return;
+            
+            if (data && data.price != null) {
+                priceEl.textContent = formatNumber(data.price, 2);
+                const trend = data.change >= 0 ? 'up' : 'down';
+                const sign = data.change >= 0 ? '+' : '';
+                changeEl.textContent = `${sign}${data.change.toFixed(2)}%`;
+                changeEl.className = 'indeks-constituent-change ' + trend;
+            } else {
+                priceEl.textContent = 'N/A';
+                changeEl.textContent = '-';
+            }
+        } catch (e) {
+            console.error('Error loading holding price:', h.symbol, e);
+        }
+    }));
+}
+
+// ============ LOAD INDEX CHART ============
+async function loadIndeksChart(symbol) {
+    const container = document.getElementById('indeksChartContainer');
     container.innerHTML = '';
-    if (currentChart) { currentChart.remove(); currentChart = null; }
-    const isMobile = window.innerWidth < 400;
-    const chartHeight = isMobile ? 450 : 520;
+    
+    if (currentDetailChart) {
+        currentDetailChart.remove();
+        currentDetailChart = null;
+    }
     
     if (typeof LightweightCharts === 'undefined') {
-        container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library LightweightCharts gagal dimuat.</div>';
+        container.innerHTML = '<div style="color:#f00;padding:20px;text-align:center;font-size:12px;">❌ Library chart gagal dimuat</div>';
         return;
     }
     
-    currentChart = LightweightCharts.createChart(container, {
+    // Buat chart
+    currentDetailChart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
-        height: chartHeight,
-        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
-        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+        height: 260,
+        layout: { 
+            background: { color: 'transparent' }, 
+            textColor: 'rgba(255, 255, 255, 0.6)', 
+            fontFamily: 'Inter, sans-serif' 
+        },
+        grid: { 
+            vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, 
+            horzLines: { color: 'rgba(255, 255, 255, 0.04)' } 
+        },
         crosshair: {
             mode: LightweightCharts.CrosshairMode.Normal,
             vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' },
             horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }
         },
-        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.25 } },
+        rightPriceScale: { 
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            scaleMargins: { top: 0.1, bottom: 0.1 }
+        },
         timeScale: { 
-            borderColor: 'rgba(255, 255, 255, 0.08)', 
-            timeVisible: true, 
-            secondsVisible: false,
-            rightOffset: 10,
-            barSpacing: 12,
-            fixLeftEdge: false,
-            fixRightEdge: false,
-            lockVisibleTimeRangeOnResize: false
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            timeVisible: false
         },
-        handleScroll: { 
-            mouseWheel: true, 
-            pressedMouseMove: true,
-            horzTouchDrag: true,
-            vertTouchDrag: false
-        },
-        handleScale: { 
-            mouseWheel: true, 
-            pinch: true,
-            axisPressedMouseMove: true
-        }
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
     });
     
-    candleSeries = currentChart.addCandlestickSeries({
-        upColor: '#ffffff', downColor: '#a855f7',
-        borderUpColor: '#ffffff', borderDownColor: '#a855f7',
-        wickUpColor: '#ffffff', wickDownColor: '#a855f7'
+    // Candle series
+    const series = currentDetailChart.addCandlestickSeries({
+        upColor: '#ffffff',
+        downColor: '#a855f7',
+        borderUpColor: '#ffffff',
+        borderDownColor: '#a855f7',
+        wickUpColor: '#ffffff',
+        wickDownColor: '#a855f7'
     });
-    volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' });
-    volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
     
-    loadChartData(symbol, type, currentTimeframe);
-    setupTimeframeButtons();
-    window.addEventListener('resize', resizeChart);
-}
-
-async function loadChartData(symbol, type, timeframe) {
-    const intervalMap = { 
-        '5M':  '5m', '30M': '30m', '1H':  '1h',
-        'D':   '1d', 'W':   '1wk', 'M':   '1mo', 'Y':   '1mo'
-    };
-    const rangeMap = { 
-        '5M':  '5d', '30M': '1mo', '1H':  '3mo',
-        'D':   '1y', 'W':   '5y', 'M':   '20y', 'Y':   'max'
-    };
-    const interval = intervalMap[timeframe] || '1mo';
-    const range = rangeMap[timeframe] || 'max';
+    // Fetch data 1 tahun
+    const candles = await fetchIndexChartData(symbol, '1d', '1y');
     
-    let candles = await fetchChartData(symbol, type, interval, range);
-    if (!candles || candles.length === 0 || !candleSeries) {
-        console.warn('⚠️ No candles for', symbol, timeframe);
+    if (!candles || candles.length === 0) {
+        container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:20px;text-align:center;font-size:12px;">Data chart gak tersedia</div>';
         return;
     }
     
-    if (timeframe === 'Y') {
-        candles = aggregateToYearly(candles);
-    }
-    
-    const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))
-        .filter(d => d.time != null && !isNaN(d.open) && !isNaN(d.high) && !isNaN(d.low) && !isNaN(d.close));
-    const volumeData = candles.map(c => ({
+    const formattedData = candles.map(c => ({
         time: c.time,
-        value: c.volume || 0,
-        color: c.close >= c.open ? 'rgba(255, 255, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'
-    })).filter(d => d.time != null && !isNaN(d.value));
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close
+    })).filter(d => d.time != null && !isNaN(d.open) && !isNaN(d.close));
     
-    candleSeries.setData(formattedData);
-    volumeSeries.setData(volumeData);
-    
-    const totalCandles = formattedData.length;
-    if (totalCandles > 100) {
-        currentChart.timeScale().setVisibleLogicalRange({
-            from: totalCandles - 100,
-            to: totalCandles + 5
-        });
-    } else {
-        currentChart.timeScale().fitContent();
+    series.setData(formattedData);
+    currentDetailChart.timeScale().fitContent();
+}
+
+// ============ CLOSE DETAIL MODAL ============
+function closeIndeksDetail() {
+    document.getElementById('indeksDetailModal').classList.remove('active');
+    if (currentDetailChart) {
+        currentDetailChart.remove();
+        currentDetailChart = null;
     }
+    document.getElementById('indeksChartContainer').innerHTML = '';
 }
 
-function aggregateToYearly(monthlyCandles) {
-    const yearlyMap = {};
-    monthlyCandles.forEach(c => {
-        const date = new Date(c.time * 1000);
-        const year = date.getFullYear();
-        if (!yearlyMap[year]) {
-            yearlyMap[year] = {
-                year, open: c.open, high: c.high, low: c.low, close: c.close,
-                volume: c.volume || 0, firstTime: c.time, lastTime: c.time
-            };
-        } else {
-            const y = yearlyMap[year];
-            if (c.time < y.firstTime) { y.open = c.open; y.firstTime = c.time; }
-            if (c.time > y.lastTime) { y.close = c.close; y.lastTime = c.time; }
-            if (c.high > y.high) y.high = c.high;
-            if (c.low < y.low) y.low = c.low;
-            y.volume += c.volume || 0;
-        }
-    });
-    return Object.values(yearlyMap).sort((a, b) => a.year - b.year)
-        .map(y => ({ time: y.firstTime, open: y.open, high: y.high, low: y.low, close: y.close, volume: y.volume }));
-}
+// ============ EVENT LISTENERS ============
+document.getElementById('closeDetailModal').addEventListener('click', closeIndeksDetail);
 
-function setupTimeframeButtons() {
-    document.querySelectorAll('.tf-btn').forEach(btn => {
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        newBtn.addEventListener('click', () => {
-            document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-            newBtn.classList.add('active');
-            currentTimeframe = newBtn.dataset.tf;
-            if (currentSymbol && currentType) loadChartData(currentSymbol, currentType, currentTimeframe);
-        });
-    });
-}
-
-function resizeChart() {
-    if (currentChart) {
-        const container = document.getElementById('tradingviewContainer');
-        currentChart.applyOptions({ width: container.clientWidth });
-    }
-}
-
-async function loadAnalysis(symbol, name, price, type) {
-    const container = document.getElementById('analysisBody');
-    try {
-        const fundamental = await fetchFundamental(symbol, type);
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
-            body: JSON.stringify({ symbol, name, price, fundamental })
-        });
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        container.innerHTML = formatAnalysis(data.analysis || 'Gagal memuat analisis.');
-    } catch (error) {
-        container.innerHTML = `<div class="analysis-error"><p>❌ Gagal memuat analisis</p><p class="error-detail">${error.message}</p></div>`;
-    }
-}
-function formatAnalysis(text) { return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
-
-function closeAssetDetail() {
-    document.getElementById('chartModal').classList.remove('active');
-    document.getElementById('tradingviewContainer').innerHTML = '';
-    if (currentChart) { currentChart.remove(); currentChart = null; candleSeries = null; volumeSeries = null; }
-    if (indicatorInterval) { clearInterval(indicatorInterval); indicatorInterval = null; }
-    window.removeEventListener('resize', resizeChart);
-}
-document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
-
-// ============ SCREENER ============
-async function runScreener() {
-    const results = document.getElementById('screenerResults');
-    results.innerHTML = '<div class="empty-state">Screener lagi diproses...</div>';
-    const peMax = parseFloat(document.getElementById('peMax').value) || 15;
-    const pbMax = parseFloat(document.getElementById('pbMax').value) || 1.5;
-    const roeMin = (parseFloat(document.getElementById('roeMin').value) || 15) / 100;
-    const derMax = parseFloat(document.getElementById('derMax').value) || 1;
-    const divMin = (parseFloat(document.getElementById('divMin').value) || 3) / 100;
-    try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/run-screener`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
-            body: JSON.stringify({ peMax, pbMax, roeMin, derMax, divMin })
-        });
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        if (!data.results || data.results.length === 0) { results.innerHTML = '<div class="empty-state">Gak ada saham yang lolos filter.</div>'; return; }
-        results.innerHTML = `<p class="description">${data.count} saham lolos filter:</p>` + data.results.map(stock => `
-            <div class="asset-card"><div class="asset-info">
-                <span class="asset-symbol">${stock.symbol}</span>
-                <span class="asset-name">${stock.company_name}</span>
-                <span class="asset-metrics">P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%</span>
-            </div></div>
-        `).join('');
-    } catch (error) {
-        results.innerHTML = `<div class="empty-state">❌ Gagal: ${error.message}</div>`;
-    }
-}
-document.getElementById('runScreener').addEventListener('click', runScreener);
-
-// ============ PORTFOLIO ============
-async function renderPortfolio() {
-    const container = document.getElementById('holdings');
-    const totalValueEl = document.getElementById('totalValue');
-    const unrealizedPLEl = document.getElementById('unrealizedPL');
-    const totalCostEl = document.getElementById('totalCost');
-    const totalHoldingsEl = document.getElementById('totalHoldings');
-    if (portfolio.length === 0) {
-        container.innerHTML = '<div class="empty-state">Belum ada holding.</div>';
-        totalValueEl.textContent = '$ 0'; unrealizedPLEl.textContent = '$ 0';
-        totalCostEl.textContent = '$ 0'; totalHoldingsEl.textContent = '0';
-        return;
-    }
-    container.innerHTML = '<div class="empty-state">Memuat harga...</div>';
-    const holdingsWithPrice = await Promise.all(portfolio.map(async (h) => {
-        const priceData = await fetchPrice(h.symbol, h.type);
-        return { ...h, currentPrice: priceData?.price || 0 };
-    }));
-    let totalValue = 0, totalCost = 0;
-    container.innerHTML = holdingsWithPrice.map(h => {
-        const currentValue = h.currentPrice * h.shares;
-        const costBasis = h.avgPrice * h.shares;
-        const pl = currentValue - costBasis;
-        const plPercent = costBasis > 0 ? (pl / costBasis) * 100 : 0;
-        totalValue += currentValue; totalCost += costBasis;
-        const plClass = pl >= 0 ? 'up' : 'down';
-        const plSign = pl >= 0 ? '+' : '';
-        return `<div class="holding-card">
-            <div class="holding-info">
-                <span class="holding-symbol">${h.symbol}</span>
-                <span class="holding-detail">${h.shares} × $${h.avgPrice.toFixed(2)} = $${costBasis.toFixed(2)}</span>
-                <span class="holding-detail">Current: $${h.currentPrice.toFixed(2)}</span>
-            </div>
-            <div class="holding-pl">
-                <span class="holding-value">$${currentValue.toFixed(2)}</span>
-                <span class="holding-pl-amount ${plClass}">${plSign}$${pl.toFixed(2)} (${plSign}${plPercent.toFixed(2)}%)</span>
-            </div>
-            <button class="holding-delete" onclick="deleteHolding('${h.id}')">×</button>
-        </div>`;
-    }).join('');
-    const totalPL = totalValue - totalCost;
-    const totalPLSign = totalPL >= 0 ? '+' : '';
-    totalValueEl.textContent = '$ ' + totalValue.toFixed(2);
-    unrealizedPLEl.textContent = `${totalPLSign}$${totalPL.toFixed(2)}`;
-    unrealizedPLEl.style.color = totalPL >= 0 ? '#10b981' : '#ef4444';
-    totalCostEl.textContent = '$ ' + totalCost.toFixed(2);
-    totalHoldingsEl.textContent = portfolio.length;
-}
-function deleteHolding(id) {
-    if (!confirm('Hapus holding ini?')) return;
-    portfolio = portfolio.filter(h => h.id !== id);
-    savePortfolio();
-    renderPortfolio();
-}
-const holdingModal = document.getElementById('holdingModal');
-document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
-document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active'));
-document.getElementById('cancelHolding').addEventListener('click', () => holdingModal.classList.remove('active'));
-document.getElementById('saveHolding').addEventListener('click', () => {
-    const symbol = document.getElementById('holdingSymbol').value.trim().toUpperCase();
-    const name = document.getElementById('holdingName').value.trim();
-    const type = document.getElementById('holdingType').value;
-    const shares = parseFloat(document.getElementById('holdingShares').value);
-    const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value);
-    if (!symbol || !name || !shares || !avgPrice) { alert('Isi semua field dulu!'); return; }
-    portfolio.push({ id: 'holding-' + Date.now(), symbol, name, type, shares, avgPrice, addedAt: Date.now() });
-    savePortfolio();
-    holdingModal.classList.remove('active');
-    document.getElementById('holdingSymbol').value = '';
-    document.getElementById('holdingName').value = '';
-    document.getElementById('holdingShares').value = '';
-    document.getElementById('holdingAvgPrice').value = '';
-    renderPortfolio();
+document.getElementById('indeksSearch').addEventListener('input', (e) => {
+    currentSearch = e.target.value.trim();
+    renderIndices();
 });
 
-// ============ NEWS ============
-async function renderNews() {
-    const container = document.getElementById('newsList');
-    container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
-    try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-news`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
-            body: JSON.stringify({ category: 'all' })
-        });
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        const news = data.news || [];
-        if (news.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada berita</div>'; return; }
-        container.innerHTML = news.map(item => {
-            const time = formatTime(item.timePublished);
-            return `<div class="news-card" onclick="window.open('${item.url}', '_blank')">
-                <div class="news-title">${item.title}</div>
-                <div class="news-summary">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div>
-                <div class="news-meta">
-                    <span class="sentiment-tag neutral">${(item.category || 'NEWS').toUpperCase()}</span>
-                    <span>${item.source || 'Unknown'}</span>
-                    <span>${time}</span>
-                </div>
-            </div>`;
-        }).join('');
-    } catch (error) {
-        container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`;
-    }
-}
-function formatTime(timeStr) {
-    if (!timeStr) return '';
-    const date = new Date(timeStr * 1000);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hour}:${minute}`;
-}
+document.querySelectorAll('.indeks-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.indeks-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.region;
+        renderIndices();
+    });
+});
+
+document.getElementById('refreshBtn').addEventListener('click', () => {
+    const btn = document.getElementById('refreshBtn');
+    btn.style.transform = 'rotate(360deg)';
+    btn.style.transition = 'transform 0.6s';
+    setTimeout(() => {
+        btn.style.transform = 'rotate(0deg)';
+        btn.style.transition = 'none';
+    }, 600);
+    renderIndices();
+});
 
 // ============ INIT ============
-renderWatchlist();
+renderIndices();
