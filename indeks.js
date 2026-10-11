@@ -10,342 +10,267 @@ let currentDetailSymbol = null;
 // ============ DATABASE INDEKS GLOBAL ============
 const GLOBAL_INDICES = [
     // ============ AMERICAS ============
-    {
-        symbol: '^GSPC',
-        name: 'S&P 500',
-        country: 'United States',
-        region: 'americas',
-        flag: '🇺🇸',
-        sectors: [
-            { name: 'Technology', pct: 29.5, color: '#22d3ee' },
-            { name: 'Financials', pct: 13.2, color: '#fbbf24' },
-            { name: 'Healthcare', pct: 12.8, color: '#10b981' },
-            { name: 'Consumer Discretionary', pct: 10.5, color: '#a855f7' },
-            { name: 'Communication', pct: 9.4, color: '#ec4899' },
-            { name: 'Industrials', pct: 7.8, color: '#f97316' },
-            { name: 'Others', pct: 16.8, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'AAPL', name: 'Apple Inc.' },
-            { symbol: 'MSFT', name: 'Microsoft Corp.' },
-            { symbol: 'NVDA', name: 'NVIDIA Corp.' },
-            { symbol: 'AMZN', name: 'Amazon.com Inc.' },
-            { symbol: 'META', name: 'Meta Platforms Inc.' }
-        ]
+    { symbol: '^GSPC', name: 'S&P 500', country: 'United States', region: 'americas', flag: '🇺🇸',
+      sectors: [
+        { name: 'Technology', pct: 29.5, color: '#22d3ee' },
+        { name: 'Financials', pct: 13.2, color: '#fbbf24' },
+        { name: 'Healthcare', pct: 12.8, color: '#10b981' },
+        { name: 'Consumer Discretionary', pct: 10.5, color: '#a855f7' },
+        { name: 'Communication', pct: 9.4, color: '#ec4899' },
+        { name: 'Industrials', pct: 7.8, color: '#f97316' },
+        { name: 'Others', pct: 16.8, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'AAPL', name: 'Apple Inc.' },
+        { symbol: 'MSFT', name: 'Microsoft Corp.' },
+        { symbol: 'NVDA', name: 'NVIDIA Corp.' },
+        { symbol: 'AMZN', name: 'Amazon.com Inc.' },
+        { symbol: 'META', name: 'Meta Platforms Inc.' }
+      ]
     },
-    {
-        symbol: '^DJI',
-        name: 'Dow Jones',
-        country: 'United States',
-        region: 'americas',
-        flag: '🇺🇸',
-        sectors: [
-            { name: 'Technology', pct: 22.1, color: '#22d3ee' },
-            { name: 'Financials', pct: 17.4, color: '#fbbf24' },
-            { name: 'Healthcare', pct: 15.2, color: '#10b981' },
-            { name: 'Industrials', pct: 14.8, color: '#f97316' },
-            { name: 'Consumer Discretionary', pct: 12.3, color: '#a855f7' },
-            { name: 'Others', pct: 18.2, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'UNH', name: 'UnitedHealth' },
-            { symbol: 'GS', name: 'Goldman Sachs' },
-            { symbol: 'MSFT', name: 'Microsoft' },
-            { symbol: 'HD', name: 'Home Depot' },
-            { symbol: 'MCD', name: 'McDonald\'s' }
-        ]
+    { symbol: '^DJI', name: 'Dow Jones', country: 'United States', region: 'americas', flag: '🇺🇸',
+      sectors: [
+        { name: 'Technology', pct: 22.1, color: '#22d3ee' },
+        { name: 'Financials', pct: 17.4, color: '#fbbf24' },
+        { name: 'Healthcare', pct: 15.2, color: '#10b981' },
+        { name: 'Industrials', pct: 14.8, color: '#f97316' },
+        { name: 'Consumer Discretionary', pct: 12.3, color: '#a855f7' },
+        { name: 'Others', pct: 18.2, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'UNH', name: 'UnitedHealth' },
+        { symbol: 'GS', name: 'Goldman Sachs' },
+        { symbol: 'MSFT', name: 'Microsoft' },
+        { symbol: 'HD', name: 'Home Depot' },
+        { symbol: 'MCD', name: "McDonald's" }
+      ]
     },
-    {
-        symbol: '^IXIC',
-        name: 'NASDAQ Composite',
-        country: 'United States',
-        region: 'americas',
-        flag: '🇺🇸',
-        sectors: [
-            { name: 'Technology', pct: 51.2, color: '#22d3ee' },
-            { name: 'Communication', pct: 15.6, color: '#ec4899' },
-            { name: 'Consumer Discretionary', pct: 12.4, color: '#a855f7' },
-            { name: 'Healthcare', pct: 7.8, color: '#10b981' },
-            { name: 'Financials', pct: 6.2, color: '#fbbf24' },
-            { name: 'Others', pct: 6.8, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'AAPL', name: 'Apple' },
-            { symbol: 'MSFT', name: 'Microsoft' },
-            { symbol: 'NVDA', name: 'NVIDIA' },
-            { symbol: 'AMZN', name: 'Amazon' },
-            { symbol: 'AVGO', name: 'Broadcom' }
-        ]
+    { symbol: '^IXIC', name: 'NASDAQ Composite', country: 'United States', region: 'americas', flag: '🇺🇸',
+      sectors: [
+        { name: 'Technology', pct: 51.2, color: '#22d3ee' },
+        { name: 'Communication', pct: 15.6, color: '#ec4899' },
+        { name: 'Consumer Discretionary', pct: 12.4, color: '#a855f7' },
+        { name: 'Healthcare', pct: 7.8, color: '#10b981' },
+        { name: 'Financials', pct: 6.2, color: '#fbbf24' },
+        { name: 'Others', pct: 6.8, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'AAPL', name: 'Apple' },
+        { symbol: 'MSFT', name: 'Microsoft' },
+        { symbol: 'NVDA', name: 'NVIDIA' },
+        { symbol: 'AMZN', name: 'Amazon' },
+        { symbol: 'AVGO', name: 'Broadcom' }
+      ]
     },
-    {
-        symbol: '^RUT',
-        name: 'Russell 2000',
-        country: 'United States',
-        region: 'americas',
-        flag: '🇺🇸',
-        sectors: [
-            { name: 'Financials', pct: 18.4, color: '#fbbf24' },
-            { name: 'Healthcare', pct: 17.2, color: '#10b981' },
-            { name: 'Industrials', pct: 15.8, color: '#f97316' },
-            { name: 'Technology', pct: 14.6, color: '#22d3ee' },
-            { name: 'Consumer Discretionary', pct: 12.1, color: '#a855f7' },
-            { name: 'Others', pct: 21.9, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'SMCI', name: 'Super Micro Computer' },
-            { symbol: 'INSM', name: 'Insmed Inc.' },
-            { symbol: 'FN', name: 'Fabrinet' },
-            { symbol: 'ONTO', name: 'Onto Innovation' },
-            { symbol: 'MSTR', name: 'MicroStrategy' }
-        ]
+    { symbol: '^RUT', name: 'Russell 2000', country: 'United States', region: 'americas', flag: '🇺🇸',
+      sectors: [
+        { name: 'Financials', pct: 18.4, color: '#fbbf24' },
+        { name: 'Healthcare', pct: 17.2, color: '#10b981' },
+        { name: 'Industrials', pct: 15.8, color: '#f97316' },
+        { name: 'Technology', pct: 14.6, color: '#22d3ee' },
+        { name: 'Consumer Discretionary', pct: 12.1, color: '#a855f7' },
+        { name: 'Others', pct: 21.9, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'SMCI', name: 'Super Micro Computer' },
+        { symbol: 'INSM', name: 'Insmed Inc.' },
+        { symbol: 'FN', name: 'Fabrinet' },
+        { symbol: 'ONTO', name: 'Onto Innovation' },
+        { symbol: 'MSTR', name: 'MicroStrategy' }
+      ]
     },
-    {
-        symbol: '^BVSP',
-        name: 'Bovespa',
-        country: 'Brazil',
-        region: 'americas',
-        flag: '🇧🇷',
-        sectors: [
-            { name: 'Financials', pct: 24.8, color: '#fbbf24' },
-            { name: 'Materials', pct: 18.2, color: '#f97316' },
-            { name: 'Energy', pct: 14.5, color: '#ef4444' },
-            { name: 'Consumer Staples', pct: 11.6, color: '#10b981' },
-            { name: 'Utilities', pct: 8.4, color: '#22d3ee' },
-            { name: 'Others', pct: 22.5, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'VALE3.SA', name: 'Vale S.A.' },
-            { symbol: 'PETR4.SA', name: 'Petrobras' },
-            { symbol: 'ITUB4.SA', name: 'Itaú Unibanco' },
-            { symbol: 'BBDC4.SA', name: 'Banco Bradesco' },
-            { symbol: 'ABEV3.SA', name: 'Ambev' }
-        ]
+    { symbol: '^BVSP', name: 'Bovespa', country: 'Brazil', region: 'americas', flag: '🇧🇷',
+      sectors: [
+        { name: 'Financials', pct: 24.8, color: '#fbbf24' },
+        { name: 'Materials', pct: 18.2, color: '#f97316' },
+        { name: 'Energy', pct: 14.5, color: '#ef4444' },
+        { name: 'Consumer Staples', pct: 11.6, color: '#10b981' },
+        { name: 'Utilities', pct: 8.4, color: '#22d3ee' },
+        { name: 'Others', pct: 22.5, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'VALE3.SA', name: 'Vale S.A.' },
+        { symbol: 'PETR4.SA', name: 'Petrobras' },
+        { symbol: 'ITUB4.SA', name: 'Itaú Unibanco' },
+        { symbol: 'BBDC4.SA', name: 'Banco Bradesco' },
+        { symbol: 'ABEV3.SA', name: 'Ambev' }
+      ]
     },
-    {
-        symbol: '^GSPTSE',
-        name: 'S&P/TSX',
-        country: 'Canada',
-        region: 'americas',
-        flag: '🇨🇦',
-        sectors: [
-            { name: 'Financials', pct: 32.4, color: '#fbbf24' },
-            { name: 'Energy', pct: 17.8, color: '#ef4444' },
-            { name: 'Industrials', pct: 12.6, color: '#f97316' },
-            { name: 'Materials', pct: 11.2, color: '#a855f7' },
-            { name: 'Technology', pct: 7.8, color: '#22d3ee' },
-            { name: 'Others', pct: 18.2, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'RY.TO', name: 'Royal Bank of Canada' },
-            { symbol: 'TD.TO', name: 'Toronto-Dominion Bank' },
-            { symbol: 'SHOP.TO', name: 'Shopify Inc.' },
-            { symbol: 'ENB.TO', name: 'Enbridge Inc.' },
-            { symbol: 'CNR.TO', name: 'Canadian National Railway' }
-        ]
+    { symbol: '^GSPTSE', name: 'S&P/TSX', country: 'Canada', region: 'americas', flag: '🇨🇦',
+      sectors: [
+        { name: 'Financials', pct: 32.4, color: '#fbbf24' },
+        { name: 'Energy', pct: 17.8, color: '#ef4444' },
+        { name: 'Industrials', pct: 12.6, color: '#f97316' },
+        { name: 'Materials', pct: 11.2, color: '#a855f7' },
+        { name: 'Technology', pct: 7.8, color: '#22d3ee' },
+        { name: 'Others', pct: 18.2, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'RY.TO', name: 'Royal Bank of Canada' },
+        { symbol: 'TD.TO', name: 'Toronto-Dominion Bank' },
+        { symbol: 'SHOP.TO', name: 'Shopify Inc.' },
+        { symbol: 'ENB.TO', name: 'Enbridge Inc.' },
+        { symbol: 'CNR.TO', name: 'Canadian National Railway' }
+      ]
     },
 
     // ============ EUROPE ============
-    {
-        symbol: '^FTSE',
-        name: 'FTSE 100',
-        country: 'United Kingdom',
-        region: 'europe',
-        flag: '🇬🇧',
-        sectors: [
-            { name: 'Financials', pct: 20.5, color: '#fbbf24' },
-            { name: 'Consumer Staples', pct: 16.4, color: '#10b981' },
-            { name: 'Energy', pct: 13.8, color: '#ef4444' },
-            { name: 'Healthcare', pct: 12.2, color: '#22d3ee' },
-            { name: 'Industrials', pct: 11.6, color: '#f97316' },
-            { name: 'Others', pct: 25.5, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'SHEL.L', name: 'Shell plc' },
-            { symbol: 'AZN.L', name: 'AstraZeneca' },
-            { symbol: 'HSBA.L', name: 'HSBC Holdings' },
-            { symbol: 'ULVR.L', name: 'Unilever' },
-            { symbol: 'BP.L', name: 'BP plc' }
-        ]
+    { symbol: '^FTSE', name: 'FTSE 100', country: 'United Kingdom', region: 'europe', flag: '🇬🇧',
+      sectors: [
+        { name: 'Financials', pct: 20.5, color: '#fbbf24' },
+        { name: 'Consumer Staples', pct: 16.4, color: '#10b981' },
+        { name: 'Energy', pct: 13.8, color: '#ef4444' },
+        { name: 'Healthcare', pct: 12.2, color: '#22d3ee' },
+        { name: 'Industrials', pct: 11.6, color: '#f97316' },
+        { name: 'Others', pct: 25.5, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'SHEL.L', name: 'Shell plc' },
+        { symbol: 'AZN.L', name: 'AstraZeneca' },
+        { symbol: 'HSBA.L', name: 'HSBC Holdings' },
+        { symbol: 'ULVR.L', name: 'Unilever' },
+        { symbol: 'BP.L', name: 'BP plc' }
+      ]
     },
-    {
-        symbol: '^GDAXI',
-        name: 'DAX',
-        country: 'Germany',
-        region: 'europe',
-        flag: '🇩🇪',
-        sectors: [
-            { name: 'Industrials', pct: 22.4, color: '#f97316' },
-            { name: 'Technology', pct: 18.6, color: '#22d3ee' },
-            { name: 'Financials', pct: 16.8, color: '#fbbf24' },
-            { name: 'Consumer Discretionary', pct: 14.2, color: '#a855f7' },
-            { name: 'Healthcare', pct: 12.1, color: '#10b981' },
-            { name: 'Others', pct: 15.9, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'SAP.DE', name: 'SAP SE' },
-            { symbol: 'SIE.DE', name: 'Siemens AG' },
-            { symbol: 'ALV.DE', name: 'Allianz SE' },
-            { symbol: 'DTE.DE', name: 'Deutsche Telekom' },
-            { symbol: 'AIR.DE', name: 'Airbus SE' }
-        ]
+    { symbol: '^GDAXI', name: 'DAX', country: 'Germany', region: 'europe', flag: '🇩🇪',
+      sectors: [
+        { name: 'Industrials', pct: 22.4, color: '#f97316' },
+        { name: 'Technology', pct: 18.6, color: '#22d3ee' },
+        { name: 'Financials', pct: 16.8, color: '#fbbf24' },
+        { name: 'Consumer Discretionary', pct: 14.2, color: '#a855f7' },
+        { name: 'Healthcare', pct: 12.1, color: '#10b981' },
+        { name: 'Others', pct: 15.9, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'SAP.DE', name: 'SAP SE' },
+        { symbol: 'SIE.DE', name: 'Siemens AG' },
+        { symbol: 'ALV.DE', name: 'Allianz SE' },
+        { symbol: 'DTE.DE', name: 'Deutsche Telekom' },
+        { symbol: 'AIR.DE', name: 'Airbus SE' }
+      ]
     },
-    {
-        symbol: '^FCHI',
-        name: 'CAC 40',
-        country: 'France',
-        region: 'europe',
-        flag: '🇫🇷',
-        sectors: [
-            { name: 'Consumer Discretionary', pct: 20.8, color: '#a855f7' },
-            { name: 'Industrials', pct: 18.2, color: '#f97316' },
-            { name: 'Financials', pct: 15.6, color: '#fbbf24' },
-            { name: 'Consumer Staples', pct: 14.4, color: '#10b981' },
-            { name: 'Healthcare', pct: 11.8, color: '#22d3ee' },
-            { name: 'Others', pct: 19.2, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'MC.PA', name: 'LVMH' },
-            { symbol: 'OR.PA', name: 'L\'Oréal' },
-            { symbol: 'TTE.PA', name: 'TotalEnergies' },
-            { symbol: 'RMS.PA', name: 'Hermès' },
-            { symbol: 'SAN.PA', name: 'Sanofi' }
-        ]
+    { symbol: '^FCHI', name: 'CAC 40', country: 'France', region: 'europe', flag: '🇫🇷',
+      sectors: [
+        { name: 'Consumer Discretionary', pct: 20.8, color: '#a855f7' },
+        { name: 'Industrials', pct: 18.2, color: '#f97316' },
+        { name: 'Financials', pct: 15.6, color: '#fbbf24' },
+        { name: 'Consumer Staples', pct: 14.4, color: '#10b981' },
+        { name: 'Healthcare', pct: 11.8, color: '#22d3ee' },
+        { name: 'Others', pct: 19.2, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'MC.PA', name: 'LVMH' },
+        { symbol: 'OR.PA', name: "L'Oréal" },
+        { symbol: 'TTE.PA', name: 'TotalEnergies' },
+        { symbol: 'RMS.PA', name: 'Hermès' },
+        { symbol: 'SAN.PA', name: 'Sanofi' }
+      ]
     },
-    {
-        symbol: '^STOXX50E',
-        name: 'Euro Stoxx 50',
-        country: 'Eurozone',
-        region: 'europe',
-        flag: '🇪🇺',
-        sectors: [
-            { name: 'Financials', pct: 21.2, color: '#fbbf24' },
-            { name: 'Industrials', pct: 17.4, color: '#f97316' },
-            { name: 'Consumer Discretionary', pct: 15.8, color: '#a855f7' },
-            { name: 'Technology', pct: 14.6, color: '#22d3ee' },
-            { name: 'Healthcare', pct: 12.2, color: '#10b981' },
-            { name: 'Others', pct: 18.8, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'ASML.AS', name: 'ASML Holding' },
-            { symbol: 'MC.PA', name: 'LVMH' },
-            { symbol: 'SAP.DE', name: 'SAP SE' },
-            { symbol: 'NESN.SW', name: 'Nestlé' },
-            { symbol: 'SIE.DE', name: 'Siemens' }
-        ]
+    { symbol: '^STOXX50E', name: 'Euro Stoxx 50', country: 'Eurozone', region: 'europe', flag: '🇪🇺',
+      sectors: [
+        { name: 'Financials', pct: 21.2, color: '#fbbf24' },
+        { name: 'Industrials', pct: 17.4, color: '#f97316' },
+        { name: 'Consumer Discretionary', pct: 15.8, color: '#a855f7' },
+        { name: 'Technology', pct: 14.6, color: '#22d3ee' },
+        { name: 'Healthcare', pct: 12.2, color: '#10b981' },
+        { name: 'Others', pct: 18.8, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'ASML.AS', name: 'ASML Holding' },
+        { symbol: 'MC.PA', name: 'LVMH' },
+        { symbol: 'SAP.DE', name: 'SAP SE' },
+        { symbol: 'NESN.SW', name: 'Nestlé' },
+        { symbol: 'SIE.DE', name: 'Siemens' }
+      ]
     },
 
     // ============ ASIA ============
-    {
-        symbol: '^N225',
-        name: 'Nikkei 225',
-        country: 'Japan',
-        region: 'asia',
-        flag: '🇯🇵',
-        sectors: [
-            { name: 'Technology', pct: 24.5, color: '#22d3ee' },
-            { name: 'Industrials', pct: 18.4, color: '#f97316' },
-            { name: 'Consumer Discretionary', pct: 16.2, color: '#a855f7' },
-            { name: 'Financials', pct: 13.8, color: '#fbbf24' },
-            { name: 'Healthcare', pct: 10.4, color: '#10b981' },
-            { name: 'Others', pct: 16.7, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: '7203.T', name: 'Toyota Motor' },
-            { symbol: '6758.T', name: 'Sony Group' },
-            { symbol: '6861.T', name: 'Keyence' },
-            { symbol: '9984.T', name: 'SoftBank Group' },
-            { symbol: '8306.T', name: 'Mitsubishi UFJ' }
-        ]
+    { symbol: '^N225', name: 'Nikkei 225', country: 'Japan', region: 'asia', flag: '🇯🇵',
+      sectors: [
+        { name: 'Technology', pct: 24.5, color: '#22d3ee' },
+        { name: 'Industrials', pct: 18.4, color: '#f97316' },
+        { name: 'Consumer Discretionary', pct: 16.2, color: '#a855f7' },
+        { name: 'Financials', pct: 13.8, color: '#fbbf24' },
+        { name: 'Healthcare', pct: 10.4, color: '#10b981' },
+        { name: 'Others', pct: 16.7, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: '7203.T', name: 'Toyota Motor' },
+        { symbol: '6758.T', name: 'Sony Group' },
+        { symbol: '6861.T', name: 'Keyence' },
+        { symbol: '9984.T', name: 'SoftBank Group' },
+        { symbol: '8306.T', name: 'Mitsubishi UFJ' }
+      ]
     },
-    {
-        symbol: '^HSI',
-        name: 'Hang Seng',
-        country: 'Hong Kong',
-        region: 'asia',
-        flag: '🇭🇰',
-        sectors: [
-            { name: 'Financials', pct: 32.6, color: '#fbbf24' },
-            { name: 'Technology', pct: 21.4, color: '#22d3ee' },
-            { name: 'Consumer Discretionary', pct: 15.2, color: '#a855f7' },
-            { name: 'Real Estate', pct: 11.8, color: '#ef4444' },
-            { name: 'Telecom', pct: 8.4, color: '#10b981' },
-            { name: 'Others', pct: 10.6, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: '0700.HK', name: 'Tencent Holdings' },
-            { symbol: '0005.HK', name: 'HSBC Holdings' },
-            { symbol: '9988.HK', name: 'Alibaba Group' },
-            { symbol: '1299.HK', name: 'AIA Group' },
-            { symbol: '3690.HK', name: 'Meituan' }
-        ]
+    { symbol: '^HSI', name: 'Hang Seng', country: 'Hong Kong', region: 'asia', flag: '🇭🇰',
+      sectors: [
+        { name: 'Financials', pct: 32.6, color: '#fbbf24' },
+        { name: 'Technology', pct: 21.4, color: '#22d3ee' },
+        { name: 'Consumer Discretionary', pct: 15.2, color: '#a855f7' },
+        { name: 'Real Estate', pct: 11.8, color: '#ef4444' },
+        { name: 'Telecom', pct: 8.4, color: '#10b981' },
+        { name: 'Others', pct: 10.6, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: '0700.HK', name: 'Tencent Holdings' },
+        { symbol: '0005.HK', name: 'HSBC Holdings' },
+        { symbol: '9988.HK', name: 'Alibaba Group' },
+        { symbol: '1299.HK', name: 'AIA Group' },
+        { symbol: '3690.HK', name: 'Meituan' }
+      ]
     },
-    {
-        symbol: '000001.SS',
-        name: 'Shanghai Composite',
-        country: 'China',
-        region: 'asia',
-        flag: '🇨🇳',
-        sectors: [
-            { name: 'Financials', pct: 28.4, color: '#fbbf24' },
-            { name: 'Industrials', pct: 18.6, color: '#f97316' },
-            { name: 'Consumer Staples', pct: 14.2, color: '#10b981' },
-            { name: 'Materials', pct: 12.8, color: '#a855f7' },
-            { name: 'Technology', pct: 10.4, color: '#22d3ee' },
-            { name: 'Others', pct: 15.6, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: '601398.SS', name: 'ICBC' },
-            { symbol: '600519.SS', name: 'Kweichow Moutai' },
-            { symbol: '601857.SS', name: 'PetroChina' },
-            { symbol: '601288.SS', name: 'Agricultural Bank of China' },
-            { symbol: '600036.SS', name: 'China Merchants Bank' }
-        ]
+    { symbol: '000001.SS', name: 'Shanghai Composite', country: 'China', region: 'asia', flag: '🇨🇳',
+      sectors: [
+        { name: 'Financials', pct: 28.4, color: '#fbbf24' },
+        { name: 'Industrials', pct: 18.6, color: '#f97316' },
+        { name: 'Consumer Staples', pct: 14.2, color: '#10b981' },
+        { name: 'Materials', pct: 12.8, color: '#a855f7' },
+        { name: 'Technology', pct: 10.4, color: '#22d3ee' },
+        { name: 'Others', pct: 15.6, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: '601398.SS', name: 'ICBC' },
+        { symbol: '600519.SS', name: 'Kweichow Moutai' },
+        { symbol: '601857.SS', name: 'PetroChina' },
+        { symbol: '601288.SS', name: 'Agricultural Bank of China' },
+        { symbol: '600036.SS', name: 'China Merchants Bank' }
+      ]
     },
-    {
-        symbol: '^NSEI',
-        name: 'NIFTY 50',
-        country: 'India',
-        region: 'asia',
-        flag: '🇮🇳',
-        sectors: [
-            { name: 'Financials', pct: 34.8, color: '#fbbf24' },
-            { name: 'Technology', pct: 16.4, color: '#22d3ee' },
-            { name: 'Energy', pct: 12.6, color: '#ef4444' },
-            { name: 'Consumer Goods', pct: 11.2, color: '#10b981' },
-            { name: 'Auto', pct: 8.4, color: '#a855f7' },
-            { name: 'Others', pct: 16.6, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'RELIANCE.NS', name: 'Reliance Industries' },
-            { symbol: 'TCS.NS', name: 'Tata Consultancy' },
-            { symbol: 'HDFCBANK.NS', name: 'HDFC Bank' },
-            { symbol: 'INFY.NS', name: 'Infosys' },
-            { symbol: 'ICICIBANK.NS', name: 'ICICI Bank' }
-        ]
+    { symbol: '^NSEI', name: 'NIFTY 50', country: 'India', region: 'asia', flag: '🇮🇳',
+      sectors: [
+        { name: 'Financials', pct: 34.8, color: '#fbbf24' },
+        { name: 'Technology', pct: 16.4, color: '#22d3ee' },
+        { name: 'Energy', pct: 12.6, color: '#ef4444' },
+        { name: 'Consumer Goods', pct: 11.2, color: '#10b981' },
+        { name: 'Auto', pct: 8.4, color: '#a855f7' },
+        { name: 'Others', pct: 16.6, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'RELIANCE.NS', name: 'Reliance Industries' },
+        { symbol: 'TCS.NS', name: 'Tata Consultancy' },
+        { symbol: 'HDFCBANK.NS', name: 'HDFC Bank' },
+        { symbol: 'INFY.NS', name: 'Infosys' },
+        { symbol: 'ICICIBANK.NS', name: 'ICICI Bank' }
+      ]
     },
 
     // ============ OCEANIA ============
-    {
-        symbol: '^AXJO',
-        name: 'ASX 200',
-        country: 'Australia',
-        region: 'oceania',
-        flag: '🇦🇺',
-        sectors: [
-            { name: 'Financials', pct: 30.2, color: '#fbbf24' },
-            { name: 'Materials', pct: 19.4, color: '#a855f7' },
-            { name: 'Healthcare', pct: 11.8, color: '#10b981' },
-            { name: 'Consumer Discretionary', pct: 10.4, color: '#22d3ee' },
-            { name: 'Industrials', pct: 9.6, color: '#f97316' },
-            { name: 'Others', pct: 18.6, color: '#64748b' }
-        ],
-        topHoldings: [
-            { symbol: 'BHP.AX', name: 'BHP Group' },
-            { symbol: 'CBA.AX', name: 'Commonwealth Bank' },
-            { symbol: 'CSL.AX', name: 'CSL Limited' },
-            { symbol: 'NAB.AX', name: 'National Australia Bank' },
-            { symbol: 'WBC.AX', name: 'Westpac Banking' }
-        ]
+    { symbol: '^AXJO', name: 'ASX 200', country: 'Australia', region: 'oceania', flag: '🇦🇺',
+      sectors: [
+        { name: 'Financials', pct: 30.2, color: '#fbbf24' },
+        { name: 'Materials', pct: 19.4, color: '#a855f7' },
+        { name: 'Healthcare', pct: 11.8, color: '#10b981' },
+        { name: 'Consumer Discretionary', pct: 10.4, color: '#22d3ee' },
+        { name: 'Industrials', pct: 9.6, color: '#f97316' },
+        { name: 'Others', pct: 18.6, color: '#64748b' }
+      ],
+      topHoldings: [
+        { symbol: 'BHP.AX', name: 'BHP Group' },
+        { symbol: 'CBA.AX', name: 'Commonwealth Bank' },
+        { symbol: 'CSL.AX', name: 'CSL Limited' },
+        { symbol: 'NAB.AX', name: 'National Australia Bank' },
+        { symbol: 'WBC.AX', name: 'Westpac Banking' }
+      ]
     }
 ];
 
@@ -364,10 +289,18 @@ function formatVolume(vol) {
     return vol.toString();
 }
 
+// 🔥 FETCH DENGAN TIMEOUT 8 DETIK
+function fetchWithTimeout(url, options, timeout = 8000) {
+    return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
+    ]);
+}
+
 // ============ FETCH INDEX DATA ============
 async function fetchIndexData(symbol) {
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-price`, {
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-price`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -375,7 +308,7 @@ async function fetchIndexData(symbol) {
                 'apikey': SUPABASE_ANON_KEY
             },
             body: JSON.stringify({ symbol, type: 'stock' })
-        });
+        }, 8000);
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
@@ -404,7 +337,7 @@ async function fetchIndexData(symbol) {
         }
         return null;
     } catch (error) {
-        console.error('Error fetchIndexData (' + symbol + '):', error);
+        console.warn('⚠️ Failed:', symbol, error.message);
         return null;
     }
 }
@@ -412,7 +345,7 @@ async function fetchIndexData(symbol) {
 // ============ FETCH CHART DATA ============
 async function fetchIndexChartData(symbol, interval = '1d', range = '1y') {
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -420,7 +353,7 @@ async function fetchIndexChartData(symbol, interval = '1d', range = '1y') {
                 'apikey': SUPABASE_ANON_KEY
             },
             body: JSON.stringify({ symbol, type: 'stock', interval, range })
-        });
+        }, 10000);
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
@@ -462,48 +395,6 @@ async function fetchIndexChartData(symbol, interval = '1d', range = '1y') {
     }
 }
 
-// ============ RENDER INDICES LIST ============
-async function renderIndices() {
-    const list = document.getElementById('indeksList');
-    list.innerHTML = `
-        <div class="indeks-loading">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">Memuat indeks global...</p>
-        </div>
-    `;
-    
-    let filtered = GLOBAL_INDICES;
-    if (currentFilter !== 'all') {
-        filtered = filtered.filter(i => i.region === currentFilter);
-    }
-    if (currentSearch) {
-        const q = currentSearch.toLowerCase();
-        filtered = filtered.filter(i => 
-            i.name.toLowerCase().includes(q) || 
-            i.symbol.toLowerCase().includes(q) ||
-            i.country.toLowerCase().includes(q)
-        );
-    }
-    
-    if (filtered.length === 0) {
-        list.innerHTML = '<div class="empty-state">Gak ada indeks yang match. Coba kata kunci lain.</div>';
-        return;
-    }
-    
-    const withData = await Promise.all(
-        filtered.map(async (idx) => {
-            const data = await fetchIndexData(idx.symbol);
-            return { ...idx, data };
-        })
-    );
-    
-    list.innerHTML = withData.map(idx => renderIndeksCard(idx)).join('');
-    
-    const now = new Date();
-    document.getElementById('lastUpdated').textContent = 'Terakhir diupdate: ' + 
-        now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
 // ============ RENDER SINGLE CARD ============
 function renderIndeksCard(idx) {
     const d = idx.data;
@@ -520,8 +411,8 @@ function renderIndeksCard(idx) {
                         </div>
                     </div>
                     <div class="indeks-card-price-wrap">
-                        <div class="indeks-card-price">-</div>
-                        <div class="indeks-card-change">Gagal memuat</div>
+                        <div class="indeks-card-price" style="color:rgba(255,255,255,0.4);">N/A</div>
+                        <div class="indeks-card-change" style="color:rgba(255,255,255,0.3);">Data gak tersedia</div>
                     </div>
                 </div>
             </div>
@@ -572,6 +463,68 @@ function renderIndeksCard(idx) {
     `;
 }
 
+// 🔥 RENDER INDICES — PROGRESSIVE (langsung tampil, gak nunggu semua)
+async function renderIndices() {
+    const list = document.getElementById('indeksList');
+    
+    let filtered = GLOBAL_INDICES;
+    if (currentFilter !== 'all') {
+        filtered = filtered.filter(i => i.region === currentFilter);
+    }
+    if (currentSearch) {
+        const q = currentSearch.toLowerCase();
+        filtered = filtered.filter(i => 
+            i.name.toLowerCase().includes(q) || 
+            i.symbol.toLowerCase().includes(q) ||
+            i.country.toLowerCase().includes(q)
+        );
+    }
+    
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state">Gak ada indeks yang match. Coba kata kunci lain.</div>';
+        return;
+    }
+    
+    // 🔥 LANGKAH 1: Tampilkan skeleton cards dulu (langsung, gak nunggu API)
+    list.innerHTML = filtered.map((idx, i) => `
+        <div class="indeks-card" id="indeks-card-${i}" style="opacity:0.6;">
+            <div class="indeks-card-header">
+                <div class="indeks-card-title">
+                    <span class="indeks-card-flag">${idx.flag}</span>
+                    <div class="indeks-card-name-wrap">
+                        <span class="indeks-card-name">${idx.name}</span>
+                        <span class="indeks-card-country">${idx.country}</span>
+                    </div>
+                </div>
+                <div class="indeks-card-price-wrap">
+                    <div class="indeks-card-price" style="color:rgba(255,255,255,0.3);">⏳</div>
+                    <div class="indeks-card-change" style="color:rgba(255,255,255,0.3);">Loading...</div>
+                </div>
+            </div>
+            <div class="indeks-card-sectors">
+                ${idx.sectors.slice(0, 5).map(s => 
+                    `<div class="indeks-sector-mini-bar" style="flex:${s.pct}; background:${s.color}; opacity:0.4;"></div>`
+                ).join('')}
+            </div>
+        </div>
+    `).join('');
+    
+    // 🔥 LANGKAH 2: Fetch tiap indeks SECARA PARALEL tapi masing-masing update sendiri
+    filtered.forEach(async (idx, i) => {
+        const data = await fetchIndexData(idx.symbol);
+        const cardEl = document.getElementById('indeks-card-' + i);
+        if (!cardEl) return;
+        
+        const updatedIdx = { ...idx, data };
+        cardEl.outerHTML = renderIndeksCard(updatedIdx);
+    });
+    
+    // Update last update time
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent = 'Terakhir diupdate: ' + 
+        now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
 // ============ OPEN DETAIL MODAL ============
 async function openIndeksDetail(symbol) {
     const idx = GLOBAL_INDICES.find(i => i.symbol === symbol);
@@ -585,8 +538,8 @@ async function openIndeksDetail(symbol) {
     document.getElementById('detailTitle').textContent = idx.name;
     document.getElementById('detailSubtitle').textContent = idx.country;
     
-    document.getElementById('detailPrice').textContent = '-';
-    document.getElementById('detailChange').textContent = '-';
+    document.getElementById('detailPrice').textContent = '⏳';
+    document.getElementById('detailChange').textContent = 'Loading...';
     document.getElementById('detailChange').className = 'indeks-detail-change';
     document.getElementById('detailHigh').textContent = '-';
     document.getElementById('detailLow').textContent = '-';
@@ -610,6 +563,9 @@ async function openIndeksDetail(symbol) {
         document.getElementById('detailLow').textContent = formatNumber(data.low, 2);
         document.getElementById('detailPrevClose').textContent = formatNumber(data.prevClose, 2);
         document.getElementById('detailVolume').textContent = formatVolume(data.volume);
+    } else {
+        document.getElementById('detailPrice').textContent = 'N/A';
+        document.getElementById('detailChange').textContent = 'Data gak tersedia';
     }
     
     loadIndeksChart(symbol);
@@ -642,7 +598,7 @@ function renderTopHoldings(holdings) {
                 <span class="indeks-constituent-name">${h.name}</span>
             </div>
             <div class="indeks-constituent-right">
-                <span class="indeks-constituent-price" id="const-price-${h.symbol}">-</span>
+                <span class="indeks-constituent-price" id="const-price-${h.symbol}">⏳</span>
                 <span class="indeks-constituent-change" id="const-change-${h.symbol}">-</span>
             </div>
         </div>
@@ -651,7 +607,7 @@ function renderTopHoldings(holdings) {
 
 // ============ LOAD TOP HOLDINGS PRICES ============
 async function loadTopHoldingsPrices(holdings) {
-    await Promise.all(holdings.map(async (h) => {
+    await Promise.allSettled(holdings.map(async (h) => {
         try {
             const data = await fetchIndexData(h.symbol);
             const priceEl = document.getElementById('const-price-' + h.symbol);
