@@ -63,6 +63,30 @@ body {
 .subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 .menu-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 20px; cursor: pointer; padding: 4px 8px; }
 
+/* ============ BACK BUTTON ============ */
+.back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: 0.2s;
+    font-family: inherit;
+}
+
+.back-btn:active {
+    transform: scale(0.9);
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--gold);
+}
+
 /* ============ HEADER ACTIONS ============ */
 .header-actions {
     display: flex;
@@ -99,6 +123,7 @@ body {
     background: transparent; border: none; color: var(--text-secondary);
     font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 20px;
     cursor: pointer; white-space: nowrap; transition: 0.2s; font-family: inherit;
+    text-decoration: none;
 }
 .tab.active {
     background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(34, 211, 238, 0.15));
@@ -509,3 +534,579 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .analysis-error { text-align: center; padding: 20px; color: var(--red); }
 .analysis-error .error-detail { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* ============================================================ */
+/* ============ GLOBAL INDICES SECTION (NEW) ============ */
+/* ============================================================ */
+
+/* ============ INFO BANNER ============ */
+.indeks-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 16px 20px 0;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(251, 191, 36, 0.08));
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    border-radius: 14px;
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.5s ease;
+}
+
+.indeks-banner-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    animation: rotateGlobe 20s linear infinite;
+}
+
+@keyframes rotateGlobe {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.indeks-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.indeks-banner-text strong {
+    font-size: 13px;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--gold), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.indeks-banner-text span {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* ============ SEARCH BAR ============ */
+.indeks-search-bar {
+    padding: 12px 20px 8px;
+}
+
+.indeks-search-bar input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+    transition: 0.2s;
+}
+
+.indeks-search-bar input:focus {
+    border-color: rgba(251, 191, 36, 0.5);
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+/* ============ REGION FILTER ============ */
+.indeks-filters {
+    display: flex;
+    gap: 6px;
+    padding: 8px 20px 16px;
+    overflow-x: auto;
+}
+
+.indeks-filters::-webkit-scrollbar { height: 0; }
+
+.indeks-filter-btn {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 18px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: 0.2s;
+}
+
+.indeks-filter-btn.active {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(34, 211, 238, 0.2));
+    color: var(--gold);
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+.indeks-filter-btn:active {
+    transform: scale(0.95);
+}
+
+/* ============ INDICES LIST ============ */
+.indeks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.indeks-loading {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.indeks-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.indeks-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--cyan));
+    opacity: 0.6;
+}
+
+.indeks-card:active {
+    transform: scale(0.98);
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+/* Card header row */
+.indeks-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.indeks-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.indeks-card-flag {
+    font-size: 24px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.indeks-card-name-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.indeks-card-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.indeks-card-country {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.indeks-card-price-wrap {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.indeks-card-price {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.indeks-card-change {
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.indeks-card-change.up { color: var(--green); }
+.indeks-card-change.down { color: var(--red); }
+
+/* Card stats grid (high/low/volume) */
+.indeks-card-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px 0;
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+    margin-bottom: 10px;
+}
+
+.indeks-stat-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: center;
+}
+
+.indeks-stat-cell-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.indeks-stat-cell-value {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.indeks-stat-cell-value.up { color: var(--green); }
+.indeks-stat-cell-value.down { color: var(--red); }
+
+/* Card sector summary (mini bars) */
+.indeks-card-sectors {
+    display: flex;
+    gap: 3px;
+    margin-top: 6px;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.indeks-sector-mini-bar {
+    height: 100%;
+    transition: all 0.3s;
+}
+
+/* ============ INDICES FOOTER ============ */
+.indeks-footer {
+    padding: 20px 0 10px;
+    text-align: center;
+}
+
+.indeks-update-info {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ============ INDICES DETAIL MODAL ============ */
+.indeks-detail-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    animation: fadeIn 0.3s ease;
+}
+
+.indeks-detail-modal.active {
+    display: flex;
+}
+
+.indeks-detail-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 14px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.indeks-detail-content::-webkit-scrollbar { width: 4px; }
+.indeks-detail-content::-webkit-scrollbar-thumb {
+    background: rgba(251, 191, 36, 0.3);
+    border-radius: 4px;
+}
+
+.indeks-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.indeks-detail-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.indeks-detail-flag {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.indeks-detail-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--gold), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+}
+
+.indeks-detail-subtitle {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* Price box */
+.indeks-detail-price-box {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.indeks-detail-price {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+}
+
+.indeks-detail-change {
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+.indeks-detail-change.up { color: var(--green); }
+.indeks-detail-change.down { color: var(--red); }
+
+/* Stats grid */
+.indeks-detail-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.indeks-stat-item {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    backdrop-filter: blur(10px);
+}
+
+.indeks-stat-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.indeks-stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.indeks-stat-value.up { color: var(--green); }
+.indeks-stat-value.down { color: var(--red); }
+
+/* Section title */
+.indeks-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--gold), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+}
+
+/* Sector breakdown section */
+.indeks-detail-sectors-section {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.indeks-sectors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.indeks-sector-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.indeks-sector-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+}
+
+.indeks-sector-name {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.indeks-sector-pct {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 11px;
+}
+
+.indeks-sector-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.indeks-sector-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+
+/* Chart section */
+.indeks-detail-chart-section {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.indeks-chart-container {
+    width: 100%;
+    height: 260px;
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Top constituents section */
+.indeks-detail-constituents-section {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    margin-bottom: 20px;
+}
+
+.indeks-constituents-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.indeks-constituent-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: 0.2s;
+}
+
+.indeks-constituent-item:active {
+    background: rgba(251, 191, 36, 0.08);
+    border-color: rgba(251, 191, 36, 0.2);
+}
+
+.indeks-constituent-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.indeks-constituent-symbol {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.indeks-constituent-name {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+.indeks-constituent-right {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: right;
+}
+
+.indeks-constituent-price {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.indeks-constituent-change {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.indeks-constituent-change.up { color: var(--green); }
+.indeks-constituent-change.down { color: var(--red); }
+
+/* ============ INDICES RESPONSIVE ============ */
+@media (min-width: 500px) {
+    .indeks-detail-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .indeks-chart-container {
+        height: 320px;
+    }
+    }
