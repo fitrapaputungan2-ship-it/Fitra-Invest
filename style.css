@@ -123,11 +123,17 @@ body {
     background: transparent; border: none; color: var(--text-secondary);
     font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 20px;
     cursor: pointer; white-space: nowrap; transition: 0.2s; font-family: inherit;
-    text-decoration: none;
 }
 .tab.active {
     background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(34, 211, 238, 0.15));
     color: var(--gold); border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.tab-link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* ============ CONTENT ============ */
@@ -682,7 +688,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     border-color: rgba(251, 191, 36, 0.4);
 }
 
-/* Card header row */
 .indeks-card-header {
     display: flex;
     justify-content: space-between;
@@ -750,7 +755,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .indeks-card-change.up { color: var(--green); }
 .indeks-card-change.down { color: var(--red); }
 
-/* Card stats grid (high/low/volume) */
 .indeks-card-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -785,7 +789,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .indeks-stat-cell-value.up { color: var(--green); }
 .indeks-stat-cell-value.down { color: var(--red); }
 
-/* Card sector summary (mini bars) */
 .indeks-card-sectors {
     display: flex;
     gap: 3px;
@@ -884,7 +887,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     font-weight: 500;
 }
 
-/* Price box */
 .indeks-detail-price-box {
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -911,7 +913,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .indeks-detail-change.up { color: var(--green); }
 .indeks-detail-change.down { color: var(--red); }
 
-/* Stats grid */
 .indeks-detail-stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -945,7 +946,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .indeks-stat-value.up { color: var(--green); }
 .indeks-stat-value.down { color: var(--red); }
 
-/* Section title */
 .indeks-section-title {
     font-size: 13px;
     font-weight: 700;
@@ -956,7 +956,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     margin-bottom: 4px;
 }
 
-/* Sector breakdown section */
 .indeks-detail-sectors-section {
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -1010,7 +1009,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     transition: width 0.6s ease;
 }
 
-/* Chart section */
 .indeks-detail-chart-section {
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -1029,7 +1027,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     position: relative;
 }
 
-/* Top constituents section */
 .indeks-detail-constituents-section {
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -1100,7 +1097,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .indeks-constituent-change.up { color: var(--green); }
 .indeks-constituent-change.down { color: var(--red); }
 
-/* ============ INDICES RESPONSIVE ============ */
 @media (min-width: 500px) {
     .indeks-detail-stats {
         grid-template-columns: repeat(4, 1fr);
@@ -1109,4 +1105,4 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     .indeks-chart-container {
         height: 320px;
     }
-    }
+                   }
