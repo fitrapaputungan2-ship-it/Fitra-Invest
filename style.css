@@ -243,6 +243,162 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 
 .empty-state { text-align: center; color: var(--text-muted); font-size: 13px; padding: 40px 20px; font-style: italic; }
 
+/* ============================================================ */
+/* ============ MARKET MOVERS (TOP GAINERS/LOSERS) ============ */
+/* ============================================================ */
+
+.market-movers {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 4px;
+}
+
+.movers-loading {
+    text-align: center;
+    padding: 30px 20px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+}
+
+.movers-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.movers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2px;
+}
+
+.movers-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.gainers-title {
+    background: linear-gradient(90deg, var(--green), #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.losers-title {
+    background: linear-gradient(90deg, var(--red), #f87171);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.movers-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: var(--glass);
+    padding: 2px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+}
+
+.movers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mover-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 10px 14px 10px 18px;
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.mover-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+}
+
+.mover-item.gainer::before {
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.mover-item.loser::before {
+    background: var(--red);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.mover-item:active {
+    transform: scale(0.98);
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+.mover-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.mover-symbol {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.mover-name {
+    font-size: 10px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mover-price-wrap {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.mover-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.mover-change {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.mover-change.gainer {
+    color: var(--green);
+}
+
+.mover-change.loser {
+    color: var(--red);
+}
+
 /* ============ SCREENER ============ */
 .screener-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 .filter-group { display: flex; flex-direction: column; gap: 6px; }
@@ -1168,4 +1324,4 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     .indeks-chart-container {
         height: 320px;
     }
-}
+    }
