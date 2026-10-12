@@ -34,7 +34,6 @@ body {
         radial-gradient(ellipse at top right, rgba(251, 191, 36, 0.06) 0%, transparent 50%),
         radial-gradient(ellipse at bottom left, rgba(34, 211, 238, 0.06) 0%, transparent 50%),
         var(--bg-deep);
-    /* 🔥 OPTIMASI GPU untuk WebView APK */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
     -webkit-backface-visibility: hidden;
@@ -50,6 +49,7 @@ body {
     background: rgba(15, 15, 26, 0.95);
     border-bottom: 1px solid var(--glass-border);
     position: sticky; top: 0; z-index: 10;
+    flex-shrink: 0;
 }
 .header-left { display: flex; align-items: center; gap: 12px; }
 .logo-mark {
@@ -122,12 +122,14 @@ body {
     background: rgba(15, 15, 26, 0.9);
     border-bottom: 1px solid var(--glass-border);
     overflow-x: auto;
+    flex-shrink: 0;
 }
 .tabs::-webkit-scrollbar { height: 0; }
 .tab {
     background: transparent; border: none; color: var(--text-secondary);
     font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 20px;
     cursor: pointer; white-space: nowrap; transition: 0.2s; font-family: inherit;
+    flex-shrink: 0;
 }
 .tab.active {
     background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(34, 211, 238, 0.15));
@@ -250,6 +252,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     background: linear-gradient(135deg, var(--gold), var(--gold-dark));
     border: none; color: #0a0a0f; font-size: 20px; font-weight: bold;
     cursor: pointer; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+    flex-shrink: 0;
 }
 
 /* ============ MODAL ============ */
@@ -264,7 +267,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     border-top: 1px solid var(--glass-border); border-radius: 24px 24px 0 0;
     display: flex; flex-direction: column; overflow: hidden;
 }
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--glass-border); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
 .modal-header h3 {
     font-size: 16px; font-weight: 700;
     background: linear-gradient(90deg, var(--gold), var(--cyan));
@@ -281,7 +284,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 }
 .form-group input:focus, .form-group select:focus { border-color: rgba(251, 191, 36, 0.5); box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1); }
 .form-group select { appearance: none; -webkit-appearance: none; }
-.modal-footer { display: flex; gap: 12px; padding: 20px; border-top: 1px solid var(--glass-border); }
+.modal-footer { display: flex; gap: 12px; padding: 20px; border-top: 1px solid var(--glass-border); flex-shrink: 0; }
 .btn-cancel, .btn-save { flex: 1; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.2s; border: none; }
 .btn-cancel { background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-secondary); }
 .btn-cancel:active { background: rgba(255, 255, 255, 0.08); }
@@ -296,6 +299,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .browse-search-bar {
     padding: 12px 20px;
     border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
 }
 
 .browse-search-bar input {
@@ -321,7 +325,11 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     gap: 6px;
     padding: 12px 20px;
     overflow-x: auto;
+    overflow-y: hidden;
     border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
+    min-height: 54px;
+    align-items: center;
 }
 
 .browse-categories::-webkit-scrollbar { height: 0; }
@@ -332,12 +340,17 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     color: var(--text-secondary);
     font-size: 11px;
     font-weight: 600;
-    padding: 6px 14px;
+    padding: 8px 14px;
     border-radius: 16px;
     cursor: pointer;
     font-family: inherit;
     white-space: nowrap;
     transition: 0.2s;
+    flex-shrink: 0;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .cat-btn.active {
@@ -354,7 +367,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     flex-direction: column;
     gap: 8px;
     -webkit-overflow-scrolling: touch;
-    /* 🔥 OPTIMASI APK */
     transform: translateZ(0);
     will-change: scroll-position;
 }
@@ -369,7 +381,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     padding: 12px 16px;
     cursor: pointer;
     transition: background 0.2s;
-    /* 🔥 backdrop-filter DIHAPUS untuk performa APK */
+    flex-shrink: 0;
 }
 
 .browse-item:active {
@@ -406,6 +418,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     border-radius: 10px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    flex-shrink: 0;
 }
 
 .browse-badge.add {
@@ -506,6 +519,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     font-size: 11px; font-weight: 600; padding: 6px 8px; border-radius: 6px;
     cursor: pointer; transition: 0.2s; font-family: inherit; 
     min-width: 42px;
+    flex-shrink: 0;
 }
 .tf-btn.active {
     background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(34, 211, 238, 0.2));
@@ -546,7 +560,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 /* ============ GLOBAL INDICES SECTION ============ */
 /* ============================================================ */
 
-/* ============ INFO BANNER ============ */
 .indeks-banner {
     display: flex;
     align-items: center;
@@ -557,6 +570,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     border: 1px solid rgba(34, 211, 238, 0.2);
     border-radius: 14px;
     animation: fadeIn 0.5s ease;
+    flex-shrink: 0;
 }
 
 .indeks-banner-icon {
@@ -591,9 +605,9 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     line-height: 1.4;
 }
 
-/* ============ SEARCH BAR ============ */
 .indeks-search-bar {
     padding: 12px 20px 8px;
+    flex-shrink: 0;
 }
 
 .indeks-search-bar input {
@@ -614,12 +628,12 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
 }
 
-/* ============ REGION FILTER ============ */
 .indeks-filters {
     display: flex;
     gap: 6px;
     padding: 8px 20px 16px;
     overflow-x: auto;
+    flex-shrink: 0;
 }
 
 .indeks-filters::-webkit-scrollbar { height: 0; }
@@ -636,6 +650,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     font-family: inherit;
     white-space: nowrap;
     transition: 0.2s;
+    flex-shrink: 0;
 }
 
 .indeks-filter-btn.active {
@@ -648,7 +663,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     transform: scale(0.95);
 }
 
-/* ============ INDICES LIST ============ */
 .indeks-list {
     display: flex;
     flex-direction: column;
@@ -803,7 +817,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     transition: all 0.3s;
 }
 
-/* ============ INDICES FOOTER ============ */
 .indeks-footer {
     padding: 20px 0 10px;
     text-align: center;
@@ -815,7 +828,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     font-style: italic;
 }
 
-/* ============ INDICES DETAIL MODAL ============ */
 .indeks-detail-modal {
     position: fixed;
     inset: 0;
