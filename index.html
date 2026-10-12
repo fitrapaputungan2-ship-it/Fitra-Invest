@@ -28,7 +28,7 @@
             <button class="tab" data-tab="screener">Screener</button>
             <button class="tab" data-tab="portfolio">Portfolio</button>
             <button class="tab" data-tab="news">News</button>
-            <a href="indeks.html" class="tab tab-link">🌍 Indeks</a>
+            <a href="./indeks.html" class="tab tab-link" id="indeksTabLink">🌍 Indeks</a>
         </nav>
 
         <main class="content" id="content">
@@ -196,5 +196,14 @@
 
     <script src="./lightweight-charts.js"></script>
     <script src="app.js?v=6000"></script>
+    
+    <!-- 🔥 NAVIGASI INDEKS — Works di Browser & APK -->
+    <script>
+        document.getElementById('indeksTabLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            // Pake relative path biar works di browser & APK Cordova
+            window.location.href = './indeks.html';
+        });
+    </script>
 </body>
 </html>
