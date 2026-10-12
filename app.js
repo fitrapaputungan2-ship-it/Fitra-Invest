@@ -180,6 +180,22 @@ let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
 ];
 function saveWatchlist() { localStorage.setItem('fitraWatchlist', JSON.stringify(watchlist)); }
 
+// ============ DATA FAVORITES ⭐ ============
+let favorites = JSON.parse(localStorage.getItem('fitraFavorites')) || [];
+function saveFavorites() { localStorage.setItem('fitraFavorites', JSON.stringify(favorites)); }
+function isFavorite(symbol) { return favorites.includes(symbol); }
+function toggleFavorite(symbol, event) {
+    if (event) event.stopPropagation(); // Biar gak trigger klik card
+    const idx = favorites.indexOf(symbol);
+    if (idx >= 0) {
+        favorites.splice(idx, 1);
+    } else {
+        favorites.push(symbol);
+    }
+    saveFavorites();
+    renderWatchlist();
+}
+
 // ============ DATA PORTFOLIO ============
 let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
 function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
@@ -357,47 +373,114 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
     }
 }
 
-// ============ RENDER WATCHLIST ============
-async function renderWatchlist() {
-    const container = document.getElementById('watchlist');
-    container.innerHTML = '<div class="empty-state">Memuat data...</div>';
-    if (watchlist.length === 0) {
-        container.innerHTML = '<div class="empty-state">Watchlist kosong. Klik 🔍 Browse atau ＋ buat nambah aset.</div>';
-        return;
-    }
-    const results = await Promise.all(watchlist.map(async (asset) => {
-        const priceData = await fetchPrice(asset.symbol, asset.type);
-        return { ...asset, priceData };
-    }));
-    container.innerHTML = results.map((asset, index) => {
-        const p = asset.priceData;
-        if (!p) return `
+// ============ RENDER CARD HTML ============
+function renderAssetCard(asset, priceData, index, showStar = true) {
+    const p = priceData;
+    const isFav = isFavorite(asset.symbol);
+    
+    if (!p) {
+        return `
             <div class="watchlist-card-wrapper">
+                <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">
+                    ${isFav ? '★' : '☆'}
+                </button>
                 <div class="asset-card">
                     <div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div>
                     <div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div>
                 </div>
-                <button class="watchlist-delete" onclick="deleteFromWatchlist(${index})">×</button>
+                <button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button>
             </div>
         `;
-        const trend = p.change >= 0 ? 'up' : 'down';
-        const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
-        const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
-        return `
-            <div class="watchlist-card-wrapper">
-                <div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
-                    <div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div>
-                    <div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div>
-                </div>
-                <button class="watchlist-delete" onclick="deleteFromWatchlist(${index})">×</button>
+    }
+    
+    const trend = p.change >= 0 ? 'up' : 'down';
+    const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
+    const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    
+    return `
+        <div class="watchlist-card-wrapper">
+            <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">
+                ${isFav ? '★' : '☆'}
+            </button>
+            <div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
+                <div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div>
+                <div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div>
             </div>
-        `;
-    }).join('');
+            <button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button>
+        </div>
+    `;
 }
 
-function deleteFromWatchlist(index) {
+// ============ RENDER WATCHLIST (DENGAN FAVORITES SECTION) ============
+async function renderWatchlist() {
+    const container = document.getElementById('watchlist');
+    container.innerHTML = '<div class="empty-state">Memuat data...</div>';
+    
+    if (watchlist.length === 0) {
+        container.innerHTML = '<div class="empty-state">Watchlist kosong. Klik 🔍 Browse atau ＋ buat nambah aset.</div>';
+        return;
+    }
+    
+    // Fetch semua harga
+    const results = await Promise.all(watchlist.map(async (asset) => {
+        const priceData = await fetchPrice(asset.symbol, asset.type);
+        return { ...asset, priceData };
+    }));
+    
+    // Pisahin favorites & non-favorites
+    const favAssets = results.filter(a => isFavorite(a.symbol));
+    const otherAssets = results.filter(a => !isFavorite(a.symbol));
+    
+    let html = '';
+    
+    // === SECTION FAVORITES ===
+    if (favAssets.length > 0) {
+        html += `
+            <div class="watchlist-section">
+                <div class="watchlist-section-header">
+                    <span class="watchlist-section-title">⭐ Favorites</span>
+                    <span class="watchlist-section-count">${favAssets.length}</span>
+                </div>
+                ${favAssets.map(asset => {
+                    const idx = watchlist.findIndex(w => w.symbol === asset.symbol);
+                    return renderAssetCard(asset, asset.priceData, idx);
+                }).join('')}
+            </div>
+        `;
+    }
+    
+    // === SECTION SEMUA ASET ===
+    html += `
+        <div class="watchlist-section">
+            <div class="watchlist-section-header">
+                <span class="watchlist-section-title">📊 ${favAssets.length > 0 ? 'Semua Aset' : 'Watchlist'}</span>
+                <span class="watchlist-section-count">${otherAssets.length}</span>
+            </div>
+            ${otherAssets.length > 0 
+                ? otherAssets.map(asset => {
+                    const idx = watchlist.findIndex(w => w.symbol === asset.symbol);
+                    return renderAssetCard(asset, asset.priceData, idx);
+                }).join('')
+                : '<div class="empty-state" style="padding:20px;font-size:12px;">Semua saham udah jadi favorite ⭐</div>'
+            }
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function deleteFromWatchlist(index, event) {
+    if (event) event.stopPropagation();
     const asset = watchlist[index];
     if (!confirm(`Hapus ${asset.symbol} dari watchlist?`)) return;
+    
+    // Hapus dari favorites juga kalau ada
+    const favIdx = favorites.indexOf(asset.symbol);
+    if (favIdx >= 0) {
+        favorites.splice(favIdx, 1);
+        saveFavorites();
+    }
+    
     watchlist.splice(index, 1);
     saveWatchlist();
     renderWatchlist();
