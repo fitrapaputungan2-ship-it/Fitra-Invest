@@ -155,6 +155,22 @@ const STOCK_UNIVERSE = [
     { symbol: '^GDAXI', name: 'DAX Index', type: 'stock', category: 'index' },
 ];
 
+// ============ MARKET MOVERS UNIVERSE ============
+const MOVERS_UNIVERSE = [
+    // US Tech (liquid)
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'INTC', 'NFLX', 'AVGO', 'ADBE',
+    // US Finance
+    'JPM', 'BAC', 'V', 'MA', 'GS', 'WFC',
+    // US Consumer
+    'WMT', 'DIS', 'MCD', 'NKE', 'SBUX', 'KO', 'PEP',
+    // US Healthcare
+    'JNJ', 'PFE', 'UNH', 'LLY',
+    // Crypto (liquid)
+    'BTC', 'ETH', 'SOL', 'BNB', 'XRP'
+];
+
+let marketMoversData = { gainers: [], losers: [] };
+
 // ============ TAB NAV ============
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -185,7 +201,7 @@ let favorites = JSON.parse(localStorage.getItem('fitraFavorites')) || [];
 function saveFavorites() { localStorage.setItem('fitraFavorites', JSON.stringify(favorites)); }
 function isFavorite(symbol) { return favorites.includes(symbol); }
 function toggleFavorite(symbol, event) {
-    if (event) event.stopPropagation(); // Biar gak trigger klik card
+    if (event) event.stopPropagation();
     const idx = favorites.indexOf(symbol);
     if (idx >= 0) {
         favorites.splice(idx, 1);
@@ -373,6 +389,117 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
     }
 }
 
+// ============ 🔥 MARKET MOVERS ============
+async function fetchMarketMovers() {
+    const container = document.getElementById('marketMovers');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="movers-loading">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Memuat pergerakan pasar...</p>
+        </div>
+    `;
+    
+    const results = [];
+    const batchSize = 10;
+    
+    for (let i = 0; i < MOVERS_UNIVERSE.length; i += batchSize) {
+        const batch = MOVERS_UNIVERSE.slice(i, i + batchSize);
+        const batchResults = await Promise.all(batch.map(async (symbol) => {
+            const stockInfo = STOCK_UNIVERSE.find(s => s.symbol === symbol) || { symbol, name: symbol, type: 'stock' };
+            const priceData = await fetchPrice(symbol, stockInfo.type);
+            if (!priceData) return null;
+            return {
+                symbol,
+                name: priceData.name || stockInfo.name,
+                type: stockInfo.type,
+                price: priceData.price,
+                change: priceData.change
+            };
+        }));
+        results.push(...batchResults.filter(Boolean));
+    }
+    
+    if (results.length === 0) {
+        container.innerHTML = '<div class="empty-state">Gagal memuat data pasar</div>';
+        return;
+    }
+    
+    const sorted = results.sort((a, b) => b.change - a.change);
+    const gainers = sorted.filter(r => r.change > 0).slice(0, 5);
+    const losers = sorted.filter(r => r.change < 0).slice(-5).reverse();
+    
+    marketMoversData = { gainers, losers };
+    renderMarketMovers();
+}
+
+function renderMarketMovers() {
+    const container = document.getElementById('marketMovers');
+    if (!container) return;
+    
+    const { gainers, losers } = marketMoversData;
+    
+    if (gainers.length === 0 && losers.length === 0) {
+        container.innerHTML = '<div class="empty-state">Belum ada data pergerakan pasar</div>';
+        return;
+    }
+    
+    let html = '';
+    
+    if (gainers.length > 0) {
+        html += `
+            <div class="movers-section">
+                <div class="movers-header">
+                    <span class="movers-title gainers-title">📈 Top Gainers</span>
+                    <span class="movers-count">${gainers.length}</span>
+                </div>
+                <div class="movers-list">
+                    ${gainers.map(g => `
+                        <div class="mover-item gainer" onclick="openAssetDetail('${g.symbol}', '${g.name.replace(/'/g, "\\'")}', ${g.price}, ${g.change}, '${g.type}')">
+                            <div class="mover-info">
+                                <span class="mover-symbol">${g.symbol}</span>
+                                <span class="mover-name">${g.name}</span>
+                            </div>
+                            <div class="mover-price-wrap">
+                                <span class="mover-price">$${g.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                                <span class="mover-change gainer">+${g.change.toFixed(2)}%</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (losers.length > 0) {
+        html += `
+            <div class="movers-section">
+                <div class="movers-header">
+                    <span class="movers-title losers-title">📉 Top Losers</span>
+                    <span class="movers-count">${losers.length}</span>
+                </div>
+                <div class="movers-list">
+                    ${losers.map(l => `
+                        <div class="mover-item loser" onclick="openAssetDetail('${l.symbol}', '${l.name.replace(/'/g, "\\'")}', ${l.price}, ${l.change}, '${l.type}')">
+                            <div class="mover-info">
+                                <span class="mover-symbol">${l.symbol}</span>
+                                <span class="mover-name">${l.name}</span>
+                            </div>
+                            <div class="mover-price-wrap">
+                                <span class="mover-price">$${l.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                                <span class="mover-change loser">${l.change.toFixed(2)}%</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
 // ============ RENDER CARD HTML ============
 function renderAssetCard(asset, priceData, index, showStar = true) {
     const p = priceData;
@@ -411,7 +538,7 @@ function renderAssetCard(asset, priceData, index, showStar = true) {
     `;
 }
 
-// ============ RENDER WATCHLIST (DENGAN FAVORITES SECTION) ============
+// ============ RENDER WATCHLIST ============
 async function renderWatchlist() {
     const container = document.getElementById('watchlist');
     container.innerHTML = '<div class="empty-state">Memuat data...</div>';
@@ -421,19 +548,16 @@ async function renderWatchlist() {
         return;
     }
     
-    // Fetch semua harga
     const results = await Promise.all(watchlist.map(async (asset) => {
         const priceData = await fetchPrice(asset.symbol, asset.type);
         return { ...asset, priceData };
     }));
     
-    // Pisahin favorites & non-favorites
     const favAssets = results.filter(a => isFavorite(a.symbol));
     const otherAssets = results.filter(a => !isFavorite(a.symbol));
     
     let html = '';
     
-    // === SECTION FAVORITES ===
     if (favAssets.length > 0) {
         html += `
             <div class="watchlist-section">
@@ -449,7 +573,6 @@ async function renderWatchlist() {
         `;
     }
     
-    // === SECTION SEMUA ASET ===
     html += `
         <div class="watchlist-section">
             <div class="watchlist-section-header">
@@ -474,7 +597,6 @@ function deleteFromWatchlist(index, event) {
     const asset = watchlist[index];
     if (!confirm(`Hapus ${asset.symbol} dari watchlist?`)) return;
     
-    // Hapus dari favorites juga kalau ada
     const favIdx = favorites.indexOf(asset.symbol);
     if (favIdx >= 0) {
         favorites.splice(favIdx, 1);
@@ -932,3 +1054,4 @@ function formatTime(timeStr) {
 
 // ============ INIT ============
 renderWatchlist();
+fetchMarketMovers();
