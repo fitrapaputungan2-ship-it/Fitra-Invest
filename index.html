@@ -33,7 +33,16 @@
 
         <main class="content" id="content">
             <section class="tab-content active" id="tab-dashboard">
-                <div class="section-header">
+                <!-- 🔥 MARKET MOVERS (TOP GAINERS & LOSERS) -->
+                <div class="market-movers" id="marketMovers">
+                    <div class="movers-loading">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text">Memuat pergerakan pasar...</p>
+                    </div>
+                </div>
+
+                <!-- WATCHLIST -->
+                <div class="section-header" style="margin-top: 20px;">
                     <h2>Watchlist</h2>
                     <div class="header-actions">
                         <button class="browse-btn" id="browseStockBtn">🔍 Browse</button>
@@ -195,7 +204,7 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=7000"></script>
+    <script src="app.js?v=8000"></script>
     
     <script>
         document.getElementById('indeksTabLink').addEventListener('click', function(e) {
@@ -204,4 +213,4 @@
         });
     </script>
 </body>
-                                                                </html>
+</html>
