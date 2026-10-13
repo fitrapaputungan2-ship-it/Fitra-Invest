@@ -33,7 +33,16 @@
 
         <main class="content" id="content">
             <section class="tab-content active" id="tab-dashboard">
-                <!-- 🔥 MARKET MOVERS (TOP GAINERS & LOSERS) -->
+                <!-- 🔔 PRICE ALERTS SECTION -->
+                <div class="price-alerts-section" id="priceAlertsSection" style="display:none;">
+                    <div class="watchlist-section-header">
+                        <span class="watchlist-section-title" style="background: linear-gradient(90deg, var(--cyan), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🔔 Price Alerts</span>
+                        <span class="watchlist-section-count" id="alertsCount">0</span>
+                    </div>
+                    <div class="price-alerts-list" id="priceAlertsList"></div>
+                </div>
+
+                <!-- MARKET MOVERS -->
                 <div class="market-movers" id="marketMovers">
                     <div class="movers-loading">
                         <div class="loading-spinner"></div>
@@ -89,6 +98,7 @@
         </main>
     </div>
 
+    <!-- CHART MODAL -->
     <div class="chart-modal" id="chartModal">
         <div class="chart-content">
             <div class="chart-header">
@@ -98,6 +108,9 @@
                 </div>
                 <button class="analysis-close" id="closeChartModal">×</button>
             </div>
+
+            <!-- 🔔 ALERT BUTTON -->
+            <button class="alert-set-btn" id="setAlertBtn">🔔 Set Price Alert</button>
 
             <div class="indicators-panel">
                 <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
@@ -149,6 +162,7 @@
         </div>
     </div>
 
+    <!-- BROWSE MODAL -->
     <div class="modal-overlay browse-modal" id="browseModal">
         <div class="modal-content browse-content">
             <div class="modal-header">
@@ -177,6 +191,7 @@
         </div>
     </div>
 
+    <!-- ASSET MODAL -->
     <div class="modal-overlay" id="assetModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Tambah ke Watchlist</h3><button class="modal-close" id="closeAssetModal">×</button></div>
@@ -189,6 +204,7 @@
         </div>
     </div>
 
+    <!-- HOLDING MODAL -->
     <div class="modal-overlay" id="holdingModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Tambah Holding</h3><button class="modal-close" id="closeHoldingModal">×</button></div>
@@ -203,8 +219,68 @@
         </div>
     </div>
 
+    <!-- 🔔 PRICE ALERT MODAL -->
+    <div class="modal-overlay" id="alertModal">
+        <div class="modal-content alert-modal-content">
+            <div class="modal-header">
+                <h3>🔔 Set Price Alert</h3>
+                <button class="modal-close" id="closeAlertModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-info-box">
+                    <div class="alert-info-symbol" id="alertSymbol">AAPL</div>
+                    <div class="alert-info-name" id="alertName">Apple Inc.</div>
+                    <div class="alert-info-current" id="alertCurrentPrice">Current: $0.00</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Arah Pergerakan Harga</label>
+                    <div class="alert-direction-group">
+                        <button class="direction-btn active" data-dir="above">
+                            <span class="dir-icon">↑</span>
+                            <span class="dir-label">Di Atas</span>
+                        </button>
+                        <button class="direction-btn" data-dir="below">
+                            <span class="dir-icon">↓</span>
+                            <span class="dir-label">Di Bawah</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Target Harga (USD)</label>
+                    <input type="number" id="alertTargetPrice" placeholder="350.00" step="any">
+                </div>
+
+                <div class="form-group">
+                    <label>Catatan (opsional)</label>
+                    <input type="text" id="alertNote" placeholder="Contoh: Beli kalau breakout" autocomplete="off">
+                </div>
+
+                <div class="alert-preview" id="alertPreview">
+                    <span class="alert-preview-icon">🔔</span>
+                    <span class="alert-preview-text">Alert bakal aktif kalau harga nyentuh target</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancelAlert">Batal</button>
+                <button class="btn-save" id="saveAlert">🔔 Set Alert</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔔 ALERT TRIGGERED TOAST -->
+    <div class="alert-toast" id="alertToast">
+        <div class="alert-toast-icon">🔔</div>
+        <div class="alert-toast-content">
+            <div class="alert-toast-title" id="alertToastTitle">Price Alert!</div>
+            <div class="alert-toast-message" id="alertToastMessage">-</div>
+        </div>
+        <button class="alert-toast-close" id="alertToastClose">×</button>
+    </div>
+
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=8000"></script>
+    <script src="app.js?v=9000"></script>
     
     <script>
         document.getElementById('indeksTabLink').addEventListener('click', function(e) {
@@ -213,4 +289,4 @@
         });
     </script>
 </body>
-</html>
+    </html>
