@@ -3,15 +3,20 @@ const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
 let indicatorInterval = null;
+let alertCheckInterval = null;
 let currentChart = null;
 let candleSeries = null;
 let volumeSeries = null;
 let currentTimeframe = 'Y';
 let currentBrowseCategory = 'all';
+let currentAlertDirection = 'above';
+let currentAlertSymbol = null;
+let currentAlertName = null;
+let currentAlertType = null;
+let currentAlertPrice = 0;
 
 // ============ STOCK UNIVERSE (130+ ASET) ============
 const STOCK_UNIVERSE = [
-    // ============ US TECH ============
     { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', category: 'us-tech' },
     { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', category: 'us-tech' },
     { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock', category: 'us-tech' },
@@ -37,8 +42,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'PLTR', name: 'Palantir Technologies', type: 'stock', category: 'us-tech' },
     { symbol: 'SQ', name: 'Block Inc.', type: 'stock', category: 'us-tech' },
     { symbol: 'PYPL', name: 'PayPal Holdings', type: 'stock', category: 'us-tech' },
-
-    // ============ US FINANCE ============
     { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'stock', category: 'us-finance' },
     { symbol: 'BAC', name: 'Bank of America', type: 'stock', category: 'us-finance' },
     { symbol: 'WFC', name: 'Wells Fargo & Co.', type: 'stock', category: 'us-finance' },
@@ -51,8 +54,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'C', name: 'Citigroup Inc.', type: 'stock', category: 'us-finance' },
     { symbol: 'SCHW', name: 'Charles Schwab', type: 'stock', category: 'us-finance' },
     { symbol: 'BRK-B', name: 'Berkshire Hathaway B', type: 'stock', category: 'us-finance' },
-
-    // ============ US HEALTHCARE ============
     { symbol: 'JNJ', name: 'Johnson & Johnson', type: 'stock', category: 'us-healthcare' },
     { symbol: 'PFE', name: 'Pfizer Inc.', type: 'stock', category: 'us-healthcare' },
     { symbol: 'UNH', name: 'UnitedHealth Group', type: 'stock', category: 'us-healthcare' },
@@ -65,8 +66,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'BMY', name: 'Bristol-Myers Squibb', type: 'stock', category: 'us-healthcare' },
     { symbol: 'AMGN', name: 'Amgen Inc.', type: 'stock', category: 'us-healthcare' },
     { symbol: 'GILD', name: 'Gilead Sciences', type: 'stock', category: 'us-healthcare' },
-
-    // ============ US CONSUMER ============
     { symbol: 'WMT', name: 'Walmart Inc.', type: 'stock', category: 'us-consumer' },
     { symbol: 'COST', name: 'Costco Wholesale', type: 'stock', category: 'us-consumer' },
     { symbol: 'HD', name: 'Home Depot Inc.', type: 'stock', category: 'us-consumer' },
@@ -81,8 +80,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'LOW', name: 'Lowe\'s Companies', type: 'stock', category: 'us-consumer' },
     { symbol: 'BKNG', name: 'Booking Holdings', type: 'stock', category: 'us-consumer' },
     { symbol: 'LULU', name: 'Lululemon Athletica', type: 'stock', category: 'us-consumer' },
-
-    // ============ US INDUSTRIAL ============
     { symbol: 'BA', name: 'Boeing Co.', type: 'stock', category: 'us-industrial' },
     { symbol: 'CAT', name: 'Caterpillar Inc.', type: 'stock', category: 'us-industrial' },
     { symbol: 'GE', name: 'General Electric', type: 'stock', category: 'us-industrial' },
@@ -94,16 +91,12 @@ const STOCK_UNIVERSE = [
     { symbol: 'DE', name: 'Deere & Company', type: 'stock', category: 'us-industrial' },
     { symbol: 'F', name: 'Ford Motor Co.', type: 'stock', category: 'us-industrial' },
     { symbol: 'GM', name: 'General Motors', type: 'stock', category: 'us-industrial' },
-
-    // ============ US ENERGY ============
     { symbol: 'XOM', name: 'Exxon Mobil Corp.', type: 'stock', category: 'us-energy' },
     { symbol: 'CVX', name: 'Chevron Corp.', type: 'stock', category: 'us-energy' },
     { symbol: 'COP', name: 'ConocoPhillips', type: 'stock', category: 'us-energy' },
     { symbol: 'SLB', name: 'Schlumberger Ltd.', type: 'stock', category: 'us-energy' },
     { symbol: 'NEE', name: 'NextEra Energy', type: 'stock', category: 'us-energy' },
     { symbol: 'OXY', name: 'Occidental Petroleum', type: 'stock', category: 'us-energy' },
-
-    // ============ INTERNATIONAL ============
     { symbol: 'TSM', name: 'Taiwan Semiconductor', type: 'stock', category: 'international' },
     { symbol: 'ASML', name: 'ASML Holding N.V.', type: 'stock', category: 'international' },
     { symbol: 'BABA', name: 'Alibaba Group', type: 'stock', category: 'international' },
@@ -117,8 +110,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'NVO', name: 'Novo Nordisk A/S', type: 'stock', category: 'international' },
     { symbol: 'HSBC', name: 'HSBC Holdings', type: 'stock', category: 'international' },
     { symbol: 'TCEHY', name: 'Tencent Holdings', type: 'stock', category: 'international' },
-
-    // ============ CRYPTO ============
     { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', category: 'crypto' },
     { symbol: 'ETH', name: 'Ethereum', type: 'crypto', category: 'crypto' },
     { symbol: 'SOL', name: 'Solana', type: 'crypto', category: 'crypto' },
@@ -133,8 +124,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'LTC', name: 'Litecoin', type: 'crypto', category: 'crypto' },
     { symbol: 'ATOM', name: 'Cosmos', type: 'crypto', category: 'crypto' },
     { symbol: 'TRX', name: 'TRON', type: 'crypto', category: 'crypto' },
-
-    // ============ COMMODITY ============
     { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity', category: 'commodity' },
     { symbol: 'SI=F', name: 'Silver Futures', type: 'commodity', category: 'commodity' },
     { symbol: 'CL=F', name: 'Crude Oil WTI', type: 'commodity', category: 'commodity' },
@@ -143,8 +132,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'PL=F', name: 'Platinum Futures', type: 'commodity', category: 'commodity' },
     { symbol: 'ZC=F', name: 'Corn Futures', type: 'commodity', category: 'commodity' },
     { symbol: 'ZW=F', name: 'Wheat Futures', type: 'commodity', category: 'commodity' },
-
-    // ============ INDEX ============
     { symbol: '^GSPC', name: 'S&P 500', type: 'stock', category: 'index' },
     { symbol: '^DJI', name: 'Dow Jones Industrial', type: 'stock', category: 'index' },
     { symbol: '^IXIC', name: 'NASDAQ Composite', type: 'stock', category: 'index' },
@@ -157,15 +144,10 @@ const STOCK_UNIVERSE = [
 
 // ============ MARKET MOVERS UNIVERSE ============
 const MOVERS_UNIVERSE = [
-    // US Tech (liquid)
     'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'INTC', 'NFLX', 'AVGO', 'ADBE',
-    // US Finance
     'JPM', 'BAC', 'V', 'MA', 'GS', 'WFC',
-    // US Consumer
     'WMT', 'DIS', 'MCD', 'NKE', 'SBUX', 'KO', 'PEP',
-    // US Healthcare
     'JNJ', 'PFE', 'UNH', 'LLY',
-    // Crypto (liquid)
     'BTC', 'ETH', 'SOL', 'BNB', 'XRP'
 ];
 
@@ -212,6 +194,224 @@ function toggleFavorite(symbol, event) {
     renderWatchlist();
 }
 
+// ============ DATA ALERTS 🔔 ============
+let alerts = JSON.parse(localStorage.getItem('fitraAlerts')) || [];
+function saveAlerts() { localStorage.setItem('fitraAlerts', JSON.stringify(alerts)); }
+function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol); }
+
+function openAlertModal(symbol, name, price, type) {
+    currentAlertSymbol = symbol;
+    currentAlertName = name;
+    currentAlertType = type;
+    currentAlertPrice = price;
+    currentAlertDirection = 'above';
+    
+    document.getElementById('alertSymbol').textContent = symbol;
+    document.getElementById('alertName').textContent = name;
+    document.getElementById('alertCurrentPrice').textContent = 'Harga Sekarang: $' + price.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    document.getElementById('alertTargetPrice').value = '';
+    document.getElementById('alertNote').value = '';
+    
+    // Reset direction buttons
+    document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.direction-btn[data-dir="above"]').classList.add('active');
+    
+    updateAlertPreview();
+    
+    document.getElementById('alertModal').classList.add('active');
+    
+    // Auto-focus ke input target
+    setTimeout(() => document.getElementById('alertTargetPrice').focus(), 300);
+}
+
+function closeAlertModal() {
+    document.getElementById('alertModal').classList.remove('active');
+}
+
+function updateAlertPreview() {
+    const targetInput = document.getElementById('alertTargetPrice').value;
+    const preview = document.getElementById('alertPreview');
+    
+    if (!targetInput || isNaN(parseFloat(targetInput))) {
+        preview.innerHTML = '<span class="alert-preview-icon">🔔</span><span class="alert-preview-text">Alert bakal aktif kalau harga nyentuh target</span>';
+        return;
+    }
+    
+    const target = parseFloat(targetInput);
+    const dirText = currentAlertDirection === 'above' ? 'naik ke atas' : 'turun ke bawah';
+    const targetStr = '$' + target.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    
+    preview.innerHTML = `<span class="alert-preview-icon">🔔</span><span class="alert-preview-text">Notif kalau <strong>${currentAlertSymbol}</strong> ${dirText} <strong>${targetStr}</strong></span>`;
+}
+
+function saveAlert() {
+    const targetInput = document.getElementById('alertTargetPrice').value;
+    const note = document.getElementById('alertNote').value.trim();
+    
+    if (!targetInput || isNaN(parseFloat(targetInput))) {
+        alert('Isi target harga dulu, kontol!');
+        return;
+    }
+    
+    const target = parseFloat(targetInput);
+    
+    // Validasi: kalau "above", target harus > current price. Kalau "below", target harus < current price
+    if (currentAlertDirection === 'above' && target <= currentAlertPrice) {
+        alert('⚠️ Buat alert "Di Atas", target harus LEBIH TINGGI dari harga sekarang!');
+        return;
+    }
+    if (currentAlertDirection === 'below' && target >= currentAlertPrice) {
+        alert('⚠️ Buat alert "Di Bawah", target harus LEBIH RENDAH dari harga sekarang!');
+        return;
+    }
+    
+    // Check duplikat (same symbol + direction)
+    const existing = alerts.find(a => a.symbol === currentAlertSymbol && a.direction === currentAlertDirection && !a.triggered);
+    if (existing) {
+        if (!confirm(`Udah ada alert ${currentAlertDirection === 'above' ? '↑ Above' : '↓ Below'} buat ${currentAlertSymbol}. Ganti aja?`)) {
+            return;
+        }
+        alerts = alerts.filter(a => a.id !== existing.id);
+    }
+    
+    const newAlert = {
+        id: 'alert-' + Date.now(),
+        symbol: currentAlertSymbol,
+        name: currentAlertName,
+        type: currentAlertType,
+        targetPrice: target,
+        direction: currentAlertDirection,
+        note: note,
+        createdAt: Date.now(),
+        triggered: false
+    };
+    
+    alerts.push(newAlert);
+    saveAlerts();
+    closeAlertModal();
+    renderPriceAlerts();
+    renderWatchlist(); // Refresh biar badge 🔔 muncul
+    
+    // Show success toast
+    showAlertToast({
+        symbol: currentAlertSymbol,
+        name: currentAlertName,
+        targetPrice: target,
+        direction: currentAlertDirection,
+        note: note
+    }, null, true);
+}
+
+function deleteAlert(id, event) {
+    if (event) event.stopPropagation();
+    if (!confirm('Hapus alert ini?')) return;
+    alerts = alerts.filter(a => a.id !== id);
+    saveAlerts();
+    renderPriceAlerts();
+    renderWatchlist();
+}
+
+async function checkAlerts() {
+    if (alerts.length === 0) return;
+    
+    const activeAlerts = alerts.filter(a => !a.triggered);
+    if (activeAlerts.length === 0) return;
+    
+    // Fetch harga parallel
+    const results = await Promise.all(activeAlerts.map(async (alert) => {
+        const price = await fetchPrice(alert.symbol, alert.type);
+        return { alert, currentPrice: price ? price.price : null };
+    }));
+    
+    let hasNewTrigger = false;
+    
+    results.forEach(({ alert, currentPrice }) => {
+        if (currentPrice == null) return;
+        
+        let triggered = false;
+        if (alert.direction === 'above' && currentPrice >= alert.targetPrice) triggered = true;
+        if (alert.direction === 'below' && currentPrice <= alert.targetPrice) triggered = true;
+        
+        if (triggered) {
+            alert.triggered = true;
+            alert.triggeredAt = Date.now();
+            alert.triggeredPrice = currentPrice;
+            hasNewTrigger = true;
+            showAlertToast(alert, currentPrice);
+        }
+    });
+    
+    if (hasNewTrigger) {
+        saveAlerts();
+        renderPriceAlerts();
+        renderWatchlist();
+    }
+}
+
+function showAlertToast(alert, currentPrice, isNewSet = false) {
+    const toast = document.getElementById('alertToast');
+    const title = document.getElementById('alertToastTitle');
+    const message = document.getElementById('alertToastMessage');
+    
+    if (isNewSet) {
+        title.textContent = '🔔 Alert Aktif!';
+        const dir = alert.direction === 'above' ? '↑ naik ke' : '↓ turun ke';
+        message.textContent = `${alert.symbol} bakal notif kalau ${dir} $${alert.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+    } else {
+        title.textContent = '🔔 PRICE ALERT TRIGGERED!';
+        const dir = alert.direction === 'above' ? '↑ naik ke atas' : '↓ turun ke bawah';
+        const cpStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        message.textContent = `${alert.symbol} udah ${dir} $${alert.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}! Harga sekarang: ${cpStr}${alert.note ? ' — ' + alert.note : ''}`;
+    }
+    
+    toast.classList.add('active');
+    
+    // Auto-hide after 10s
+    setTimeout(() => {
+        toast.classList.remove('active');
+    }, 10000);
+}
+
+function closeAlertToast() {
+    document.getElementById('alertToast').classList.remove('active');
+}
+
+function renderPriceAlerts() {
+    const section = document.getElementById('priceAlertsSection');
+    const list = document.getElementById('priceAlertsList');
+    const count = document.getElementById('alertsCount');
+    
+    if (!section || !list || !count) return;
+    
+    const activeAlerts = alerts.filter(a => !a.triggered);
+    
+    if (activeAlerts.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+    
+    section.style.display = 'block';
+    count.textContent = activeAlerts.length;
+    
+    list.innerHTML = activeAlerts.map(a => {
+        const dirIcon = a.direction === 'above' ? '↑' : '↓';
+        const dirClass = a.direction === 'above' ? 'above' : 'below';
+        const dirLabel = a.direction === 'above' ? 'Di Atas' : 'Di Bawah';
+        const targetStr = '$' + a.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        
+        return `
+            <div class="price-alert-item ${dirClass}" onclick="openAssetDetail('${a.symbol}', '${a.name.replace(/'/g, "\\'")}', 0, 0, '${a.type}')">
+                <div class="price-alert-icon ${dirClass}">${dirIcon}</div>
+                <div class="price-alert-info">
+                    <div class="price-alert-symbol">${a.symbol} <span class="price-alert-dir">${dirLabel}</span></div>
+                    <div class="price-alert-target">Target: ${targetStr}${a.note ? ' • ' + a.note : ''}</div>
+                </div>
+                <button class="price-alert-delete" onclick="deleteAlert('${a.id}', event)">×</button>
+            </div>
+        `;
+    }).join('');
+}
+
 // ============ DATA PORTFOLIO ============
 let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
 function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
@@ -230,9 +430,7 @@ function renderBrowseStocks() {
     const cat = currentBrowseCategory;
     
     let filtered = STOCK_UNIVERSE;
-    if (cat !== 'all') {
-        filtered = filtered.filter(s => s.category === cat);
-    }
+    if (cat !== 'all') filtered = filtered.filter(s => s.category === cat);
     if (search) {
         filtered = filtered.filter(s => 
             s.symbol.toLowerCase().includes(search) || 
@@ -241,7 +439,7 @@ function renderBrowseStocks() {
     }
     
     if (filtered.length === 0) {
-        body.innerHTML = '<div class="empty-state">Gak ada saham yang match. Coba kata kunci lain.</div>';
+        body.innerHTML = '<div class="empty-state">Gak ada saham yang match.</div>';
         return;
     }
     
@@ -254,9 +452,7 @@ function renderBrowseStocks() {
                     <span class="browse-name">${stock.name}</span>
                 </div>
                 <div class="browse-item-action">
-                    ${inWatchlist 
-                        ? '<span class="browse-badge added">✓ Added</span>' 
-                        : '<span class="browse-badge add">+ Add</span>'}
+                    ${inWatchlist ? '<span class="browse-badge added">✓ Added</span>' : '<span class="browse-badge add">+ Add</span>'}
                 </div>
             </div>
         `;
@@ -264,11 +460,8 @@ function renderBrowseStocks() {
 }
 function toggleFromBrowse(symbol, name, type) {
     const idx = watchlist.findIndex(w => w.symbol === symbol);
-    if (idx >= 0) {
-        watchlist.splice(idx, 1);
-    } else {
-        watchlist.push({ symbol, name, type });
-    }
+    if (idx >= 0) watchlist.splice(idx, 1);
+    else watchlist.push({ symbol, name, type });
     saveWatchlist();
     renderBrowseStocks();
     renderWatchlist();
@@ -352,36 +545,22 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
         
         if (data.data && Array.isArray(data.data)) {
             return data.data.map(c => ({
-                time: c.time,
-                open: parseFloat(c.open),
-                high: parseFloat(c.high),
-                low: parseFloat(c.low),
-                close: parseFloat(c.close),
-                volume: parseFloat(c.volume || 0)
+                time: c.time, open: parseFloat(c.open), high: parseFloat(c.high),
+                low: parseFloat(c.low), close: parseFloat(c.close), volume: parseFloat(c.volume || 0)
             })).filter(c => !isNaN(c.open) && !isNaN(c.close));
         }
-        
         if (data.chart && data.chart.result && data.chart.result[0]) {
             const result = data.chart.result[0];
             const timestamps = result.timestamp || [];
             const quote = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
-            const opens = quote.open || [];
-            const highs = quote.high || [];
-            const lows = quote.low || [];
-            const closes = quote.close || [];
-            const volumes = quote.volume || [];
+            const opens = quote.open || [], highs = quote.high || [], lows = quote.low || [], closes = quote.close || [], volumes = quote.volume || [];
             const candles = [];
             for (let i = 0; i < timestamps.length; i++) {
                 if (opens[i] == null || closes[i] == null) continue;
-                candles.push({
-                    time: timestamps[i],
-                    open: opens[i], high: highs[i], low: lows[i], close: closes[i],
-                    volume: volumes[i] || 0
-                });
+                candles.push({ time: timestamps[i], open: opens[i], high: highs[i], low: lows[i], close: closes[i], volume: volumes[i] || 0 });
             }
             return candles;
         }
-        
         return [];
     } catch (error) {
         console.error('Error fetchChartData:', error);
@@ -389,47 +568,30 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
     }
 }
 
-// ============ 🔥 MARKET MOVERS ============
+// ============ MARKET MOVERS ============
 async function fetchMarketMovers() {
     const container = document.getElementById('marketMovers');
     if (!container) return;
-    
-    container.innerHTML = `
-        <div class="movers-loading">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">Memuat pergerakan pasar...</p>
-        </div>
-    `;
+    container.innerHTML = '<div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat pergerakan pasar...</p></div>';
     
     const results = [];
     const batchSize = 10;
-    
     for (let i = 0; i < MOVERS_UNIVERSE.length; i += batchSize) {
         const batch = MOVERS_UNIVERSE.slice(i, i + batchSize);
         const batchResults = await Promise.all(batch.map(async (symbol) => {
             const stockInfo = STOCK_UNIVERSE.find(s => s.symbol === symbol) || { symbol, name: symbol, type: 'stock' };
             const priceData = await fetchPrice(symbol, stockInfo.type);
             if (!priceData) return null;
-            return {
-                symbol,
-                name: priceData.name || stockInfo.name,
-                type: stockInfo.type,
-                price: priceData.price,
-                change: priceData.change
-            };
+            return { symbol, name: priceData.name || stockInfo.name, type: stockInfo.type, price: priceData.price, change: priceData.change };
         }));
         results.push(...batchResults.filter(Boolean));
     }
     
-    if (results.length === 0) {
-        container.innerHTML = '<div class="empty-state">Gagal memuat data pasar</div>';
-        return;
-    }
+    if (results.length === 0) { container.innerHTML = '<div class="empty-state">Gagal memuat data pasar</div>'; return; }
     
     const sorted = results.sort((a, b) => b.change - a.change);
     const gainers = sorted.filter(r => r.change > 0).slice(0, 5);
     const losers = sorted.filter(r => r.change < 0).slice(-5).reverse();
-    
     marketMoversData = { gainers, losers };
     renderMarketMovers();
 }
@@ -437,16 +599,10 @@ async function fetchMarketMovers() {
 function renderMarketMovers() {
     const container = document.getElementById('marketMovers');
     if (!container) return;
-    
     const { gainers, losers } = marketMoversData;
-    
-    if (gainers.length === 0 && losers.length === 0) {
-        container.innerHTML = '<div class="empty-state">Belum ada data pergerakan pasar</div>';
-        return;
-    }
+    if (gainers.length === 0 && losers.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada data pergerakan pasar</div>'; return; }
     
     let html = '';
-    
     if (gainers.length > 0) {
         html += `
             <div class="movers-section">
@@ -471,7 +627,6 @@ function renderMarketMovers() {
             </div>
         `;
     }
-    
     if (losers.length > 0) {
         html += `
             <div class="movers-section">
@@ -496,21 +651,19 @@ function renderMarketMovers() {
             </div>
         `;
     }
-    
     container.innerHTML = html;
 }
 
-// ============ RENDER CARD HTML ============
-function renderAssetCard(asset, priceData, index, showStar = true) {
+// ============ RENDER CARD ============
+function renderAssetCard(asset, priceData, index) {
     const p = priceData;
     const isFav = isFavorite(asset.symbol);
+    const hasAl = hasAlert(asset.symbol);
     
     if (!p) {
         return `
             <div class="watchlist-card-wrapper">
-                <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">
-                    ${isFav ? '★' : '☆'}
-                </button>
+                <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button>
                 <div class="asset-card">
                     <div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div>
                     <div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div>
@@ -526,11 +679,12 @@ function renderAssetCard(asset, priceData, index, showStar = true) {
     
     return `
         <div class="watchlist-card-wrapper">
-            <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">
-                ${isFav ? '★' : '☆'}
-            </button>
+            <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button>
             <div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
-                <div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div>
+                <div class="asset-info">
+                    <span class="asset-symbol">${asset.symbol}${hasAl ? ' <span class="alert-badge">🔔</span>' : ''}</span>
+                    <span class="asset-name">${asset.name}</span>
+                </div>
                 <div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div>
             </div>
             <button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button>
@@ -542,11 +696,7 @@ function renderAssetCard(asset, priceData, index, showStar = true) {
 async function renderWatchlist() {
     const container = document.getElementById('watchlist');
     container.innerHTML = '<div class="empty-state">Memuat data...</div>';
-    
-    if (watchlist.length === 0) {
-        container.innerHTML = '<div class="empty-state">Watchlist kosong. Klik 🔍 Browse atau ＋ buat nambah aset.</div>';
-        return;
-    }
+    if (watchlist.length === 0) { container.innerHTML = '<div class="empty-state">Watchlist kosong.</div>'; return; }
     
     const results = await Promise.all(watchlist.map(async (asset) => {
         const priceData = await fetchPrice(asset.symbol, asset.type);
@@ -557,7 +707,6 @@ async function renderWatchlist() {
     const otherAssets = results.filter(a => !isFavorite(a.symbol));
     
     let html = '';
-    
     if (favAssets.length > 0) {
         html += `
             <div class="watchlist-section">
@@ -565,30 +714,25 @@ async function renderWatchlist() {
                     <span class="watchlist-section-title">⭐ Favorites</span>
                     <span class="watchlist-section-count">${favAssets.length}</span>
                 </div>
-                ${favAssets.map(asset => {
-                    const idx = watchlist.findIndex(w => w.symbol === asset.symbol);
-                    return renderAssetCard(asset, asset.priceData, idx);
+                ${favAssets.map(a => {
+                    const idx = watchlist.findIndex(w => w.symbol === a.symbol);
+                    return renderAssetCard(a, a.priceData, idx);
                 }).join('')}
             </div>
         `;
     }
-    
     html += `
         <div class="watchlist-section">
             <div class="watchlist-section-header">
                 <span class="watchlist-section-title">📊 ${favAssets.length > 0 ? 'Semua Aset' : 'Watchlist'}</span>
                 <span class="watchlist-section-count">${otherAssets.length}</span>
             </div>
-            ${otherAssets.length > 0 
-                ? otherAssets.map(asset => {
-                    const idx = watchlist.findIndex(w => w.symbol === asset.symbol);
-                    return renderAssetCard(asset, asset.priceData, idx);
-                }).join('')
-                : '<div class="empty-state" style="padding:20px;font-size:12px;">Semua saham udah jadi favorite ⭐</div>'
-            }
+            ${otherAssets.length > 0 ? otherAssets.map(a => {
+                const idx = watchlist.findIndex(w => w.symbol === a.symbol);
+                return renderAssetCard(a, a.priceData, idx);
+            }).join('') : '<div class="empty-state" style="padding:20px;font-size:12px;">Semua saham udah jadi favorite ⭐</div>'}
         </div>
     `;
-    
     container.innerHTML = html;
 }
 
@@ -596,13 +740,12 @@ function deleteFromWatchlist(index, event) {
     if (event) event.stopPropagation();
     const asset = watchlist[index];
     if (!confirm(`Hapus ${asset.symbol} dari watchlist?`)) return;
-    
     const favIdx = favorites.indexOf(asset.symbol);
-    if (favIdx >= 0) {
-        favorites.splice(favIdx, 1);
-        saveFavorites();
-    }
-    
+    if (favIdx >= 0) { favorites.splice(favIdx, 1); saveFavorites(); }
+    // Hapus alert juga
+    alerts = alerts.filter(a => a.symbol !== asset.symbol);
+    saveAlerts();
+    renderPriceAlerts();
     watchlist.splice(index, 1);
     saveWatchlist();
     renderWatchlist();
@@ -617,7 +760,7 @@ document.getElementById('saveAsset').addEventListener('click', () => {
     const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase();
     const name = document.getElementById('assetName').value.trim();
     const type = document.getElementById('assetType').value;
-    if (!symbol || !name) { alert('Isi semua field dulu!'); return; }
+    if (!symbol || !name) { alert('Isi semua field!'); return; }
     if (watchlist.some(a => a.symbol === symbol)) { alert(`${symbol} udah ada!`); return; }
     watchlist.push({ symbol, name, type });
     saveWatchlist();
@@ -626,6 +769,26 @@ document.getElementById('saveAsset').addEventListener('click', () => {
     document.getElementById('assetName').value = '';
     renderWatchlist();
 });
+
+// ============ ALERT MODAL HANDLERS ============
+document.getElementById('setAlertBtn').addEventListener('click', () => {
+    openAlertModal(currentSymbol, currentName, currentPrice, currentType);
+});
+document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal);
+document.getElementById('cancelAlert').addEventListener('click', closeAlertModal);
+document.getElementById('saveAlert').addEventListener('click', saveAlert);
+document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview);
+
+document.querySelectorAll('.direction-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentAlertDirection = btn.dataset.dir;
+        updateAlertPreview();
+    });
+});
+
+document.getElementById('alertToastClose').addEventListener('click', closeAlertToast);
 
 // ============ INDIKATOR ============
 function calcEMA(closes, period) {
@@ -638,10 +801,7 @@ function calcEMA(closes, period) {
 function calcRSI(closes, period = 14) {
     if (closes.length < period + 1) return 50;
     let gains = 0, losses = 0;
-    for (let i = 1; i <= period; i++) {
-        const diff = closes[i] - closes[i - 1];
-        if (diff >= 0) gains += diff; else losses -= diff;
-    }
+    for (let i = 1; i <= period; i++) { const diff = closes[i] - closes[i - 1]; if (diff >= 0) gains += diff; else losses -= diff; }
     let avgGain = gains / period, avgLoss = losses / period;
     for (let i = period + 1; i < closes.length; i++) {
         const diff = closes[i] - closes[i - 1];
@@ -666,9 +826,7 @@ async function updateIndicators(symbol, type) {
     if (candles.length < 20) return;
     const closes = candles.map(c => c.close).filter(c => c);
     const currentPrice = closes[closes.length - 1];
-    const ema20 = calcEMA(closes, 20);
-    const ema5 = calcEMA(closes, 5);
-    const rsi = calcRSI(closes, 14);
+    const ema20 = calcEMA(closes, 20), ema5 = calcEMA(closes, 5), rsi = calcRSI(closes, 14);
     const htf = currentPrice > ema20 ? 'BULLISH' : 'BEARISH';
     const ltf = ema5 > ema20 ? 'BULLISH' : 'BEARISH';
     const htfEl = document.getElementById('htfValue');
@@ -699,10 +857,11 @@ async function updateIndicators(symbol, type) {
 }
 
 // ============ ASSET DETAIL ============
-let currentSymbol = null, currentType = null, currentPrice = 0, currentChange = 0;
+let currentSymbol = null, currentType = null, currentName = null, currentPrice = 0, currentChange = 0;
 async function openAssetDetail(symbol, name, price, change, type) {
     currentSymbol = symbol;
     currentType = type;
+    currentName = name;
     currentPrice = price;
     currentChange = change;
     document.getElementById('chartModal').classList.add('active');
@@ -745,46 +904,32 @@ function loadChart(symbol, type) {
     }
     
     currentChart = LightweightCharts.createChart(container, {
-        width: container.clientWidth,
-        height: chartHeight,
+        width: container.clientWidth, height: chartHeight,
         layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
         grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
-        crosshair: {
-            mode: LightweightCharts.CrosshairMode.Normal,
-            vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' },
-            horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }
-        },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }, horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' } },
         rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.25 } },
-        timeScale: { 
-            borderColor: 'rgba(255, 255, 255, 0.08)', 
-            timeVisible: true, 
-            secondsVisible: false,
-            rightOffset: 10,
-            barSpacing: 12,
-            fixLeftEdge: false,
-            fixRightEdge: false,
-            lockVisibleTimeRangeOnResize: false
-        },
-        handleScroll: { 
-            mouseWheel: true, 
-            pressedMouseMove: true,
-            horzTouchDrag: true,
-            vertTouchDrag: false
-        },
-        handleScale: { 
-            mouseWheel: true, 
-            pinch: true,
-            axisPressedMouseMove: true
-        }
+        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: true, secondsVisible: false, rightOffset: 10, barSpacing: 12, fixLeftEdge: false, fixRightEdge: false, lockVisibleTimeRangeOnResize: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
     });
     
-    candleSeries = currentChart.addCandlestickSeries({
-        upColor: '#ffffff', downColor: '#a855f7',
-        borderUpColor: '#ffffff', borderDownColor: '#a855f7',
-        wickUpColor: '#ffffff', wickDownColor: '#a855f7'
-    });
+    candleSeries = currentChart.addCandlestickSeries({ upColor: '#ffffff', downColor: '#a855f7', borderUpColor: '#ffffff', borderDownColor: '#a855f7', wickUpColor: '#ffffff', wickDownColor: '#a855f7' });
     volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' });
     volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
+    
+    // 🔔 Tampilkan garis alert di chart (kalau ada)
+    const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered);
+    if (activeAlert && candleSeries) {
+        candleSeries.createPriceLine({
+            price: activeAlert.targetPrice,
+            color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444',
+            lineWidth: 2,
+            lineStyle: 2, // dashed
+            axisLabelVisible: true,
+            title: '🔔 Alert'
+        });
+    }
     
     loadChartData(symbol, type, currentTimeframe);
     setupTimeframeButtons();
@@ -792,44 +937,21 @@ function loadChart(symbol, type) {
 }
 
 async function loadChartData(symbol, type, timeframe) {
-    const intervalMap = { 
-        '5M':  '5m', '30M': '30m', '1H':  '1h',
-        'D':   '1d', 'W':   '1wk', 'M':   '1mo', 'Y':   '1mo'
-    };
-    const rangeMap = { 
-        '5M':  '5d', '30M': '1mo', '1H':  '3mo',
-        'D':   '1y', 'W':   '5y', 'M':   '20y', 'Y':   'max'
-    };
+    const intervalMap = { '5M': '5m', '30M': '30m', '1H': '1h', 'D': '1d', 'W': '1wk', 'M': '1mo', 'Y': '1mo' };
+    const rangeMap = { '5M': '5d', '30M': '1mo', '1H': '3mo', 'D': '1y', 'W': '5y', 'M': '20y', 'Y': 'max' };
     const interval = intervalMap[timeframe] || '1mo';
     const range = rangeMap[timeframe] || 'max';
-    
     let candles = await fetchChartData(symbol, type, interval, range);
-    if (!candles || candles.length === 0 || !candleSeries) {
-        console.warn('⚠️ No candles for', symbol, timeframe);
-        return;
-    }
-    
-    if (timeframe === 'Y') {
-        candles = aggregateToYearly(candles);
-    }
-    
+    if (!candles || candles.length === 0 || !candleSeries) return;
+    if (timeframe === 'Y') candles = aggregateToYearly(candles);
     const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))
         .filter(d => d.time != null && !isNaN(d.open) && !isNaN(d.high) && !isNaN(d.low) && !isNaN(d.close));
-    const volumeData = candles.map(c => ({
-        time: c.time,
-        value: c.volume || 0,
-        color: c.close >= c.open ? 'rgba(255, 255, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'
-    })).filter(d => d.time != null && !isNaN(d.value));
-    
+    const volumeData = candles.map(c => ({ time: c.time, value: c.volume || 0, color: c.close >= c.open ? 'rgba(255, 255, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)' })).filter(d => d.time != null && !isNaN(d.value));
     candleSeries.setData(formattedData);
     volumeSeries.setData(volumeData);
-    
     const totalCandles = formattedData.length;
     if (totalCandles > 100) {
-        currentChart.timeScale().setVisibleLogicalRange({
-            from: totalCandles - 100,
-            to: totalCandles + 5
-        });
+        currentChart.timeScale().setVisibleLogicalRange({ from: totalCandles - 100, to: totalCandles + 5 });
     } else {
         currentChart.timeScale().fitContent();
     }
@@ -841,10 +963,7 @@ function aggregateToYearly(monthlyCandles) {
         const date = new Date(c.time * 1000);
         const year = date.getFullYear();
         if (!yearlyMap[year]) {
-            yearlyMap[year] = {
-                year, open: c.open, high: c.high, low: c.low, close: c.close,
-                volume: c.volume || 0, firstTime: c.time, lastTime: c.time
-            };
+            yearlyMap[year] = { year, open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume || 0, firstTime: c.time, lastTime: c.time };
         } else {
             const y = yearlyMap[year];
             if (c.time < y.firstTime) { y.open = c.open; y.firstTime = c.time; }
@@ -1000,7 +1119,7 @@ document.getElementById('saveHolding').addEventListener('click', () => {
     const type = document.getElementById('holdingType').value;
     const shares = parseFloat(document.getElementById('holdingShares').value);
     const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value);
-    if (!symbol || !name || !shares || !avgPrice) { alert('Isi semua field dulu!'); return; }
+    if (!symbol || !name || !shares || !avgPrice) { alert('Isi semua field!'); return; }
     portfolio.push({ id: 'holding-' + Date.now(), symbol, name, type, shares, avgPrice, addedAt: Date.now() });
     savePortfolio();
     holdingModal.classList.remove('active');
@@ -1054,4 +1173,9 @@ function formatTime(timeStr) {
 
 // ============ INIT ============
 renderWatchlist();
+renderPriceAlerts();
 fetchMarketMovers();
+
+// Check alerts every 60 detik
+setTimeout(() => checkAlerts(), 5000); // Check pertama setelah 5 detik
+alertCheckInterval = setInterval(checkAlerts, 60000); // Terus tiap 1 menit
