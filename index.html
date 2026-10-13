@@ -20,7 +20,10 @@
                     <p class="subtitle">Global Value Investing AI</p>
                 </div>
             </div>
-            <button class="menu-btn" id="menuBtn">⋮</button>
+            <div class="header-right-actions">
+                <button class="currency-open-btn" id="currencyOpenBtn">💱</button>
+                <button class="menu-btn" id="menuBtn">⋮</button>
+            </div>
         </header>
 
         <nav class="tabs">
@@ -315,6 +318,94 @@
         </div>
     </div>
 
+    <!-- 💱 CURRENCY CONVERTER MODAL -->
+    <div class="currency-modal" id="currencyModal">
+        <div class="currency-content">
+            <div class="currency-header">
+                <h3>💱 Kurs Converter</h3>
+                <button class="analysis-close" id="closeCurrencyModal">×</button>
+            </div>
+
+            <div class="currency-card">
+                <div class="currency-field">
+                    <label class="currency-field-label">DARI</label>
+                    <div class="currency-input-row">
+                        <input type="number" id="currencyFromAmount" value="1" step="any" inputmode="decimal">
+                        <select id="currencyFromSelect">
+                            <option value="USD" selected>🇺🇸 USD</option>
+                            <option value="IDR">🇮🇩 IDR</option>
+                            <option value="EUR">🇪🇺 EUR</option>
+                            <option value="JPY">🇯🇵 JPY</option>
+                            <option value="GBP">🇬🇧 GBP</option>
+                            <option value="SGD">🇸🇬 SGD</option>
+                            <option value="MYR">🇲🇾 MYR</option>
+                            <option value="CNY">🇨🇳 CNY</option>
+                            <option value="AUD">🇦🇺 AUD</option>
+                            <option value="KRW">🇰🇷 KRW</option>
+                            <option value="THB">🇹🇭 THB</option>
+                            <option value="INR">🇮🇳 INR</option>
+                            <option value="SAR">🇸🇦 SAR</option>
+                            <option value="AED">🇦🇪 AED</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="currency-swap-btn" id="currencySwapBtn" aria-label="Tukar">
+                    <span class="swap-icon">⇅</span>
+                </button>
+
+                <div class="currency-field">
+                    <label class="currency-field-label">KE</label>
+                    <div class="currency-result-box" id="currencyToResult">-</div>
+                    <select id="currencyToSelect" class="currency-to-select">
+                        <option value="USD">🇺🇸 USD</option>
+                        <option value="IDR" selected>🇮🇩 IDR</option>
+                        <option value="EUR">🇪🇺 EUR</option>
+                        <option value="JPY">🇯🇵 JPY</option>
+                        <option value="GBP">🇬🇧 GBP</option>
+                        <option value="SGD">🇸🇬 SGD</option>
+                        <option value="MYR">🇲🇾 MYR</option>
+                        <option value="CNY">🇨🇳 CNY</option>
+                        <option value="AUD">🇦🇺 AUD</option>
+                        <option value="KRW">🇰🇷 KRW</option>
+                        <option value="THB">🇹🇭 THB</option>
+                        <option value="INR">🇮🇳 INR</option>
+                        <option value="SAR">🇸🇦 SAR</option>
+                        <option value="AED">🇦🇪 AED</option>
+                    </select>
+                </div>
+
+                <div class="currency-rate-info">
+                    <div class="currency-rate-line" id="currencyRateLine">
+                        <span class="rate-loading-spinner"></span> Memuat rate...
+                    </div>
+                    <div class="currency-rate-update" id="currencyRateUpdate">Terakhir diupdate: --</div>
+                </div>
+            </div>
+
+            <div class="currency-quick-section">
+                <div class="currency-quick-label">💵 Jumlah Cepat</div>
+                <div class="currency-quick-amounts">
+                    <button class="quick-amount-btn" data-amount="1">$1</button>
+                    <button class="quick-amount-btn" data-amount="10">$10</button>
+                    <button class="quick-amount-btn" data-amount="100">$100</button>
+                    <button class="quick-amount-btn active" data-amount="1000">$1K</button>
+                    <button class="quick-amount-btn" data-amount="10000">$10K</button>
+                    <button class="quick-amount-btn" data-amount="100000">$100K</button>
+                </div>
+            </div>
+
+            <div class="currency-quick-section">
+                <div class="currency-quick-label">🌏 Mata Uang Cepat</div>
+                <div class="currency-quick-targets" id="currencyQuickTargets"></div>
+            </div>
+
+            <button class="currency-refresh-btn" id="currencyRefreshBtn">
+                <span class="refresh-icon">🔄</span> Refresh Rate
+            </button>
+        </div>
+    </div>
+
     <!-- 🔔 ALERT TOAST -->
     <div class="alert-toast" id="alertToast">
         <div class="alert-toast-icon">🔔</div>
@@ -326,7 +417,7 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=11000"></script>
+    <script src="app.js?v=12000"></script>
     
     <script>
         document.getElementById('indeksTabLink').addEventListener('click', function(e) {
@@ -335,4 +426,4 @@
         });
     </script>
 </body>
-                                                                       </html>
+</html>
