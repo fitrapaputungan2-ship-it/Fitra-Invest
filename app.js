@@ -15,6 +15,14 @@ let currentAlertName = null;
 let currentAlertType = null;
 let currentAlertPrice = 0;
 
+// ============ CHART COLORS (buat pie chart) ============
+const CHART_COLORS = [
+    '#fbbf24', '#22d3ee', '#10b981', '#a855f7', '#ef4444',
+    '#ec4899', '#f97316', '#3b82f6', '#84cc16', '#06b6d4',
+    '#8b5cf6', '#eab308', '#14b8a6', '#f43f5e', '#facc15',
+    '#fb7185', '#4ade80', '#60a5fa'
+];
+
 // ============ STOCK UNIVERSE (130+ ASET) ============
 const STOCK_UNIVERSE = [
     { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', category: 'us-tech' },
@@ -185,11 +193,8 @@ function isFavorite(symbol) { return favorites.includes(symbol); }
 function toggleFavorite(symbol, event) {
     if (event) event.stopPropagation();
     const idx = favorites.indexOf(symbol);
-    if (idx >= 0) {
-        favorites.splice(idx, 1);
-    } else {
-        favorites.push(symbol);
-    }
+    if (idx >= 0) favorites.splice(idx, 1);
+    else favorites.push(symbol);
     saveFavorites();
     renderWatchlist();
 }
@@ -197,7 +202,7 @@ function toggleFavorite(symbol, event) {
 // ============ DATA ALERTS 🔔 ============
 let alerts = JSON.parse(localStorage.getItem('fitraAlerts')) || [];
 function saveAlerts() { localStorage.setItem('fitraAlerts', JSON.stringify(alerts)); }
-function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol); }
+function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol && !a.triggered); }
 
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol;
@@ -212,94 +217,55 @@ function openAlertModal(symbol, name, price, type) {
     document.getElementById('alertTargetPrice').value = '';
     document.getElementById('alertNote').value = '';
     
-    // Reset direction buttons
     document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.direction-btn[data-dir="above"]').classList.add('active');
     
     updateAlertPreview();
-    
     document.getElementById('alertModal').classList.add('active');
-    
-    // Auto-focus ke input target
     setTimeout(() => document.getElementById('alertTargetPrice').focus(), 300);
 }
 
-function closeAlertModal() {
-    document.getElementById('alertModal').classList.remove('active');
-}
+function closeAlertModal() { document.getElementById('alertModal').classList.remove('active'); }
 
 function updateAlertPreview() {
     const targetInput = document.getElementById('alertTargetPrice').value;
     const preview = document.getElementById('alertPreview');
-    
     if (!targetInput || isNaN(parseFloat(targetInput))) {
         preview.innerHTML = '<span class="alert-preview-icon">🔔</span><span class="alert-preview-text">Alert bakal aktif kalau harga nyentuh target</span>';
         return;
     }
-    
     const target = parseFloat(targetInput);
     const dirText = currentAlertDirection === 'above' ? 'naik ke atas' : 'turun ke bawah';
     const targetStr = '$' + target.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    
     preview.innerHTML = `<span class="alert-preview-icon">🔔</span><span class="alert-preview-text">Notif kalau <strong>${currentAlertSymbol}</strong> ${dirText} <strong>${targetStr}</strong></span>`;
 }
 
 function saveAlert() {
     const targetInput = document.getElementById('alertTargetPrice').value;
     const note = document.getElementById('alertNote').value.trim();
-    
-    if (!targetInput || isNaN(parseFloat(targetInput))) {
-        alert('Isi target harga dulu, kontol!');
-        return;
-    }
-    
+    if (!targetInput || isNaN(parseFloat(targetInput))) { alert('Isi target harga dulu, kontol!'); return; }
     const target = parseFloat(targetInput);
+    if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('⚠️ Alert "Di Atas" harus target LEBIH TINGGI dari harga sekarang!'); return; }
+    if (currentAlertDirection === 'below' && target >= currentAlertPrice) { alert('⚠️ Alert "Di Bawah" harus target LEBIH RENDAH dari harga sekarang!'); return; }
     
-    // Validasi: kalau "above", target harus > current price. Kalau "below", target harus < current price
-    if (currentAlertDirection === 'above' && target <= currentAlertPrice) {
-        alert('⚠️ Buat alert "Di Atas", target harus LEBIH TINGGI dari harga sekarang!');
-        return;
-    }
-    if (currentAlertDirection === 'below' && target >= currentAlertPrice) {
-        alert('⚠️ Buat alert "Di Bawah", target harus LEBIH RENDAH dari harga sekarang!');
-        return;
-    }
-    
-    // Check duplikat (same symbol + direction)
     const existing = alerts.find(a => a.symbol === currentAlertSymbol && a.direction === currentAlertDirection && !a.triggered);
     if (existing) {
-        if (!confirm(`Udah ada alert ${currentAlertDirection === 'above' ? '↑ Above' : '↓ Below'} buat ${currentAlertSymbol}. Ganti aja?`)) {
-            return;
-        }
+        if (!confirm(`Udah ada alert ${currentAlertDirection === 'above' ? '↑ Above' : '↓ Below'} buat ${currentAlertSymbol}. Ganti?`)) return;
         alerts = alerts.filter(a => a.id !== existing.id);
     }
     
     const newAlert = {
         id: 'alert-' + Date.now(),
-        symbol: currentAlertSymbol,
-        name: currentAlertName,
-        type: currentAlertType,
-        targetPrice: target,
-        direction: currentAlertDirection,
-        note: note,
-        createdAt: Date.now(),
-        triggered: false
+        symbol: currentAlertSymbol, name: currentAlertName, type: currentAlertType,
+        targetPrice: target, direction: currentAlertDirection, note: note,
+        createdAt: Date.now(), triggered: false
     };
-    
     alerts.push(newAlert);
     saveAlerts();
     closeAlertModal();
     renderPriceAlerts();
-    renderWatchlist(); // Refresh biar badge 🔔 muncul
-    
-    // Show success toast
-    showAlertToast({
-        symbol: currentAlertSymbol,
-        name: currentAlertName,
-        targetPrice: target,
-        direction: currentAlertDirection,
-        note: note
-    }, null, true);
+    renderWatchlist();
+    showAlertToast(newAlert, null, true);
 }
 
 function deleteAlert(id, event) {
@@ -313,25 +279,20 @@ function deleteAlert(id, event) {
 
 async function checkAlerts() {
     if (alerts.length === 0) return;
-    
     const activeAlerts = alerts.filter(a => !a.triggered);
     if (activeAlerts.length === 0) return;
     
-    // Fetch harga parallel
     const results = await Promise.all(activeAlerts.map(async (alert) => {
         const price = await fetchPrice(alert.symbol, alert.type);
         return { alert, currentPrice: price ? price.price : null };
     }));
     
     let hasNewTrigger = false;
-    
     results.forEach(({ alert, currentPrice }) => {
         if (currentPrice == null) return;
-        
         let triggered = false;
         if (alert.direction === 'above' && currentPrice >= alert.targetPrice) triggered = true;
         if (alert.direction === 'below' && currentPrice <= alert.targetPrice) triggered = true;
-        
         if (triggered) {
             alert.triggered = true;
             alert.triggeredAt = Date.now();
@@ -361,34 +322,23 @@ function showAlertToast(alert, currentPrice, isNewSet = false) {
         title.textContent = '🔔 PRICE ALERT TRIGGERED!';
         const dir = alert.direction === 'above' ? '↑ naik ke atas' : '↓ turun ke bawah';
         const cpStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
-        message.textContent = `${alert.symbol} udah ${dir} $${alert.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}! Harga sekarang: ${cpStr}${alert.note ? ' — ' + alert.note : ''}`;
+        message.textContent = `${alert.symbol} udah ${dir} $${alert.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}! Sekarang: ${cpStr}${alert.note ? ' — ' + alert.note : ''}`;
     }
     
     toast.classList.add('active');
-    
-    // Auto-hide after 10s
-    setTimeout(() => {
-        toast.classList.remove('active');
-    }, 10000);
+    setTimeout(() => toast.classList.remove('active'), 10000);
 }
 
-function closeAlertToast() {
-    document.getElementById('alertToast').classList.remove('active');
-}
+function closeAlertToast() { document.getElementById('alertToast').classList.remove('active'); }
 
 function renderPriceAlerts() {
     const section = document.getElementById('priceAlertsSection');
     const list = document.getElementById('priceAlertsList');
     const count = document.getElementById('alertsCount');
-    
     if (!section || !list || !count) return;
     
     const activeAlerts = alerts.filter(a => !a.triggered);
-    
-    if (activeAlerts.length === 0) {
-        section.style.display = 'none';
-        return;
-    }
+    if (activeAlerts.length === 0) { section.style.display = 'none'; return; }
     
     section.style.display = 'block';
     count.textContent = activeAlerts.length;
@@ -398,7 +348,6 @@ function renderPriceAlerts() {
         const dirClass = a.direction === 'above' ? 'above' : 'below';
         const dirLabel = a.direction === 'above' ? 'Di Atas' : 'Di Bawah';
         const targetStr = '$' + a.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
-        
         return `
             <div class="price-alert-item ${dirClass}" onclick="openAssetDetail('${a.symbol}', '${a.name.replace(/'/g, "\\'")}', 0, 0, '${a.type}')">
                 <div class="price-alert-icon ${dirClass}">${dirIcon}</div>
@@ -417,31 +366,17 @@ let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
 function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
 
 // ============ BROWSE STOCK ============
-function openBrowseModal() {
-    document.getElementById('browseModal').classList.add('active');
-    renderBrowseStocks();
-}
-function closeBrowseModal() {
-    document.getElementById('browseModal').classList.remove('active');
-}
+function openBrowseModal() { document.getElementById('browseModal').classList.add('active'); renderBrowseStocks(); }
+function closeBrowseModal() { document.getElementById('browseModal').classList.remove('active'); }
+
 function renderBrowseStocks() {
     const body = document.getElementById('browseBody');
     const search = (document.getElementById('browseSearch').value || '').toLowerCase().trim();
     const cat = currentBrowseCategory;
-    
     let filtered = STOCK_UNIVERSE;
     if (cat !== 'all') filtered = filtered.filter(s => s.category === cat);
-    if (search) {
-        filtered = filtered.filter(s => 
-            s.symbol.toLowerCase().includes(search) || 
-            s.name.toLowerCase().includes(search)
-        );
-    }
-    
-    if (filtered.length === 0) {
-        body.innerHTML = '<div class="empty-state">Gak ada saham yang match.</div>';
-        return;
-    }
+    if (search) filtered = filtered.filter(s => s.symbol.toLowerCase().includes(search) || s.name.toLowerCase().includes(search));
+    if (filtered.length === 0) { body.innerHTML = '<div class="empty-state">Gak ada saham yang match.</div>'; return; }
     
     body.innerHTML = filtered.map(stock => {
         const inWatchlist = watchlist.some(w => w.symbol === stock.symbol);
@@ -458,6 +393,7 @@ function renderBrowseStocks() {
         `;
     }).join('');
 }
+
 function toggleFromBrowse(symbol, name, type) {
     const idx = watchlist.findIndex(w => w.symbol === symbol);
     if (idx >= 0) watchlist.splice(idx, 1);
@@ -484,11 +420,7 @@ async function fetchPrice(symbol, type) {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-price`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'apikey': SUPABASE_ANON_KEY
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
             body: JSON.stringify({ symbol, type })
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -501,10 +433,7 @@ async function fetchPrice(symbol, type) {
             return { price: meta.regularMarketPrice, currency: meta.currency, change: meta.regularMarketChangePercent || 0, name: meta.longName || meta.shortName };
         }
         return null;
-    } catch (error) {
-        console.error('Error fetchPrice:', error);
-        return null;
-    }
+    } catch (error) { console.error('Error fetchPrice:', error); return null; }
 }
 
 // ============ FETCH FUNDAMENTAL ============
@@ -512,20 +441,13 @@ async function fetchFundamental(symbol, type) {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-fundamental`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'apikey': SUPABASE_ANON_KEY
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
             body: JSON.stringify({ symbol, type })
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         return data.fundamental || {};
-    } catch (error) {
-        console.error('Error fetchFundamental:', error);
-        return {};
-    }
+    } catch (error) { console.error('Error fetchFundamental:', error); return {}; }
 }
 
 // ============ FETCH CHART DATA ============
@@ -533,16 +455,11 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'apikey': SUPABASE_ANON_KEY
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
             body: JSON.stringify({ symbol, type, interval, range })
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
-        
         if (data.data && Array.isArray(data.data)) {
             return data.data.map(c => ({
                 time: c.time, open: parseFloat(c.open), high: parseFloat(c.high),
@@ -562,10 +479,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
             return candles;
         }
         return [];
-    } catch (error) {
-        console.error('Error fetchChartData:', error);
-        return [];
-    }
+    } catch (error) { console.error('Error fetchChartData:', error); return []; }
 }
 
 // ============ MARKET MOVERS ============
@@ -588,7 +502,6 @@ async function fetchMarketMovers() {
     }
     
     if (results.length === 0) { container.innerHTML = '<div class="empty-state">Gagal memuat data pasar</div>'; return; }
-    
     const sorted = results.sort((a, b) => b.change - a.change);
     const gainers = sorted.filter(r => r.change > 0).slice(0, 5);
     const losers = sorted.filter(r => r.change < 0).slice(-5).reverse();
@@ -600,7 +513,7 @@ function renderMarketMovers() {
     const container = document.getElementById('marketMovers');
     if (!container) return;
     const { gainers, losers } = marketMoversData;
-    if (gainers.length === 0 && losers.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada data pergerakan pasar</div>'; return; }
+    if (gainers.length === 0 && losers.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada data</div>'; return; }
     
     let html = '';
     if (gainers.length > 0) {
@@ -742,7 +655,6 @@ function deleteFromWatchlist(index, event) {
     if (!confirm(`Hapus ${asset.symbol} dari watchlist?`)) return;
     const favIdx = favorites.indexOf(asset.symbol);
     if (favIdx >= 0) { favorites.splice(favIdx, 1); saveFavorites(); }
-    // Hapus alert juga
     alerts = alerts.filter(a => a.symbol !== asset.symbol);
     saveAlerts();
     renderPriceAlerts();
@@ -778,7 +690,6 @@ document.getElementById('closeAlertModal').addEventListener('click', closeAlertM
 document.getElementById('cancelAlert').addEventListener('click', closeAlertModal);
 document.getElementById('saveAlert').addEventListener('click', saveAlert);
 document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview);
-
 document.querySelectorAll('.direction-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
@@ -787,7 +698,6 @@ document.querySelectorAll('.direction-btn').forEach(btn => {
         updateAlertPreview();
     });
 });
-
 document.getElementById('alertToastClose').addEventListener('click', closeAlertToast);
 
 // ============ INDIKATOR ============
@@ -899,7 +809,7 @@ function loadChart(symbol, type) {
     const chartHeight = isMobile ? 450 : 520;
     
     if (typeof LightweightCharts === 'undefined') {
-        container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library LightweightCharts gagal dimuat.</div>';
+        container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library gagal dimuat.</div>';
         return;
     }
     
@@ -918,16 +828,13 @@ function loadChart(symbol, type) {
     volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' });
     volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
     
-    // 🔔 Tampilkan garis alert di chart (kalau ada)
+    // 🔔 Alert line di chart
     const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered);
     if (activeAlert && candleSeries) {
         candleSeries.createPriceLine({
             price: activeAlert.targetPrice,
             color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444',
-            lineWidth: 2,
-            lineStyle: 2, // dashed
-            axisLabelVisible: true,
-            title: '🔔 Alert'
+            lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert'
         });
     }
     
@@ -1049,52 +956,64 @@ async function runScreener() {
                 <span class="asset-metrics">P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%</span>
             </div></div>
         `).join('');
-    } catch (error) {
-        results.innerHTML = `<div class="empty-state">❌ Gagal: ${error.message}</div>`;
-    }
+    } catch (error) { results.innerHTML = `<div class="empty-state">❌ Gagal: ${error.message}</div>`; }
 }
 document.getElementById('runScreener').addEventListener('click', runScreener);
 
-// ============ PORTFOLIO ============
+// ============ 🥧 PORTFOLIO ============
 async function renderPortfolio() {
     const container = document.getElementById('holdings');
     const totalValueEl = document.getElementById('totalValue');
     const unrealizedPLEl = document.getElementById('unrealizedPL');
     const totalCostEl = document.getElementById('totalCost');
     const totalHoldingsEl = document.getElementById('totalHoldings');
+    const chartSection = document.getElementById('portfolioChartSection');
+    
     if (portfolio.length === 0) {
         container.innerHTML = '<div class="empty-state">Belum ada holding.</div>';
-        totalValueEl.textContent = '$ 0'; unrealizedPLEl.textContent = '$ 0';
-        totalCostEl.textContent = '$ 0'; totalHoldingsEl.textContent = '0';
+        totalValueEl.textContent = '$ 0';
+        unrealizedPLEl.textContent = '$ 0';
+        totalCostEl.textContent = '$ 0';
+        totalHoldingsEl.textContent = '0';
+        if (chartSection) chartSection.style.display = 'none';
         return;
     }
+    
     container.innerHTML = '<div class="empty-state">Memuat harga...</div>';
+    
     const holdingsWithPrice = await Promise.all(portfolio.map(async (h) => {
         const priceData = await fetchPrice(h.symbol, h.type);
         return { ...h, currentPrice: priceData?.price || 0 };
     }));
-    let totalValue = 0, totalCost = 0;
-    container.innerHTML = holdingsWithPrice.map(h => {
-        const currentValue = h.currentPrice * h.shares;
-        const costBasis = h.avgPrice * h.shares;
-        const pl = currentValue - costBasis;
-        const plPercent = costBasis > 0 ? (pl / costBasis) * 100 : 0;
-        totalValue += currentValue; totalCost += costBasis;
-        const plClass = pl >= 0 ? 'up' : 'down';
-        const plSign = pl >= 0 ? '+' : '';
+    
+    const holdingsWithValues = holdingsWithPrice.map(h => ({
+        ...h,
+        currentValue: h.currentPrice * h.shares,
+        costBasis: h.avgPrice * h.shares,
+        pl: (h.currentPrice * h.shares) - (h.avgPrice * h.shares)
+    }));
+    
+    const totalValue = holdingsWithValues.reduce((s, h) => s + h.currentValue, 0);
+    const totalCost = holdingsWithValues.reduce((s, h) => s + h.costBasis, 0);
+    
+    container.innerHTML = holdingsWithValues.map(h => {
+        const plPercent = h.costBasis > 0 ? (h.pl / h.costBasis) * 100 : 0;
+        const plClass = h.pl >= 0 ? 'up' : 'down';
+        const plSign = h.pl >= 0 ? '+' : '';
         return `<div class="holding-card">
             <div class="holding-info">
                 <span class="holding-symbol">${h.symbol}</span>
-                <span class="holding-detail">${h.shares} × $${h.avgPrice.toFixed(2)} = $${costBasis.toFixed(2)}</span>
+                <span class="holding-detail">${h.shares} × $${h.avgPrice.toFixed(2)} = $${h.costBasis.toFixed(2)}</span>
                 <span class="holding-detail">Current: $${h.currentPrice.toFixed(2)}</span>
             </div>
             <div class="holding-pl">
-                <span class="holding-value">$${currentValue.toFixed(2)}</span>
-                <span class="holding-pl-amount ${plClass}">${plSign}$${pl.toFixed(2)} (${plSign}${plPercent.toFixed(2)}%)</span>
+                <span class="holding-value">$${h.currentValue.toFixed(2)}</span>
+                <span class="holding-pl-amount ${plClass}">${plSign}$${h.pl.toFixed(2)} (${plSign}${plPercent.toFixed(2)}%)</span>
             </div>
             <button class="holding-delete" onclick="deleteHolding('${h.id}')">×</button>
         </div>`;
     }).join('');
+    
     const totalPL = totalValue - totalCost;
     const totalPLSign = totalPL >= 0 ? '+' : '';
     totalValueEl.textContent = '$ ' + totalValue.toFixed(2);
@@ -1102,13 +1021,88 @@ async function renderPortfolio() {
     unrealizedPLEl.style.color = totalPL >= 0 ? '#10b981' : '#ef4444';
     totalCostEl.textContent = '$ ' + totalCost.toFixed(2);
     totalHoldingsEl.textContent = portfolio.length;
+    
+    // 🔥 Render pie chart
+    renderPortfolioPieChart(holdingsWithValues, totalValue);
 }
+
+function renderPortfolioPieChart(holdings, totalValue) {
+    const chartSection = document.getElementById('portfolioChartSection');
+    const canvas = document.getElementById('portfolioPieChart');
+    const centerValue = document.getElementById('chartCenterValue');
+    const legend = document.getElementById('portfolioLegend');
+    
+    if (!chartSection || !canvas || !centerValue || !legend) return;
+    if (holdings.length === 0 || totalValue <= 0) {
+        chartSection.style.display = 'none';
+        return;
+    }
+    
+    chartSection.style.display = 'block';
+    
+    // Sort by value descending
+    const sorted = [...holdings].sort((a, b) => b.currentValue - a.currentValue);
+    
+    // High DPI setup
+    const dpr = window.devicePixelRatio || 1;
+    const size = 240;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, size, size);
+    
+    const cx = size / 2;
+    const cy = size / 2;
+    const outerRadius = size / 2 - 8;
+    const innerRadius = outerRadius * 0.62;
+    
+    let startAngle = -Math.PI / 2;
+    
+    sorted.forEach((h, i) => {
+        const pct = h.currentValue / totalValue;
+        const angle = pct * Math.PI * 2;
+        const endAngle = startAngle + angle;
+        const color = CHART_COLORS[i % CHART_COLORS.length];
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, outerRadius, startAngle, endAngle);
+        ctx.arc(cx, cy, innerRadius, endAngle, startAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(10, 10, 15, 0.9)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        startAngle = endAngle;
+    });
+    
+    centerValue.textContent = '$' + totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
+    
+    legend.innerHTML = sorted.map((h, i) => {
+        const pct = (h.currentValue / totalValue) * 100;
+        const color = CHART_COLORS[i % CHART_COLORS.length];
+        return `<div class="portfolio-legend-item">
+            <span class="legend-dot" style="background: ${color}; box-shadow: 0 0 8px ${color}80;"></span>
+            <span class="legend-symbol">${h.symbol}</span>
+            <span class="legend-pct">${pct.toFixed(1)}%</span>
+            <span class="legend-value">$${h.currentValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+        </div>`;
+    }).join('');
+}
+
 function deleteHolding(id) {
     if (!confirm('Hapus holding ini?')) return;
     portfolio = portfolio.filter(h => h.id !== id);
     savePortfolio();
     renderPortfolio();
 }
+
 const holdingModal = document.getElementById('holdingModal');
 document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
 document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active'));
@@ -1156,9 +1150,7 @@ async function renderNews() {
                 </div>
             </div>`;
         }).join('');
-    } catch (error) {
-        container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`;
-    }
+    } catch (error) { container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`; }
 }
 function formatTime(timeStr) {
     if (!timeStr) return '';
@@ -1176,6 +1168,5 @@ renderWatchlist();
 renderPriceAlerts();
 fetchMarketMovers();
 
-// Check alerts every 60 detik
-setTimeout(() => checkAlerts(), 5000); // Check pertama setelah 5 detik
-alertCheckInterval = setInterval(checkAlerts, 60000); // Terus tiap 1 menit
+setTimeout(() => checkAlerts(), 5000);
+alertCheckInterval = setInterval(checkAlerts, 60000);
