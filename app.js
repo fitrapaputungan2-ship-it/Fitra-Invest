@@ -14,8 +14,41 @@ let currentAlertSymbol = null;
 let currentAlertName = null;
 let currentAlertType = null;
 let currentAlertPrice = 0;
+let currentNewsItem = null;
+let newsCache = [];
 
-// ============ CHART COLORS (buat pie chart) ============
+// ============ 🌐 TRANSLATION CACHE ============
+let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
+
+function saveTranslationCache() {
+    try {
+        localStorage.setItem('fitraTranslationCache', JSON.stringify(translationCache));
+    } catch (e) {
+        console.warn('Cache penuh, reset');
+        translationCache = {};
+    }
+}
+
+async function translateText(text) {
+    if (!text || text.trim() === '') return text;
+    if (translationCache[text]) return translationCache[text];
+    
+    try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=id&dt=t&q=${encodeURIComponent(text)}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        const translated = data[0].map(item => item[0]).filter(Boolean).join('');
+        translationCache[text] = translated;
+        saveTranslationCache();
+        return translated;
+    } catch (error) {
+        console.warn('Translate gagal:', error.message);
+        return text;
+    }
+}
+
+// ============ CHART COLORS ============
 const CHART_COLORS = [
     '#fbbf24', '#22d3ee', '#10b981', '#a855f7', '#ef4444',
     '#ec4899', '#f97316', '#3b82f6', '#84cc16', '#06b6d4',
@@ -23,7 +56,7 @@ const CHART_COLORS = [
     '#fb7185', '#4ade80', '#60a5fa'
 ];
 
-// ============ STOCK UNIVERSE (130+ ASET) ============
+// ============ STOCK UNIVERSE ============
 const STOCK_UNIVERSE = [
     { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', category: 'us-tech' },
     { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', category: 'us-tech' },
@@ -186,7 +219,7 @@ let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
 ];
 function saveWatchlist() { localStorage.setItem('fitraWatchlist', JSON.stringify(watchlist)); }
 
-// ============ DATA FAVORITES ⭐ ============
+// ============ DATA FAVORITES ============
 let favorites = JSON.parse(localStorage.getItem('fitraFavorites')) || [];
 function saveFavorites() { localStorage.setItem('fitraFavorites', JSON.stringify(favorites)); }
 function isFavorite(symbol) { return favorites.includes(symbol); }
@@ -199,7 +232,7 @@ function toggleFavorite(symbol, event) {
     renderWatchlist();
 }
 
-// ============ DATA ALERTS 🔔 ============
+// ============ DATA ALERTS ============
 let alerts = JSON.parse(localStorage.getItem('fitraAlerts')) || [];
 function saveAlerts() { localStorage.setItem('fitraAlerts', JSON.stringify(alerts)); }
 function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol && !a.triggered); }
@@ -210,21 +243,17 @@ function openAlertModal(symbol, name, price, type) {
     currentAlertType = type;
     currentAlertPrice = price;
     currentAlertDirection = 'above';
-    
     document.getElementById('alertSymbol').textContent = symbol;
     document.getElementById('alertName').textContent = name;
     document.getElementById('alertCurrentPrice').textContent = 'Harga Sekarang: $' + price.toLocaleString('en-US', { maximumFractionDigits: 2 });
     document.getElementById('alertTargetPrice').value = '';
     document.getElementById('alertNote').value = '';
-    
     document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.direction-btn[data-dir="above"]').classList.add('active');
-    
     updateAlertPreview();
     document.getElementById('alertModal').classList.add('active');
     setTimeout(() => document.getElementById('alertTargetPrice').focus(), 300);
 }
-
 function closeAlertModal() { document.getElementById('alertModal').classList.remove('active'); }
 
 function updateAlertPreview() {
@@ -243,20 +272,17 @@ function updateAlertPreview() {
 function saveAlert() {
     const targetInput = document.getElementById('alertTargetPrice').value;
     const note = document.getElementById('alertNote').value.trim();
-    if (!targetInput || isNaN(parseFloat(targetInput))) { alert('Isi target harga dulu, kontol!'); return; }
+    if (!targetInput || isNaN(parseFloat(targetInput))) { alert('Isi target harga dulu!'); return; }
     const target = parseFloat(targetInput);
-    if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('⚠️ Alert "Di Atas" harus target LEBIH TINGGI dari harga sekarang!'); return; }
-    if (currentAlertDirection === 'below' && target >= currentAlertPrice) { alert('⚠️ Alert "Di Bawah" harus target LEBIH RENDAH dari harga sekarang!'); return; }
-    
+    if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('⚠️ Alert "Di Atas" harus target LEBIH TINGGI!'); return; }
+    if (currentAlertDirection === 'below' && target >= currentAlertPrice) { alert('⚠️ Alert "Di Bawah" harus target LEBIH RENDAH!'); return; }
     const existing = alerts.find(a => a.symbol === currentAlertSymbol && a.direction === currentAlertDirection && !a.triggered);
     if (existing) {
-        if (!confirm(`Udah ada alert ${currentAlertDirection === 'above' ? '↑ Above' : '↓ Below'} buat ${currentAlertSymbol}. Ganti?`)) return;
+        if (!confirm(`Udah ada alert ${currentAlertDirection === 'above' ? '↑' : '↓'} buat ${currentAlertSymbol}. Ganti?`)) return;
         alerts = alerts.filter(a => a.id !== existing.id);
     }
-    
     const newAlert = {
-        id: 'alert-' + Date.now(),
-        symbol: currentAlertSymbol, name: currentAlertName, type: currentAlertType,
+        id: 'alert-' + Date.now(), symbol: currentAlertSymbol, name: currentAlertName, type: currentAlertType,
         targetPrice: target, direction: currentAlertDirection, note: note,
         createdAt: Date.now(), triggered: false
     };
@@ -281,12 +307,10 @@ async function checkAlerts() {
     if (alerts.length === 0) return;
     const activeAlerts = alerts.filter(a => !a.triggered);
     if (activeAlerts.length === 0) return;
-    
     const results = await Promise.all(activeAlerts.map(async (alert) => {
         const price = await fetchPrice(alert.symbol, alert.type);
         return { alert, currentPrice: price ? price.price : null };
     }));
-    
     let hasNewTrigger = false;
     results.forEach(({ alert, currentPrice }) => {
         if (currentPrice == null) return;
@@ -294,26 +318,17 @@ async function checkAlerts() {
         if (alert.direction === 'above' && currentPrice >= alert.targetPrice) triggered = true;
         if (alert.direction === 'below' && currentPrice <= alert.targetPrice) triggered = true;
         if (triggered) {
-            alert.triggered = true;
-            alert.triggeredAt = Date.now();
-            alert.triggeredPrice = currentPrice;
-            hasNewTrigger = true;
-            showAlertToast(alert, currentPrice);
+            alert.triggered = true; alert.triggeredAt = Date.now(); alert.triggeredPrice = currentPrice;
+            hasNewTrigger = true; showAlertToast(alert, currentPrice);
         }
     });
-    
-    if (hasNewTrigger) {
-        saveAlerts();
-        renderPriceAlerts();
-        renderWatchlist();
-    }
+    if (hasNewTrigger) { saveAlerts(); renderPriceAlerts(); renderWatchlist(); }
 }
 
 function showAlertToast(alert, currentPrice, isNewSet = false) {
     const toast = document.getElementById('alertToast');
     const title = document.getElementById('alertToastTitle');
     const message = document.getElementById('alertToastMessage');
-    
     if (isNewSet) {
         title.textContent = '🔔 Alert Aktif!';
         const dir = alert.direction === 'above' ? '↑ naik ke' : '↓ turun ke';
@@ -324,11 +339,9 @@ function showAlertToast(alert, currentPrice, isNewSet = false) {
         const cpStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
         message.textContent = `${alert.symbol} udah ${dir} $${alert.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}! Sekarang: ${cpStr}${alert.note ? ' — ' + alert.note : ''}`;
     }
-    
     toast.classList.add('active');
     setTimeout(() => toast.classList.remove('active'), 10000);
 }
-
 function closeAlertToast() { document.getElementById('alertToast').classList.remove('active'); }
 
 function renderPriceAlerts() {
@@ -336,13 +349,10 @@ function renderPriceAlerts() {
     const list = document.getElementById('priceAlertsList');
     const count = document.getElementById('alertsCount');
     if (!section || !list || !count) return;
-    
     const activeAlerts = alerts.filter(a => !a.triggered);
     if (activeAlerts.length === 0) { section.style.display = 'none'; return; }
-    
     section.style.display = 'block';
     count.textContent = activeAlerts.length;
-    
     list.innerHTML = activeAlerts.map(a => {
         const dirIcon = a.direction === 'above' ? '↑' : '↓';
         const dirClass = a.direction === 'above' ? 'above' : 'below';
@@ -377,7 +387,6 @@ function renderBrowseStocks() {
     if (cat !== 'all') filtered = filtered.filter(s => s.category === cat);
     if (search) filtered = filtered.filter(s => s.symbol.toLowerCase().includes(search) || s.name.toLowerCase().includes(search));
     if (filtered.length === 0) { body.innerHTML = '<div class="empty-state">Gak ada saham yang match.</div>'; return; }
-    
     body.innerHTML = filtered.map(stock => {
         const inWatchlist = watchlist.some(w => w.symbol === stock.symbol);
         return `
@@ -487,7 +496,6 @@ async function fetchMarketMovers() {
     const container = document.getElementById('marketMovers');
     if (!container) return;
     container.innerHTML = '<div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat pergerakan pasar...</p></div>';
-    
     const results = [];
     const batchSize = 10;
     for (let i = 0; i < MOVERS_UNIVERSE.length; i += batchSize) {
@@ -500,8 +508,7 @@ async function fetchMarketMovers() {
         }));
         results.push(...batchResults.filter(Boolean));
     }
-    
-    if (results.length === 0) { container.innerHTML = '<div class="empty-state">Gagal memuat data pasar</div>'; return; }
+    if (results.length === 0) { container.innerHTML = '<div class="empty-state">Gagal memuat data</div>'; return; }
     const sorted = results.sort((a, b) => b.change - a.change);
     const gainers = sorted.filter(r => r.change > 0).slice(0, 5);
     const losers = sorted.filter(r => r.change < 0).slice(-5).reverse();
@@ -514,55 +521,12 @@ function renderMarketMovers() {
     if (!container) return;
     const { gainers, losers } = marketMoversData;
     if (gainers.length === 0 && losers.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada data</div>'; return; }
-    
     let html = '';
     if (gainers.length > 0) {
-        html += `
-            <div class="movers-section">
-                <div class="movers-header">
-                    <span class="movers-title gainers-title">📈 Top Gainers</span>
-                    <span class="movers-count">${gainers.length}</span>
-                </div>
-                <div class="movers-list">
-                    ${gainers.map(g => `
-                        <div class="mover-item gainer" onclick="openAssetDetail('${g.symbol}', '${g.name.replace(/'/g, "\\'")}', ${g.price}, ${g.change}, '${g.type}')">
-                            <div class="mover-info">
-                                <span class="mover-symbol">${g.symbol}</span>
-                                <span class="mover-name">${g.name}</span>
-                            </div>
-                            <div class="mover-price-wrap">
-                                <span class="mover-price">$${g.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
-                                <span class="mover-change gainer">+${g.change.toFixed(2)}%</span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
+        html += `<div class="movers-section"><div class="movers-header"><span class="movers-title gainers-title">📈 Top Gainers</span><span class="movers-count">${gainers.length}</span></div><div class="movers-list">${gainers.map(g => `<div class="mover-item gainer" onclick="openAssetDetail('${g.symbol}', '${g.name.replace(/'/g, "\\'")}', ${g.price}, ${g.change}, '${g.type}')"><div class="mover-info"><span class="mover-symbol">${g.symbol}</span><span class="mover-name">${g.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${g.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change gainer">+${g.change.toFixed(2)}%</span></div></div>`).join('')}</div></div>`;
     }
     if (losers.length > 0) {
-        html += `
-            <div class="movers-section">
-                <div class="movers-header">
-                    <span class="movers-title losers-title">📉 Top Losers</span>
-                    <span class="movers-count">${losers.length}</span>
-                </div>
-                <div class="movers-list">
-                    ${losers.map(l => `
-                        <div class="mover-item loser" onclick="openAssetDetail('${l.symbol}', '${l.name.replace(/'/g, "\\'")}', ${l.price}, ${l.change}, '${l.type}')">
-                            <div class="mover-info">
-                                <span class="mover-symbol">${l.symbol}</span>
-                                <span class="mover-name">${l.name}</span>
-                            </div>
-                            <div class="mover-price-wrap">
-                                <span class="mover-price">$${l.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
-                                <span class="mover-change loser">${l.change.toFixed(2)}%</span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
+        html += `<div class="movers-section"><div class="movers-header"><span class="movers-title losers-title">📉 Top Losers</span><span class="movers-count">${losers.length}</span></div><div class="movers-list">${losers.map(l => `<div class="mover-item loser" onclick="openAssetDetail('${l.symbol}', '${l.name.replace(/'/g, "\\'")}', ${l.price}, ${l.change}, '${l.type}')"><div class="mover-info"><span class="mover-symbol">${l.symbol}</span><span class="mover-name">${l.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${l.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change loser">${l.change.toFixed(2)}%</span></div></div>`).join('')}</div></div>`;
     }
     container.innerHTML = html;
 }
@@ -572,37 +536,13 @@ function renderAssetCard(asset, priceData, index) {
     const p = priceData;
     const isFav = isFavorite(asset.symbol);
     const hasAl = hasAlert(asset.symbol);
-    
     if (!p) {
-        return `
-            <div class="watchlist-card-wrapper">
-                <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button>
-                <div class="asset-card">
-                    <div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div>
-                    <div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div>
-                </div>
-                <button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button>
-            </div>
-        `;
+        return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card"><div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
     }
-    
     const trend = p.change >= 0 ? 'up' : 'down';
     const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
     const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    
-    return `
-        <div class="watchlist-card-wrapper">
-            <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button>
-            <div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')">
-                <div class="asset-info">
-                    <span class="asset-symbol">${asset.symbol}${hasAl ? ' <span class="alert-badge">🔔</span>' : ''}</span>
-                    <span class="asset-name">${asset.name}</span>
-                </div>
-                <div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div>
-            </div>
-            <button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button>
-        </div>
-    `;
+    return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')"><div class="asset-info"><span class="asset-symbol">${asset.symbol}${hasAl ? ' <span class="alert-badge">🔔</span>' : ''}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
 }
 
 // ============ RENDER WATCHLIST ============
@@ -610,42 +550,17 @@ async function renderWatchlist() {
     const container = document.getElementById('watchlist');
     container.innerHTML = '<div class="empty-state">Memuat data...</div>';
     if (watchlist.length === 0) { container.innerHTML = '<div class="empty-state">Watchlist kosong.</div>'; return; }
-    
     const results = await Promise.all(watchlist.map(async (asset) => {
         const priceData = await fetchPrice(asset.symbol, asset.type);
         return { ...asset, priceData };
     }));
-    
     const favAssets = results.filter(a => isFavorite(a.symbol));
     const otherAssets = results.filter(a => !isFavorite(a.symbol));
-    
     let html = '';
     if (favAssets.length > 0) {
-        html += `
-            <div class="watchlist-section">
-                <div class="watchlist-section-header">
-                    <span class="watchlist-section-title">⭐ Favorites</span>
-                    <span class="watchlist-section-count">${favAssets.length}</span>
-                </div>
-                ${favAssets.map(a => {
-                    const idx = watchlist.findIndex(w => w.symbol === a.symbol);
-                    return renderAssetCard(a, a.priceData, idx);
-                }).join('')}
-            </div>
-        `;
+        html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">⭐ Favorites</span><span class="watchlist-section-count">${favAssets.length}</span></div>${favAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('')}</div>`;
     }
-    html += `
-        <div class="watchlist-section">
-            <div class="watchlist-section-header">
-                <span class="watchlist-section-title">📊 ${favAssets.length > 0 ? 'Semua Aset' : 'Watchlist'}</span>
-                <span class="watchlist-section-count">${otherAssets.length}</span>
-            </div>
-            ${otherAssets.length > 0 ? otherAssets.map(a => {
-                const idx = watchlist.findIndex(w => w.symbol === a.symbol);
-                return renderAssetCard(a, a.priceData, idx);
-            }).join('') : '<div class="empty-state" style="padding:20px;font-size:12px;">Semua saham udah jadi favorite ⭐</div>'}
-        </div>
-    `;
+    html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">📊 ${favAssets.length > 0 ? 'Semua Aset' : 'Watchlist'}</span><span class="watchlist-section-count">${otherAssets.length}</span></div>${otherAssets.length > 0 ? otherAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('') : '<div class="empty-state" style="padding:20px;font-size:12px;">Semua saham udah favorite ⭐</div>'}</div>`;
     container.innerHTML = html;
 }
 
@@ -807,12 +722,10 @@ function loadChart(symbol, type) {
     if (currentChart) { currentChart.remove(); currentChart = null; }
     const isMobile = window.innerWidth < 400;
     const chartHeight = isMobile ? 450 : 520;
-    
     if (typeof LightweightCharts === 'undefined') {
         container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library gagal dimuat.</div>';
         return;
     }
-    
     currentChart = LightweightCharts.createChart(container, {
         width: container.clientWidth, height: chartHeight,
         layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
@@ -823,21 +736,13 @@ function loadChart(symbol, type) {
         handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
         handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
     });
-    
     candleSeries = currentChart.addCandlestickSeries({ upColor: '#ffffff', downColor: '#a855f7', borderUpColor: '#ffffff', borderDownColor: '#a855f7', wickUpColor: '#ffffff', wickDownColor: '#a855f7' });
     volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' });
     volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
-    
-    // 🔔 Alert line di chart
     const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered);
     if (activeAlert && candleSeries) {
-        candleSeries.createPriceLine({
-            price: activeAlert.targetPrice,
-            color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444',
-            lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert'
-        });
+        candleSeries.createPriceLine({ price: activeAlert.targetPrice, color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert' });
     }
-    
     loadChartData(symbol, type, currentTimeframe);
     setupTimeframeButtons();
     window.addEventListener('resize', resizeChart);
@@ -851,17 +756,13 @@ async function loadChartData(symbol, type, timeframe) {
     let candles = await fetchChartData(symbol, type, interval, range);
     if (!candles || candles.length === 0 || !candleSeries) return;
     if (timeframe === 'Y') candles = aggregateToYearly(candles);
-    const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))
-        .filter(d => d.time != null && !isNaN(d.open) && !isNaN(d.high) && !isNaN(d.low) && !isNaN(d.close));
+    const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })).filter(d => d.time != null && !isNaN(d.open) && !isNaN(d.high) && !isNaN(d.low) && !isNaN(d.close));
     const volumeData = candles.map(c => ({ time: c.time, value: c.volume || 0, color: c.close >= c.open ? 'rgba(255, 255, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)' })).filter(d => d.time != null && !isNaN(d.value));
     candleSeries.setData(formattedData);
     volumeSeries.setData(volumeData);
     const totalCandles = formattedData.length;
-    if (totalCandles > 100) {
-        currentChart.timeScale().setVisibleLogicalRange({ from: totalCandles - 100, to: totalCandles + 5 });
-    } else {
-        currentChart.timeScale().fitContent();
-    }
+    if (totalCandles > 100) currentChart.timeScale().setVisibleLogicalRange({ from: totalCandles - 100, to: totalCandles + 5 });
+    else currentChart.timeScale().fitContent();
 }
 
 function aggregateToYearly(monthlyCandles) {
@@ -880,8 +781,7 @@ function aggregateToYearly(monthlyCandles) {
             y.volume += c.volume || 0;
         }
     });
-    return Object.values(yearlyMap).sort((a, b) => a.year - b.year)
-        .map(y => ({ time: y.firstTime, open: y.open, high: y.high, low: y.low, close: y.close, volume: y.volume }));
+    return Object.values(yearlyMap).sort((a, b) => a.year - b.year).map(y => ({ time: y.firstTime, open: y.open, high: y.high, low: y.low, close: y.close, volume: y.volume }));
 }
 
 function setupTimeframeButtons() {
@@ -949,18 +849,12 @@ async function runScreener() {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         if (!data.results || data.results.length === 0) { results.innerHTML = '<div class="empty-state">Gak ada saham yang lolos filter.</div>'; return; }
-        results.innerHTML = `<p class="description">${data.count} saham lolos filter:</p>` + data.results.map(stock => `
-            <div class="asset-card"><div class="asset-info">
-                <span class="asset-symbol">${stock.symbol}</span>
-                <span class="asset-name">${stock.company_name}</span>
-                <span class="asset-metrics">P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%</span>
-            </div></div>
-        `).join('');
+        results.innerHTML = `<p class="description">${data.count} saham lolos filter:</p>` + data.results.map(stock => `<div class="asset-card"><div class="asset-info"><span class="asset-symbol">${stock.symbol}</span><span class="asset-name">${stock.company_name}</span><span class="asset-metrics">P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%</span></div></div>`).join('');
     } catch (error) { results.innerHTML = `<div class="empty-state">❌ Gagal: ${error.message}</div>`; }
 }
 document.getElementById('runScreener').addEventListener('click', runScreener);
 
-// ============ 🥧 PORTFOLIO ============
+// ============ PORTFOLIO ============
 async function renderPortfolio() {
     const container = document.getElementById('holdings');
     const totalValueEl = document.getElementById('totalValue');
@@ -968,52 +862,30 @@ async function renderPortfolio() {
     const totalCostEl = document.getElementById('totalCost');
     const totalHoldingsEl = document.getElementById('totalHoldings');
     const chartSection = document.getElementById('portfolioChartSection');
-    
     if (portfolio.length === 0) {
         container.innerHTML = '<div class="empty-state">Belum ada holding.</div>';
-        totalValueEl.textContent = '$ 0';
-        unrealizedPLEl.textContent = '$ 0';
-        totalCostEl.textContent = '$ 0';
-        totalHoldingsEl.textContent = '0';
+        totalValueEl.textContent = '$ 0'; unrealizedPLEl.textContent = '$ 0';
+        totalCostEl.textContent = '$ 0'; totalHoldingsEl.textContent = '0';
         if (chartSection) chartSection.style.display = 'none';
         return;
     }
-    
     container.innerHTML = '<div class="empty-state">Memuat harga...</div>';
-    
     const holdingsWithPrice = await Promise.all(portfolio.map(async (h) => {
         const priceData = await fetchPrice(h.symbol, h.type);
         return { ...h, currentPrice: priceData?.price || 0 };
     }));
-    
     const holdingsWithValues = holdingsWithPrice.map(h => ({
-        ...h,
-        currentValue: h.currentPrice * h.shares,
-        costBasis: h.avgPrice * h.shares,
+        ...h, currentValue: h.currentPrice * h.shares, costBasis: h.avgPrice * h.shares,
         pl: (h.currentPrice * h.shares) - (h.avgPrice * h.shares)
     }));
-    
     const totalValue = holdingsWithValues.reduce((s, h) => s + h.currentValue, 0);
     const totalCost = holdingsWithValues.reduce((s, h) => s + h.costBasis, 0);
-    
     container.innerHTML = holdingsWithValues.map(h => {
         const plPercent = h.costBasis > 0 ? (h.pl / h.costBasis) * 100 : 0;
         const plClass = h.pl >= 0 ? 'up' : 'down';
         const plSign = h.pl >= 0 ? '+' : '';
-        return `<div class="holding-card">
-            <div class="holding-info">
-                <span class="holding-symbol">${h.symbol}</span>
-                <span class="holding-detail">${h.shares} × $${h.avgPrice.toFixed(2)} = $${h.costBasis.toFixed(2)}</span>
-                <span class="holding-detail">Current: $${h.currentPrice.toFixed(2)}</span>
-            </div>
-            <div class="holding-pl">
-                <span class="holding-value">$${h.currentValue.toFixed(2)}</span>
-                <span class="holding-pl-amount ${plClass}">${plSign}$${h.pl.toFixed(2)} (${plSign}${plPercent.toFixed(2)}%)</span>
-            </div>
-            <button class="holding-delete" onclick="deleteHolding('${h.id}')">×</button>
-        </div>`;
+        return `<div class="holding-card"><div class="holding-info"><span class="holding-symbol">${h.symbol}</span><span class="holding-detail">${h.shares} × $${h.avgPrice.toFixed(2)} = $${h.costBasis.toFixed(2)}</span><span class="holding-detail">Current: $${h.currentPrice.toFixed(2)}</span></div><div class="holding-pl"><span class="holding-value">$${h.currentValue.toFixed(2)}</span><span class="holding-pl-amount ${plClass}">${plSign}$${h.pl.toFixed(2)} (${plSign}${plPercent.toFixed(2)}%)</span></div><button class="holding-delete" onclick="deleteHolding('${h.id}')">×</button></div>`;
     }).join('');
-    
     const totalPL = totalValue - totalCost;
     const totalPLSign = totalPL >= 0 ? '+' : '';
     totalValueEl.textContent = '$ ' + totalValue.toFixed(2);
@@ -1021,8 +893,6 @@ async function renderPortfolio() {
     unrealizedPLEl.style.color = totalPL >= 0 ? '#10b981' : '#ef4444';
     totalCostEl.textContent = '$ ' + totalCost.toFixed(2);
     totalHoldingsEl.textContent = portfolio.length;
-    
-    // 🔥 Render pie chart
     renderPortfolioPieChart(holdingsWithValues, totalValue);
 }
 
@@ -1031,44 +901,29 @@ function renderPortfolioPieChart(holdings, totalValue) {
     const canvas = document.getElementById('portfolioPieChart');
     const centerValue = document.getElementById('chartCenterValue');
     const legend = document.getElementById('portfolioLegend');
-    
     if (!chartSection || !canvas || !centerValue || !legend) return;
-    if (holdings.length === 0 || totalValue <= 0) {
-        chartSection.style.display = 'none';
-        return;
-    }
-    
+    if (holdings.length === 0 || totalValue <= 0) { chartSection.style.display = 'none'; return; }
     chartSection.style.display = 'block';
-    
-    // Sort by value descending
     const sorted = [...holdings].sort((a, b) => b.currentValue - a.currentValue);
-    
-    // High DPI setup
     const dpr = window.devicePixelRatio || 1;
     const size = 240;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     canvas.style.width = size + 'px';
     canvas.style.height = size + 'px';
-    
     const ctx = canvas.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
-    
-    const cx = size / 2;
-    const cy = size / 2;
+    const cx = size / 2, cy = size / 2;
     const outerRadius = size / 2 - 8;
     const innerRadius = outerRadius * 0.62;
-    
     let startAngle = -Math.PI / 2;
-    
     sorted.forEach((h, i) => {
         const pct = h.currentValue / totalValue;
         const angle = pct * Math.PI * 2;
         const endAngle = startAngle + angle;
         const color = CHART_COLORS[i % CHART_COLORS.length];
-        
         ctx.beginPath();
         ctx.arc(cx, cy, outerRadius, startAngle, endAngle);
         ctx.arc(cx, cy, innerRadius, endAngle, startAngle, true);
@@ -1078,21 +933,13 @@ function renderPortfolioPieChart(holdings, totalValue) {
         ctx.strokeStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.lineWidth = 2;
         ctx.stroke();
-        
         startAngle = endAngle;
     });
-    
     centerValue.textContent = '$' + totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
-    
     legend.innerHTML = sorted.map((h, i) => {
         const pct = (h.currentValue / totalValue) * 100;
         const color = CHART_COLORS[i % CHART_COLORS.length];
-        return `<div class="portfolio-legend-item">
-            <span class="legend-dot" style="background: ${color}; box-shadow: 0 0 8px ${color}80;"></span>
-            <span class="legend-symbol">${h.symbol}</span>
-            <span class="legend-pct">${pct.toFixed(1)}%</span>
-            <span class="legend-value">$${h.currentValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-        </div>`;
+        return `<div class="portfolio-legend-item"><span class="legend-dot" style="background: ${color}; box-shadow: 0 0 8px ${color}80;"></span><span class="legend-symbol">${h.symbol}</span><span class="legend-pct">${pct.toFixed(1)}%</span><span class="legend-value">$${h.currentValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></div>`;
     }).join('');
 }
 
@@ -1124,7 +971,7 @@ document.getElementById('saveHolding').addEventListener('click', () => {
     renderPortfolio();
 });
 
-// ============ NEWS ============
+// ============ 📰 NEWS ============
 async function renderNews() {
     const container = document.getElementById('newsList');
     container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
@@ -1137,21 +984,128 @@ async function renderNews() {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         const news = data.news || [];
+        newsCache = news;
         if (news.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada berita</div>'; return; }
-        container.innerHTML = news.map(item => {
+        
+        // Render awal pakai English (biar cepet muncul)
+        container.innerHTML = news.map((item, i) => {
             const time = formatTime(item.timePublished);
-            return `<div class="news-card" onclick="window.open('${item.url}', '_blank')">
-                <div class="news-title">${item.title}</div>
-                <div class="news-summary">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div>
+            const category = (item.category || 'NEWS').toUpperCase();
+            return `<div class="news-card" id="news-card-${i}" onclick="openNewsDetail(${i})">
+                <div class="news-title" id="news-title-${i}"><span class="trans-inline-spinner"></span>${item.title}</div>
+                <div class="news-summary" id="news-summary-${i}">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div>
                 <div class="news-meta">
-                    <span class="sentiment-tag neutral">${(item.category || 'NEWS').toUpperCase()}</span>
+                    <span class="sentiment-tag neutral">${category}</span>
                     <span>${item.source || 'Unknown'}</span>
                     <span>${time}</span>
+                    <span class="trans-done-badge" id="trans-badge-${i}" style="display:none;">🌐 ID</span>
                 </div>
             </div>`;
         }).join('');
-    } catch (error) { container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`; }
+        
+        // Translate di background
+        translateNewsInBackground(news);
+    } catch (error) {
+        container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`;
+    }
 }
+
+async function translateNewsInBackground(news) {
+    for (let i = 0; i < news.length; i++) {
+        const item = news[i];
+        try {
+            if (item.title) {
+                const transTitle = await translateText(item.title);
+                const titleEl = document.getElementById(`news-title-${i}`);
+                if (titleEl && transTitle !== item.title) titleEl.textContent = transTitle;
+            }
+            if (item.summary) {
+                const shortSummary = item.summary.substring(0, 150);
+                const transSummary = await translateText(shortSummary);
+                const summaryEl = document.getElementById(`news-summary-${i}`);
+                if (summaryEl && transSummary !== shortSummary) {
+                    summaryEl.textContent = transSummary + (item.summary.length > 150 ? '...' : '');
+                }
+            }
+            const badgeEl = document.getElementById(`trans-badge-${i}`);
+            if (badgeEl) badgeEl.style.display = 'inline-block';
+        } catch (e) { console.warn('Translate gagal news #' + i); }
+    }
+}
+
+function openNewsDetail(index) {
+    const item = newsCache[index];
+    if (!item) return;
+    currentNewsItem = item;
+    const modal = document.getElementById('newsDetailModal');
+    modal.classList.add('active');
+    document.getElementById('ndSource').textContent = item.source || 'Unknown';
+    document.getElementById('ndTime').textContent = formatTime(item.timePublished);
+    document.getElementById('ndCategory').textContent = (item.category || 'NEWS').toUpperCase();
+    document.getElementById('ndTitle').textContent = item.title;
+    document.getElementById('ndSummary').textContent = item.summary || 'Tidak ada ringkasan tersedia.';
+    const badge = document.getElementById('ndTransBadge');
+    badge.style.display = 'inline-flex';
+    badge.classList.remove('trans-done');
+    badge.innerHTML = '<span class="trans-loading-spinner"></span> 🌐 Menerjemahkan...';
+    translateNewsDetail(item);
+}
+
+async function translateNewsDetail(item) {
+    const badge = document.getElementById('ndTransBadge');
+    try {
+        const [transTitle, transSummary] = await Promise.all([
+            translateText(item.title),
+            translateText(item.summary || '')
+        ]);
+        if (currentNewsItem !== item) return;
+        document.getElementById('ndTitle').textContent = transTitle;
+        if (transSummary && transSummary.trim()) document.getElementById('ndSummary').textContent = transSummary;
+        badge.innerHTML = '🌐 Diterjemahkan dari Bahasa Inggris';
+        badge.classList.add('trans-done');
+    } catch (e) { badge.style.display = 'none'; }
+}
+
+function closeNewsDetail() {
+    document.getElementById('newsDetailModal').classList.remove('active');
+    currentNewsItem = null;
+}
+
+function openNewsOriginal() {
+    if (currentNewsItem && currentNewsItem.url) window.open(currentNewsItem.url, '_blank');
+}
+
+function copyNewsLink() {
+    if (!currentNewsItem || !currentNewsItem.url) return;
+    const url = currentNewsItem.url;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => showToastSimple('📋 Link berhasil dicopy!')).catch(() => fallbackCopy(url));
+    } else { fallbackCopy(url); }
+}
+
+function fallbackCopy(text) {
+    const temp = document.createElement('textarea');
+    temp.value = text;
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    document.body.appendChild(temp);
+    temp.select();
+    try { document.execCommand('copy'); showToastSimple('📋 Link berhasil dicopy!'); }
+    catch (e) { showToastSimple('❌ Gagal copy link'); }
+    document.body.removeChild(temp);
+}
+
+function showToastSimple(message) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1a1a2e,#0f0f1a);color:#fff;padding:12px 20px;border-radius:12px;border:1px solid rgba(251,191,36,0.4);font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9999;animation:toastIn 0.3s ease;`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'toastOut 0.3s ease';
+        setTimeout(() => document.body.removeChild(toast), 300);
+    }, 2000);
+}
+
 function formatTime(timeStr) {
     if (!timeStr) return '';
     const date = new Date(timeStr * 1000);
@@ -1162,6 +1116,10 @@ function formatTime(timeStr) {
     const minute = String(date.getMinutes()).padStart(2, '0');
     return `${day}/${month}/${year} ${hour}:${minute}`;
 }
+
+document.getElementById('closeNewsDetail').addEventListener('click', closeNewsDetail);
+document.getElementById('ndOpenOriginal').addEventListener('click', openNewsOriginal);
+document.getElementById('ndCopyLink').addEventListener('click', copyNewsLink);
 
 // ============ INIT ============
 renderWatchlist();
