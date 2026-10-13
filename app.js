@@ -21,18 +21,13 @@ let newsCache = [];
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
 
 function saveTranslationCache() {
-    try {
-        localStorage.setItem('fitraTranslationCache', JSON.stringify(translationCache));
-    } catch (e) {
-        console.warn('Cache penuh, reset');
-        translationCache = {};
-    }
+    try { localStorage.setItem('fitraTranslationCache', JSON.stringify(translationCache)); }
+    catch (e) { console.warn('Cache penuh'); translationCache = {}; }
 }
 
 async function translateText(text) {
     if (!text || text.trim() === '') return text;
     if (translationCache[text]) return translationCache[text];
-    
     try {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=id&dt=t&q=${encodeURIComponent(text)}`;
         const response = await fetch(url);
@@ -42,19 +37,117 @@ async function translateText(text) {
         translationCache[text] = translated;
         saveTranslationCache();
         return translated;
+    } catch (error) { return text; }
+}
+
+// ============ 💱 CURRENCY CONVERTER ============
+let currencyRates = JSON.parse(localStorage.getItem('fitraCurrencyRates') || 'null');
+let currencyLastFetch = parseInt(localStorage.getItem('fitraCurrencyLastFetch') || '0');
+const CURRENCY_CACHE_TTL = 60 * 60 * 1000; // 1 jam
+const QUICK_TARGETS = ['IDR', 'EUR', 'JPY', 'GBP', 'SGD', 'MYR', 'CNY', 'AUD', 'KRW', 'THB'];
+
+async function fetchCurrencyRates(forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && currencyRates && (now - currencyLastFetch) < CURRENCY_CACHE_TTL) return currencyRates;
+    try {
+        const response = await fetch('https://open.er-api.com/v6/latest/USD');
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        if (data.result !== 'success' || !data.rates) throw new Error('Invalid response');
+        currencyRates = data.rates;
+        currencyLastFetch = now;
+        try {
+            localStorage.setItem('fitraCurrencyRates', JSON.stringify(currencyRates));
+            localStorage.setItem('fitraCurrencyLastFetch', currencyLastFetch.toString());
+        } catch (e) {}
+        return currencyRates;
     } catch (error) {
-        console.warn('Translate gagal:', error.message);
-        return text;
+        console.error('Error fetch currency:', error);
+        if (currencyRates) return currencyRates;
+        return null;
     }
 }
 
+function formatCurrencyAmount(amount, currency) {
+    const decimals = ['JPY', 'KRW', 'IDR'].includes(currency) ? 0 : 2;
+    const symbols = { 'USD': '$', 'IDR': 'Rp ', 'EUR': '€', 'JPY': '¥', 'GBP': '£', 'SGD': 'S$', 'MYR': 'RM ', 'CNY': '¥', 'AUD': 'A$', 'KRW': '₩', 'THB': '฿', 'INR': '₹', 'SAR': 'SR ', 'AED': 'AED ' };
+    const symbol = symbols[currency] || currency + ' ';
+    return symbol + amount.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+async function convertCurrency() {
+    const fromAmount = parseFloat(document.getElementById('currencyFromAmount').value) || 0;
+    const fromCur = document.getElementById('currencyFromSelect').value;
+    const toCur = document.getElementById('currencyToSelect').value;
+    const resultEl = document.getElementById('currencyToResult');
+    const rateLine = document.getElementById('currencyRateLine');
+    
+    if (!currencyRates) {
+        resultEl.textContent = 'Memuat...';
+        rateLine.innerHTML = '<span class="rate-loading-spinner"></span> Mengambil rate...';
+        const rates = await fetchCurrencyRates();
+        if (!rates) {
+            resultEl.textContent = '❌ Gagal memuat';
+            rateLine.textContent = 'Error: rate gak tersedia';
+            return;
+        }
+    }
+    
+    const fromRate = currencyRates[fromCur] || 1;
+    const toRate = currencyRates[toCur] || 1;
+    const result = (fromAmount / fromRate) * toRate;
+    resultEl.textContent = formatCurrencyAmount(result, toCur);
+    
+    const rate1 = (1 / fromRate) * toRate;
+    const rateDecimals = ['JPY', 'KRW', 'IDR'].includes(toCur) ? 2 : 4;
+    rateLine.innerHTML = `💱 <strong>1 ${fromCur}</strong> = <strong>${rate1.toLocaleString('en-US', { minimumFractionDigits: rateDecimals, maximumFractionDigits: rateDecimals })} ${toCur}</strong>`;
+    
+    if (currencyLastFetch) {
+        const date = new Date(currencyLastFetch);
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mm = String(date.getMinutes()).padStart(2, '0');
+        document.getElementById('currencyRateUpdate').textContent = `Terakhir diupdate: ${hh}:${mm}`;
+    }
+}
+
+function swapCurrencies() {
+    const fromSel = document.getElementById('currencyFromSelect');
+    const toSel = document.getElementById('currencyToSelect');
+    const temp = fromSel.value;
+    fromSel.value = toSel.value;
+    toSel.value = temp;
+    convertCurrency();
+    // Sync quick target active
+    const val = toSel.value;
+    document.querySelectorAll('.quick-target-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.cur === val);
+    });
+}
+
+function renderCurrencyQuickTargets() {
+    const container = document.getElementById('currencyQuickTargets');
+    if (!container) return;
+    const flags = { 'IDR': '🇮🇩', 'EUR': '🇪🇺', 'JPY': '🇯🇵', 'GBP': '🇬🇧', 'SGD': '🇸🇬', 'MYR': '🇲🇾', 'CNY': '🇨🇳', 'AUD': '🇦🇺', 'KRW': '🇰🇷', 'THB': '🇹🇭', 'USD': '🇺🇸', 'INR': '🇮🇳', 'SAR': '🇸🇦', 'AED': '🇦🇪' };
+    container.innerHTML = QUICK_TARGETS.map(cur => `<button class="quick-target-btn ${cur === 'IDR' ? 'active' : ''}" data-cur="${cur}">${flags[cur]} ${cur}</button>`).join('');
+    container.querySelectorAll('.quick-target-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            container.querySelectorAll('.quick-target-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('currencyToSelect').value = btn.dataset.cur;
+            convertCurrency();
+        });
+    });
+}
+
+async function openCurrencyModal() {
+    document.getElementById('currencyModal').classList.add('active');
+    renderCurrencyQuickTargets();
+    await convertCurrency();
+}
+function closeCurrencyModal() { document.getElementById('currencyModal').classList.remove('active'); }
+
 // ============ CHART COLORS ============
-const CHART_COLORS = [
-    '#fbbf24', '#22d3ee', '#10b981', '#a855f7', '#ef4444',
-    '#ec4899', '#f97316', '#3b82f6', '#84cc16', '#06b6d4',
-    '#8b5cf6', '#eab308', '#14b8a6', '#f43f5e', '#facc15',
-    '#fb7185', '#4ade80', '#60a5fa'
-];
+const CHART_COLORS = ['#fbbf24', '#22d3ee', '#10b981', '#a855f7', '#ef4444', '#ec4899', '#f97316', '#3b82f6', '#84cc16', '#06b6d4', '#8b5cf6', '#eab308', '#14b8a6', '#f43f5e', '#facc15', '#fb7185', '#4ade80', '#60a5fa'];
 
 // ============ STOCK UNIVERSE ============
 const STOCK_UNIVERSE = [
@@ -184,14 +277,7 @@ const STOCK_UNIVERSE = [
 ];
 
 // ============ MARKET MOVERS UNIVERSE ============
-const MOVERS_UNIVERSE = [
-    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'INTC', 'NFLX', 'AVGO', 'ADBE',
-    'JPM', 'BAC', 'V', 'MA', 'GS', 'WFC',
-    'WMT', 'DIS', 'MCD', 'NKE', 'SBUX', 'KO', 'PEP',
-    'JNJ', 'PFE', 'UNH', 'LLY',
-    'BTC', 'ETH', 'SOL', 'BNB', 'XRP'
-];
-
+const MOVERS_UNIVERSE = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'INTC', 'NFLX', 'AVGO', 'ADBE', 'JPM', 'BAC', 'V', 'MA', 'GS', 'WFC', 'WMT', 'DIS', 'MCD', 'NKE', 'SBUX', 'KO', 'PEP', 'JNJ', 'PFE', 'UNH', 'LLY', 'BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
 let marketMoversData = { gainers: [], losers: [] };
 
 // ============ TAB NAV ============
@@ -206,7 +292,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 });
 
-// ============ DATA WATCHLIST ============
+// ============ DATA ============
 let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
     { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock' },
     { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock' },
@@ -219,7 +305,6 @@ let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
 ];
 function saveWatchlist() { localStorage.setItem('fitraWatchlist', JSON.stringify(watchlist)); }
 
-// ============ DATA FAVORITES ============
 let favorites = JSON.parse(localStorage.getItem('fitraFavorites')) || [];
 function saveFavorites() { localStorage.setItem('fitraFavorites', JSON.stringify(favorites)); }
 function isFavorite(symbol) { return favorites.includes(symbol); }
@@ -232,17 +317,17 @@ function toggleFavorite(symbol, event) {
     renderWatchlist();
 }
 
-// ============ DATA ALERTS ============
 let alerts = JSON.parse(localStorage.getItem('fitraAlerts')) || [];
 function saveAlerts() { localStorage.setItem('fitraAlerts', JSON.stringify(alerts)); }
 function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol && !a.triggered); }
 
+let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
+function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
+
+// ============ ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
-    currentAlertSymbol = symbol;
-    currentAlertName = name;
-    currentAlertType = type;
-    currentAlertPrice = price;
-    currentAlertDirection = 'above';
+    currentAlertSymbol = symbol; currentAlertName = name; currentAlertType = type;
+    currentAlertPrice = price; currentAlertDirection = 'above';
     document.getElementById('alertSymbol').textContent = symbol;
     document.getElementById('alertName').textContent = name;
     document.getElementById('alertCurrentPrice').textContent = 'Harga Sekarang: $' + price.toLocaleString('en-US', { maximumFractionDigits: 2 });
@@ -274,18 +359,14 @@ function saveAlert() {
     const note = document.getElementById('alertNote').value.trim();
     if (!targetInput || isNaN(parseFloat(targetInput))) { alert('Isi target harga dulu!'); return; }
     const target = parseFloat(targetInput);
-    if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('⚠️ Alert "Di Atas" harus target LEBIH TINGGI!'); return; }
-    if (currentAlertDirection === 'below' && target >= currentAlertPrice) { alert('⚠️ Alert "Di Bawah" harus target LEBIH RENDAH!'); return; }
+    if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('⚠️ Alert "Di Atas" harus LEBIH TINGGI!'); return; }
+    if (currentAlertDirection === 'below' && target >= currentAlertPrice) { alert('⚠️ Alert "Di Bawah" harus LEBIH RENDAH!'); return; }
     const existing = alerts.find(a => a.symbol === currentAlertSymbol && a.direction === currentAlertDirection && !a.triggered);
     if (existing) {
-        if (!confirm(`Udah ada alert ${currentAlertDirection === 'above' ? '↑' : '↓'} buat ${currentAlertSymbol}. Ganti?`)) return;
+        if (!confirm(`Udah ada alert buat ${currentAlertSymbol}. Ganti?`)) return;
         alerts = alerts.filter(a => a.id !== existing.id);
     }
-    const newAlert = {
-        id: 'alert-' + Date.now(), symbol: currentAlertSymbol, name: currentAlertName, type: currentAlertType,
-        targetPrice: target, direction: currentAlertDirection, note: note,
-        createdAt: Date.now(), triggered: false
-    };
+    const newAlert = { id: 'alert-' + Date.now(), symbol: currentAlertSymbol, name: currentAlertName, type: currentAlertType, targetPrice: target, direction: currentAlertDirection, note: note, createdAt: Date.now(), triggered: false };
     alerts.push(newAlert);
     saveAlerts();
     closeAlertModal();
@@ -358,22 +439,9 @@ function renderPriceAlerts() {
         const dirClass = a.direction === 'above' ? 'above' : 'below';
         const dirLabel = a.direction === 'above' ? 'Di Atas' : 'Di Bawah';
         const targetStr = '$' + a.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
-        return `
-            <div class="price-alert-item ${dirClass}" onclick="openAssetDetail('${a.symbol}', '${a.name.replace(/'/g, "\\'")}', 0, 0, '${a.type}')">
-                <div class="price-alert-icon ${dirClass}">${dirIcon}</div>
-                <div class="price-alert-info">
-                    <div class="price-alert-symbol">${a.symbol} <span class="price-alert-dir">${dirLabel}</span></div>
-                    <div class="price-alert-target">Target: ${targetStr}${a.note ? ' • ' + a.note : ''}</div>
-                </div>
-                <button class="price-alert-delete" onclick="deleteAlert('${a.id}', event)">×</button>
-            </div>
-        `;
+        return `<div class="price-alert-item ${dirClass}" onclick="openAssetDetail('${a.symbol}', '${a.name.replace(/'/g, "\\'")}', 0, 0, '${a.type}')"><div class="price-alert-icon ${dirClass}">${dirIcon}</div><div class="price-alert-info"><div class="price-alert-symbol">${a.symbol} <span class="price-alert-dir">${dirLabel}</span></div><div class="price-alert-target">Target: ${targetStr}${a.note ? ' • ' + a.note : ''}</div></div><button class="price-alert-delete" onclick="deleteAlert('${a.id}', event)">×</button></div>`;
     }).join('');
 }
-
-// ============ DATA PORTFOLIO ============
-let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
-function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
 
 // ============ BROWSE STOCK ============
 function openBrowseModal() { document.getElementById('browseModal').classList.add('active'); renderBrowseStocks(); }
@@ -389,17 +457,7 @@ function renderBrowseStocks() {
     if (filtered.length === 0) { body.innerHTML = '<div class="empty-state">Gak ada saham yang match.</div>'; return; }
     body.innerHTML = filtered.map(stock => {
         const inWatchlist = watchlist.some(w => w.symbol === stock.symbol);
-        return `
-            <div class="browse-item ${inWatchlist ? 'in-watchlist' : ''}" onclick="toggleFromBrowse('${stock.symbol}', '${stock.name.replace(/'/g, "\\'")}', '${stock.type}')">
-                <div class="browse-item-info">
-                    <span class="browse-symbol">${stock.symbol}</span>
-                    <span class="browse-name">${stock.name}</span>
-                </div>
-                <div class="browse-item-action">
-                    ${inWatchlist ? '<span class="browse-badge added">✓ Added</span>' : '<span class="browse-badge add">+ Add</span>'}
-                </div>
-            </div>
-        `;
+        return `<div class="browse-item ${inWatchlist ? 'in-watchlist' : ''}" onclick="toggleFromBrowse('${stock.symbol}', '${stock.name.replace(/'/g, "\\'")}', '${stock.type}')"><div class="browse-item-info"><span class="browse-symbol">${stock.symbol}</span><span class="browse-name">${stock.name}</span></div><div class="browse-item-action">${inWatchlist ? '<span class="browse-badge added">✓ Added</span>' : '<span class="browse-badge add">+ Add</span>'}</div></div>`;
     }).join('');
 }
 
@@ -412,19 +470,7 @@ function toggleFromBrowse(symbol, name, type) {
     renderWatchlist();
 }
 
-document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
-document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
-document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
-document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentBrowseCategory = btn.dataset.cat;
-        renderBrowseStocks();
-    });
-});
-
-// ============ FETCH PRICE ============
+// ============ FETCH FUNCTIONS ============
 async function fetchPrice(symbol, type) {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-price`, {
@@ -434,18 +480,15 @@ async function fetchPrice(symbol, type) {
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
-        if (type === 'crypto' && data.price) {
-            return { price: data.price, currency: 'USD', change: data.change || 0, name: data.name || symbol };
-        }
+        if (type === 'crypto' && data.price) return { price: data.price, currency: 'USD', change: data.change || 0, name: data.name || symbol };
         if (type !== 'crypto' && data.chart && data.chart.result) {
             const meta = data.chart.result[0].meta;
             return { price: meta.regularMarketPrice, currency: meta.currency, change: meta.regularMarketChangePercent || 0, name: meta.longName || meta.shortName };
         }
         return null;
-    } catch (error) { console.error('Error fetchPrice:', error); return null; }
+    } catch (error) { return null; }
 }
 
-// ============ FETCH FUNDAMENTAL ============
 async function fetchFundamental(symbol, type) {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-fundamental`, {
@@ -456,10 +499,9 @@ async function fetchFundamental(symbol, type) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         return data.fundamental || {};
-    } catch (error) { console.error('Error fetchFundamental:', error); return {}; }
+    } catch (error) { return {}; }
 }
 
-// ============ FETCH CHART DATA ============
 async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, {
@@ -470,10 +512,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         if (data.data && Array.isArray(data.data)) {
-            return data.data.map(c => ({
-                time: c.time, open: parseFloat(c.open), high: parseFloat(c.high),
-                low: parseFloat(c.low), close: parseFloat(c.close), volume: parseFloat(c.volume || 0)
-            })).filter(c => !isNaN(c.open) && !isNaN(c.close));
+            return data.data.map(c => ({ time: c.time, open: parseFloat(c.open), high: parseFloat(c.high), low: parseFloat(c.low), close: parseFloat(c.close), volume: parseFloat(c.volume || 0) })).filter(c => !isNaN(c.open) && !isNaN(c.close));
         }
         if (data.chart && data.chart.result && data.chart.result[0]) {
             const result = data.chart.result[0];
@@ -488,7 +527,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
             return candles;
         }
         return [];
-    } catch (error) { console.error('Error fetchChartData:', error); return []; }
+    } catch (error) { return []; }
 }
 
 // ============ MARKET MOVERS ============
@@ -522,30 +561,23 @@ function renderMarketMovers() {
     const { gainers, losers } = marketMoversData;
     if (gainers.length === 0 && losers.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada data</div>'; return; }
     let html = '';
-    if (gainers.length > 0) {
-        html += `<div class="movers-section"><div class="movers-header"><span class="movers-title gainers-title">📈 Top Gainers</span><span class="movers-count">${gainers.length}</span></div><div class="movers-list">${gainers.map(g => `<div class="mover-item gainer" onclick="openAssetDetail('${g.symbol}', '${g.name.replace(/'/g, "\\'")}', ${g.price}, ${g.change}, '${g.type}')"><div class="mover-info"><span class="mover-symbol">${g.symbol}</span><span class="mover-name">${g.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${g.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change gainer">+${g.change.toFixed(2)}%</span></div></div>`).join('')}</div></div>`;
-    }
-    if (losers.length > 0) {
-        html += `<div class="movers-section"><div class="movers-header"><span class="movers-title losers-title">📉 Top Losers</span><span class="movers-count">${losers.length}</span></div><div class="movers-list">${losers.map(l => `<div class="mover-item loser" onclick="openAssetDetail('${l.symbol}', '${l.name.replace(/'/g, "\\'")}', ${l.price}, ${l.change}, '${l.type}')"><div class="mover-info"><span class="mover-symbol">${l.symbol}</span><span class="mover-name">${l.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${l.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change loser">${l.change.toFixed(2)}%</span></div></div>`).join('')}</div></div>`;
-    }
+    if (gainers.length > 0) html += `<div class="movers-section"><div class="movers-header"><span class="movers-title gainers-title">📈 Top Gainers</span><span class="movers-count">${gainers.length}</span></div><div class="movers-list">${gainers.map(g => `<div class="mover-item gainer" onclick="openAssetDetail('${g.symbol}', '${g.name.replace(/'/g, "\\'")}', ${g.price}, ${g.change}, '${g.type}')"><div class="mover-info"><span class="mover-symbol">${g.symbol}</span><span class="mover-name">${g.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${g.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change gainer">+${g.change.toFixed(2)}%</span></div></div>`).join('')}</div></div>`;
+    if (losers.length > 0) html += `<div class="movers-section"><div class="movers-header"><span class="movers-title losers-title">📉 Top Losers</span><span class="movers-count">${losers.length}</span></div><div class="movers-list">${losers.map(l => `<div class="mover-item loser" onclick="openAssetDetail('${l.symbol}', '${l.name.replace(/'/g, "\\'")}', ${l.price}, ${l.change}, '${l.type}')"><div class="mover-info"><span class="mover-symbol">${l.symbol}</span><span class="mover-name">${l.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${l.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change loser">${l.change.toFixed(2)}%</span></div></div>`).join('')}</div></div>`;
     container.innerHTML = html;
 }
 
-// ============ RENDER CARD ============
+// ============ RENDER ============
 function renderAssetCard(asset, priceData, index) {
     const p = priceData;
     const isFav = isFavorite(asset.symbol);
     const hasAl = hasAlert(asset.symbol);
-    if (!p) {
-        return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card"><div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
-    }
+    if (!p) return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card"><div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
     const trend = p.change >= 0 ? 'up' : 'down';
     const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
     const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
     return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')"><div class="asset-info"><span class="asset-symbol">${asset.symbol}${hasAl ? ' <span class="alert-badge">🔔</span>' : ''}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
 }
 
-// ============ RENDER WATCHLIST ============
 async function renderWatchlist() {
     const container = document.getElementById('watchlist');
     container.innerHTML = '<div class="empty-state">Memuat data...</div>';
@@ -557,9 +589,7 @@ async function renderWatchlist() {
     const favAssets = results.filter(a => isFavorite(a.symbol));
     const otherAssets = results.filter(a => !isFavorite(a.symbol));
     let html = '';
-    if (favAssets.length > 0) {
-        html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">⭐ Favorites</span><span class="watchlist-section-count">${favAssets.length}</span></div>${favAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('')}</div>`;
-    }
+    if (favAssets.length > 0) html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">⭐ Favorites</span><span class="watchlist-section-count">${favAssets.length}</span></div>${favAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('')}</div>`;
     html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">📊 ${favAssets.length > 0 ? 'Semua Aset' : 'Watchlist'}</span><span class="watchlist-section-count">${otherAssets.length}</span></div>${otherAssets.length > 0 ? otherAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('') : '<div class="empty-state" style="padding:20px;font-size:12px;">Semua saham udah favorite ⭐</div>'}</div>`;
     container.innerHTML = html;
 }
@@ -567,7 +597,7 @@ async function renderWatchlist() {
 function deleteFromWatchlist(index, event) {
     if (event) event.stopPropagation();
     const asset = watchlist[index];
-    if (!confirm(`Hapus ${asset.symbol} dari watchlist?`)) return;
+    if (!confirm(`Hapus ${asset.symbol}?`)) return;
     const favIdx = favorites.indexOf(asset.symbol);
     if (favIdx >= 0) { favorites.splice(favIdx, 1); saveFavorites(); }
     alerts = alerts.filter(a => a.symbol !== asset.symbol);
@@ -577,43 +607,6 @@ function deleteFromWatchlist(index, event) {
     saveWatchlist();
     renderWatchlist();
 }
-
-// ============ MODAL ASSET ============
-const assetModal = document.getElementById('assetModal');
-document.getElementById('addAssetBtn').addEventListener('click', () => assetModal.classList.add('active'));
-document.getElementById('closeAssetModal').addEventListener('click', () => assetModal.classList.remove('active'));
-document.getElementById('cancelAsset').addEventListener('click', () => assetModal.classList.remove('active'));
-document.getElementById('saveAsset').addEventListener('click', () => {
-    const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase();
-    const name = document.getElementById('assetName').value.trim();
-    const type = document.getElementById('assetType').value;
-    if (!symbol || !name) { alert('Isi semua field!'); return; }
-    if (watchlist.some(a => a.symbol === symbol)) { alert(`${symbol} udah ada!`); return; }
-    watchlist.push({ symbol, name, type });
-    saveWatchlist();
-    assetModal.classList.remove('active');
-    document.getElementById('assetSymbol').value = '';
-    document.getElementById('assetName').value = '';
-    renderWatchlist();
-});
-
-// ============ ALERT MODAL HANDLERS ============
-document.getElementById('setAlertBtn').addEventListener('click', () => {
-    openAlertModal(currentSymbol, currentName, currentPrice, currentType);
-});
-document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal);
-document.getElementById('cancelAlert').addEventListener('click', closeAlertModal);
-document.getElementById('saveAlert').addEventListener('click', saveAlert);
-document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview);
-document.querySelectorAll('.direction-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentAlertDirection = btn.dataset.dir;
-        updateAlertPreview();
-    });
-});
-document.getElementById('alertToastClose').addEventListener('click', closeAlertToast);
 
 // ============ INDIKATOR ============
 function calcEMA(closes, period) {
@@ -660,12 +653,9 @@ async function updateIndicators(symbol, type) {
     const rsiEl = document.getElementById('rsiValue');
     const bidEl = document.getElementById('bidValue');
     const askEl = document.getElementById('askValue');
-    htfEl.textContent = htf;
-    htfEl.className = 'ind-value ' + (htf === 'BULLISH' ? 'bullish' : 'bearish');
-    ltfEl.textContent = ltf;
-    ltfEl.className = 'ind-value ' + (ltf === 'BULLISH' ? 'bullish' : 'bearish');
-    emaEl.textContent = ema20.toFixed(2);
-    emaEl.className = 'ind-value neutral';
+    htfEl.textContent = htf; htfEl.className = 'ind-value ' + (htf === 'BULLISH' ? 'bullish' : 'bearish');
+    ltfEl.textContent = ltf; ltfEl.className = 'ind-value ' + (ltf === 'BULLISH' ? 'bullish' : 'bearish');
+    emaEl.textContent = ema20.toFixed(2); emaEl.className = 'ind-value neutral';
     rsiEl.textContent = rsi.toFixed(0);
     if (rsi >= 70) rsiEl.className = 'ind-value bearish';
     else if (rsi <= 30) rsiEl.className = 'ind-value bullish';
@@ -684,23 +674,12 @@ async function updateIndicators(symbol, type) {
 // ============ ASSET DETAIL ============
 let currentSymbol = null, currentType = null, currentName = null, currentPrice = 0, currentChange = 0;
 async function openAssetDetail(symbol, name, price, change, type) {
-    currentSymbol = symbol;
-    currentType = type;
-    currentName = name;
-    currentPrice = price;
-    currentChange = change;
+    currentSymbol = symbol; currentType = type; currentName = name; currentPrice = price; currentChange = change;
     document.getElementById('chartModal').classList.add('active');
     document.getElementById('chartTitle').textContent = symbol + ' — ' + name;
     updateChartPrice();
     document.getElementById('analysisBody').innerHTML = `<div class="loading-spinner"></div><p class="loading-text">Mengambil data fundamental...</p>`;
-    document.getElementById('htfValue').textContent = '-';
-    document.getElementById('ltfValue').textContent = '-';
-    document.getElementById('ema20Value').textContent = '-';
-    document.getElementById('rsiValue').textContent = '-';
-    document.getElementById('bidValue').textContent = '-';
-    document.getElementById('askValue').textContent = '-';
-    document.getElementById('buyerPct').textContent = '-';
-    document.getElementById('sellerPct').textContent = '-';
+    ['htfValue','ltfValue','ema20Value','rsiValue','bidValue','askValue','buyerPct','sellerPct'].forEach(id => document.getElementById(id).textContent = '-');
     loadChart(symbol, type);
     updateIndicators(symbol, type);
     loadAnalysis(symbol, name, price, type);
@@ -715,17 +694,13 @@ function updateChartPrice() {
     priceEl.style.color = currentChange >= 0 ? '#10b981' : '#ef4444';
 }
 
-// ============ LIGHTWEIGHT CHARTS ============
 function loadChart(symbol, type) {
     const container = document.getElementById('tradingviewContainer');
     container.innerHTML = '';
     if (currentChart) { currentChart.remove(); currentChart = null; }
     const isMobile = window.innerWidth < 400;
     const chartHeight = isMobile ? 450 : 520;
-    if (typeof LightweightCharts === 'undefined') {
-        container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library gagal dimuat.</div>';
-        return;
-    }
+    if (typeof LightweightCharts === 'undefined') { container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library gagal dimuat.</div>'; return; }
     currentChart = LightweightCharts.createChart(container, {
         width: container.clientWidth, height: chartHeight,
         layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
@@ -740,9 +715,7 @@ function loadChart(symbol, type) {
     volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' });
     volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
     const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered);
-    if (activeAlert && candleSeries) {
-        candleSeries.createPriceLine({ price: activeAlert.targetPrice, color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert' });
-    }
+    if (activeAlert && candleSeries) candleSeries.createPriceLine({ price: activeAlert.targetPrice, color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert' });
     loadChartData(symbol, type, currentTimeframe);
     setupTimeframeButtons();
     window.addEventListener('resize', resizeChart);
@@ -770,9 +743,8 @@ function aggregateToYearly(monthlyCandles) {
     monthlyCandles.forEach(c => {
         const date = new Date(c.time * 1000);
         const year = date.getFullYear();
-        if (!yearlyMap[year]) {
-            yearlyMap[year] = { year, open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume || 0, firstTime: c.time, lastTime: c.time };
-        } else {
+        if (!yearlyMap[year]) yearlyMap[year] = { year, open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume || 0, firstTime: c.time, lastTime: c.time };
+        else {
             const y = yearlyMap[year];
             if (c.time < y.firstTime) { y.open = c.open; y.firstTime = c.time; }
             if (c.time > y.lastTime) { y.close = c.close; y.lastTime = c.time; }
@@ -829,7 +801,6 @@ function closeAssetDetail() {
     if (indicatorInterval) { clearInterval(indicatorInterval); indicatorInterval = null; }
     window.removeEventListener('resize', resizeChart);
 }
-document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
 
 // ============ SCREENER ============
 async function runScreener() {
@@ -852,7 +823,6 @@ async function runScreener() {
         results.innerHTML = `<p class="description">${data.count} saham lolos filter:</p>` + data.results.map(stock => `<div class="asset-card"><div class="asset-info"><span class="asset-symbol">${stock.symbol}</span><span class="asset-name">${stock.company_name}</span><span class="asset-metrics">P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%</span></div></div>`).join('');
     } catch (error) { results.innerHTML = `<div class="empty-state">❌ Gagal: ${error.message}</div>`; }
 }
-document.getElementById('runScreener').addEventListener('click', runScreener);
 
 // ============ PORTFOLIO ============
 async function renderPortfolio() {
@@ -874,10 +844,7 @@ async function renderPortfolio() {
         const priceData = await fetchPrice(h.symbol, h.type);
         return { ...h, currentPrice: priceData?.price || 0 };
     }));
-    const holdingsWithValues = holdingsWithPrice.map(h => ({
-        ...h, currentValue: h.currentPrice * h.shares, costBasis: h.avgPrice * h.shares,
-        pl: (h.currentPrice * h.shares) - (h.avgPrice * h.shares)
-    }));
+    const holdingsWithValues = holdingsWithPrice.map(h => ({ ...h, currentValue: h.currentPrice * h.shares, costBasis: h.avgPrice * h.shares, pl: (h.currentPrice * h.shares) - (h.avgPrice * h.shares) }));
     const totalValue = holdingsWithValues.reduce((s, h) => s + h.currentValue, 0);
     const totalCost = holdingsWithValues.reduce((s, h) => s + h.costBasis, 0);
     container.innerHTML = holdingsWithValues.map(h => {
@@ -907,14 +874,10 @@ function renderPortfolioPieChart(holdings, totalValue) {
     const sorted = [...holdings].sort((a, b) => b.currentValue - a.currentValue);
     const dpr = window.devicePixelRatio || 1;
     const size = 240;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    canvas.style.width = size + 'px';
-    canvas.style.height = size + 'px';
+    canvas.width = size * dpr; canvas.height = size * dpr;
+    canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
     const ctx = canvas.getContext('2d');
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, size);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, size, size);
     const cx = size / 2, cy = size / 2;
     const outerRadius = size / 2 - 8;
     const innerRadius = outerRadius * 0.62;
@@ -928,11 +891,8 @@ function renderPortfolioPieChart(holdings, totalValue) {
         ctx.arc(cx, cy, outerRadius, startAngle, endAngle);
         ctx.arc(cx, cy, innerRadius, endAngle, startAngle, true);
         ctx.closePath();
-        ctx.fillStyle = color;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.fillStyle = color; ctx.fill();
+        ctx.strokeStyle = 'rgba(10, 10, 15, 0.9)'; ctx.lineWidth = 2; ctx.stroke();
         startAngle = endAngle;
     });
     centerValue.textContent = '$' + totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -949,6 +909,163 @@ function deleteHolding(id) {
     savePortfolio();
     renderPortfolio();
 }
+
+// ============ NEWS ============
+async function renderNews() {
+    const container = document.getElementById('newsList');
+    container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
+    try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-news`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
+            body: JSON.stringify({ category: 'all' })
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        const news = data.news || [];
+        newsCache = news;
+        if (news.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada berita</div>'; return; }
+        container.innerHTML = news.map((item, i) => {
+            const time = formatTime(item.timePublished);
+            const category = (item.category || 'NEWS').toUpperCase();
+            return `<div class="news-card" id="news-card-${i}" onclick="openNewsDetail(${i})"><div class="news-title" id="news-title-${i}"><span class="trans-inline-spinner"></span>${item.title}</div><div class="news-summary" id="news-summary-${i}">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div><div class="news-meta"><span class="sentiment-tag neutral">${category}</span><span>${item.source || 'Unknown'}</span><span>${time}</span><span class="trans-done-badge" id="trans-badge-${i}" style="display:none;">🌐 ID</span></div></div>`;
+        }).join('');
+        translateNewsInBackground(news);
+    } catch (error) { container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`; }
+}
+
+async function translateNewsInBackground(news) {
+    for (let i = 0; i < news.length; i++) {
+        const item = news[i];
+        try {
+            if (item.title) {
+                const transTitle = await translateText(item.title);
+                const titleEl = document.getElementById(`news-title-${i}`);
+                if (titleEl && transTitle !== item.title) titleEl.textContent = transTitle;
+            }
+            if (item.summary) {
+                const shortSummary = item.summary.substring(0, 150);
+                const transSummary = await translateText(shortSummary);
+                const summaryEl = document.getElementById(`news-summary-${i}`);
+                if (summaryEl && transSummary !== shortSummary) summaryEl.textContent = transSummary + (item.summary.length > 150 ? '...' : '');
+            }
+            const badgeEl = document.getElementById(`trans-badge-${i}`);
+            if (badgeEl) badgeEl.style.display = 'inline-block';
+        } catch (e) {}
+    }
+}
+
+function openNewsDetail(index) {
+    const item = newsCache[index];
+    if (!item) return;
+    currentNewsItem = item;
+    document.getElementById('newsDetailModal').classList.add('active');
+    document.getElementById('ndSource').textContent = item.source || 'Unknown';
+    document.getElementById('ndTime').textContent = formatTime(item.timePublished);
+    document.getElementById('ndCategory').textContent = (item.category || 'NEWS').toUpperCase();
+    document.getElementById('ndTitle').textContent = item.title;
+    document.getElementById('ndSummary').textContent = item.summary || 'Tidak ada ringkasan tersedia.';
+    const badge = document.getElementById('ndTransBadge');
+    badge.style.display = 'inline-flex';
+    badge.classList.remove('trans-done');
+    badge.innerHTML = '<span class="trans-loading-spinner"></span> 🌐 Menerjemahkan...';
+    translateNewsDetail(item);
+}
+
+async function translateNewsDetail(item) {
+    const badge = document.getElementById('ndTransBadge');
+    try {
+        const [transTitle, transSummary] = await Promise.all([translateText(item.title), translateText(item.summary || '')]);
+        if (currentNewsItem !== item) return;
+        document.getElementById('ndTitle').textContent = transTitle;
+        if (transSummary && transSummary.trim()) document.getElementById('ndSummary').textContent = transSummary;
+        badge.innerHTML = '🌐 Diterjemahkan dari Bahasa Inggris';
+        badge.classList.add('trans-done');
+    } catch (e) { badge.style.display = 'none'; }
+}
+
+function closeNewsDetail() { document.getElementById('newsDetailModal').classList.remove('active'); currentNewsItem = null; }
+function openNewsOriginal() { if (currentNewsItem && currentNewsItem.url) window.open(currentNewsItem.url, '_blank'); }
+function copyNewsLink() {
+    if (!currentNewsItem || !currentNewsItem.url) return;
+    const url = currentNewsItem.url;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(() => showToastSimple('📋 Link berhasil dicopy!')).catch(() => fallbackCopy(url));
+    else fallbackCopy(url);
+}
+function fallbackCopy(text) {
+    const temp = document.createElement('textarea');
+    temp.value = text; temp.style.position = 'fixed'; temp.style.left = '-9999px';
+    document.body.appendChild(temp); temp.select();
+    try { document.execCommand('copy'); showToastSimple('📋 Link berhasil dicopy!'); }
+    catch (e) { showToastSimple('❌ Gagal copy link'); }
+    document.body.removeChild(temp);
+}
+function showToastSimple(message) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1a1a2e,#0f0f1a);color:#fff;padding:12px 20px;border-radius:12px;border:1px solid rgba(251,191,36,0.4);font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9999;animation:toastIn 0.3s ease;`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease'; setTimeout(() => document.body.removeChild(toast), 300); }, 2000);
+}
+
+function formatTime(timeStr) {
+    if (!timeStr) return '';
+    const date = new Date(timeStr * 1000);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hour}:${minute}`;
+}
+
+// ============ EVENT LISTENERS ============
+document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
+document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
+document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
+document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentBrowseCategory = btn.dataset.cat;
+        renderBrowseStocks();
+    });
+});
+
+const assetModal = document.getElementById('assetModal');
+document.getElementById('addAssetBtn').addEventListener('click', () => assetModal.classList.add('active'));
+document.getElementById('closeAssetModal').addEventListener('click', () => assetModal.classList.remove('active'));
+document.getElementById('cancelAsset').addEventListener('click', () => assetModal.classList.remove('active'));
+document.getElementById('saveAsset').addEventListener('click', () => {
+    const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase();
+    const name = document.getElementById('assetName').value.trim();
+    const type = document.getElementById('assetType').value;
+    if (!symbol || !name) { alert('Isi semua field!'); return; }
+    if (watchlist.some(a => a.symbol === symbol)) { alert(`${symbol} udah ada!`); return; }
+    watchlist.push({ symbol, name, type });
+    saveWatchlist();
+    assetModal.classList.remove('active');
+    document.getElementById('assetSymbol').value = '';
+    document.getElementById('assetName').value = '';
+    renderWatchlist();
+});
+
+document.getElementById('setAlertBtn').addEventListener('click', () => openAlertModal(currentSymbol, currentName, currentPrice, currentType));
+document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal);
+document.getElementById('cancelAlert').addEventListener('click', closeAlertModal);
+document.getElementById('saveAlert').addEventListener('click', saveAlert);
+document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview);
+document.querySelectorAll('.direction-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentAlertDirection = btn.dataset.dir;
+        updateAlertPreview();
+    });
+});
+document.getElementById('alertToastClose').addEventListener('click', closeAlertToast);
+document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
+document.getElementById('runScreener').addEventListener('click', runScreener);
 
 const holdingModal = document.getElementById('holdingModal');
 document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
@@ -971,155 +1088,41 @@ document.getElementById('saveHolding').addEventListener('click', () => {
     renderPortfolio();
 });
 
-// ============ 📰 NEWS ============
-async function renderNews() {
-    const container = document.getElementById('newsList');
-    container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
-    try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-news`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
-            body: JSON.stringify({ category: 'all' })
-        });
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        const news = data.news || [];
-        newsCache = news;
-        if (news.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada berita</div>'; return; }
-        
-        // Render awal pakai English (biar cepet muncul)
-        container.innerHTML = news.map((item, i) => {
-            const time = formatTime(item.timePublished);
-            const category = (item.category || 'NEWS').toUpperCase();
-            return `<div class="news-card" id="news-card-${i}" onclick="openNewsDetail(${i})">
-                <div class="news-title" id="news-title-${i}"><span class="trans-inline-spinner"></span>${item.title}</div>
-                <div class="news-summary" id="news-summary-${i}">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div>
-                <div class="news-meta">
-                    <span class="sentiment-tag neutral">${category}</span>
-                    <span>${item.source || 'Unknown'}</span>
-                    <span>${time}</span>
-                    <span class="trans-done-badge" id="trans-badge-${i}" style="display:none;">🌐 ID</span>
-                </div>
-            </div>`;
-        }).join('');
-        
-        // Translate di background
-        translateNewsInBackground(news);
-    } catch (error) {
-        container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`;
-    }
-}
-
-async function translateNewsInBackground(news) {
-    for (let i = 0; i < news.length; i++) {
-        const item = news[i];
-        try {
-            if (item.title) {
-                const transTitle = await translateText(item.title);
-                const titleEl = document.getElementById(`news-title-${i}`);
-                if (titleEl && transTitle !== item.title) titleEl.textContent = transTitle;
-            }
-            if (item.summary) {
-                const shortSummary = item.summary.substring(0, 150);
-                const transSummary = await translateText(shortSummary);
-                const summaryEl = document.getElementById(`news-summary-${i}`);
-                if (summaryEl && transSummary !== shortSummary) {
-                    summaryEl.textContent = transSummary + (item.summary.length > 150 ? '...' : '');
-                }
-            }
-            const badgeEl = document.getElementById(`trans-badge-${i}`);
-            if (badgeEl) badgeEl.style.display = 'inline-block';
-        } catch (e) { console.warn('Translate gagal news #' + i); }
-    }
-}
-
-function openNewsDetail(index) {
-    const item = newsCache[index];
-    if (!item) return;
-    currentNewsItem = item;
-    const modal = document.getElementById('newsDetailModal');
-    modal.classList.add('active');
-    document.getElementById('ndSource').textContent = item.source || 'Unknown';
-    document.getElementById('ndTime').textContent = formatTime(item.timePublished);
-    document.getElementById('ndCategory').textContent = (item.category || 'NEWS').toUpperCase();
-    document.getElementById('ndTitle').textContent = item.title;
-    document.getElementById('ndSummary').textContent = item.summary || 'Tidak ada ringkasan tersedia.';
-    const badge = document.getElementById('ndTransBadge');
-    badge.style.display = 'inline-flex';
-    badge.classList.remove('trans-done');
-    badge.innerHTML = '<span class="trans-loading-spinner"></span> 🌐 Menerjemahkan...';
-    translateNewsDetail(item);
-}
-
-async function translateNewsDetail(item) {
-    const badge = document.getElementById('ndTransBadge');
-    try {
-        const [transTitle, transSummary] = await Promise.all([
-            translateText(item.title),
-            translateText(item.summary || '')
-        ]);
-        if (currentNewsItem !== item) return;
-        document.getElementById('ndTitle').textContent = transTitle;
-        if (transSummary && transSummary.trim()) document.getElementById('ndSummary').textContent = transSummary;
-        badge.innerHTML = '🌐 Diterjemahkan dari Bahasa Inggris';
-        badge.classList.add('trans-done');
-    } catch (e) { badge.style.display = 'none'; }
-}
-
-function closeNewsDetail() {
-    document.getElementById('newsDetailModal').classList.remove('active');
-    currentNewsItem = null;
-}
-
-function openNewsOriginal() {
-    if (currentNewsItem && currentNewsItem.url) window.open(currentNewsItem.url, '_blank');
-}
-
-function copyNewsLink() {
-    if (!currentNewsItem || !currentNewsItem.url) return;
-    const url = currentNewsItem.url;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => showToastSimple('📋 Link berhasil dicopy!')).catch(() => fallbackCopy(url));
-    } else { fallbackCopy(url); }
-}
-
-function fallbackCopy(text) {
-    const temp = document.createElement('textarea');
-    temp.value = text;
-    temp.style.position = 'fixed';
-    temp.style.left = '-9999px';
-    document.body.appendChild(temp);
-    temp.select();
-    try { document.execCommand('copy'); showToastSimple('📋 Link berhasil dicopy!'); }
-    catch (e) { showToastSimple('❌ Gagal copy link'); }
-    document.body.removeChild(temp);
-}
-
-function showToastSimple(message) {
-    const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1a1a2e,#0f0f1a);color:#fff;padding:12px 20px;border-radius:12px;border:1px solid rgba(251,191,36,0.4);font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9999;animation:toastIn 0.3s ease;`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.animation = 'toastOut 0.3s ease';
-        setTimeout(() => document.body.removeChild(toast), 300);
-    }, 2000);
-}
-
-function formatTime(timeStr) {
-    if (!timeStr) return '';
-    const date = new Date(timeStr * 1000);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hour}:${minute}`;
-}
-
 document.getElementById('closeNewsDetail').addEventListener('click', closeNewsDetail);
 document.getElementById('ndOpenOriginal').addEventListener('click', openNewsOriginal);
 document.getElementById('ndCopyLink').addEventListener('click', copyNewsLink);
+
+// CURRENCY EVENT LISTENERS
+document.getElementById('currencyOpenBtn').addEventListener('click', openCurrencyModal);
+document.getElementById('closeCurrencyModal').addEventListener('click', closeCurrencyModal);
+document.getElementById('currencyFromAmount').addEventListener('input', convertCurrency);
+document.getElementById('currencyFromSelect').addEventListener('change', convertCurrency);
+document.getElementById('currencyToSelect').addEventListener('change', () => {
+    const val = document.getElementById('currencyToSelect').value;
+    document.querySelectorAll('.quick-target-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === val));
+    convertCurrency();
+});
+document.getElementById('currencySwapBtn').addEventListener('click', () => {
+    const btn = document.getElementById('currencySwapBtn');
+    btn.style.transform = 'rotate(180deg)';
+    setTimeout(() => btn.style.transform = 'rotate(0deg)', 300);
+    swapCurrencies();
+});
+document.getElementById('currencyRefreshBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('currencyRefreshBtn');
+    btn.querySelector('.refresh-icon').style.animation = 'spin 1s linear infinite';
+    await fetchCurrencyRates(true);
+    await convertCurrency();
+    btn.querySelector('.refresh-icon').style.animation = '';
+});
+document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('currencyFromAmount').value = btn.dataset.amount;
+        convertCurrency();
+    });
+});
 
 // ============ INIT ============
 renderWatchlist();
