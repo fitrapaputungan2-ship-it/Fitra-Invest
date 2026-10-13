@@ -282,6 +282,39 @@
         </div>
     </div>
 
+    <!-- 📰 NEWS DETAIL MODAL -->
+    <div class="news-detail-modal" id="newsDetailModal">
+        <div class="news-detail-content">
+            <div class="news-detail-header">
+                <div class="news-detail-header-info">
+                    <span class="news-detail-source" id="ndSource">Source</span>
+                    <span class="news-detail-time" id="ndTime">-</span>
+                </div>
+                <button class="analysis-close" id="closeNewsDetail">×</button>
+            </div>
+
+            <div class="news-detail-badge-row">
+                <span class="sentiment-tag neutral" id="ndCategory">NEWS</span>
+                <span class="news-detail-translation-badge" id="ndTransBadge">
+                    <span class="trans-loading-spinner"></span> 🌐 Menerjemahkan...
+                </span>
+            </div>
+
+            <h2 class="news-detail-title" id="ndTitle">Memuat berita...</h2>
+
+            <div class="news-detail-summary" id="ndSummary">Loading...</div>
+
+            <div class="news-detail-actions">
+                <button class="news-action-btn primary" id="ndOpenOriginal">
+                    🌐 Baca Selengkapnya
+                </button>
+                <button class="news-action-btn" id="ndCopyLink">
+                    📋 Salin Link
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🔔 ALERT TOAST -->
     <div class="alert-toast" id="alertToast">
         <div class="alert-toast-icon">🔔</div>
@@ -293,7 +326,7 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=10000"></script>
+    <script src="app.js?v=11000"></script>
     
     <script>
         document.getElementById('indeksTabLink').addEventListener('click', function(e) {
@@ -302,4 +335,4 @@
         });
     </script>
 </body>
-</html>
+                                                                       </html>
