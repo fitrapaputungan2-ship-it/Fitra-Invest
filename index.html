@@ -86,6 +86,20 @@
                     <div class="summary-card"><span class="label">Total Cost</span><span class="value" id="totalCost">$ 0</span></div>
                     <div class="summary-card"><span class="label">Holdings</span><span class="value" id="totalHoldings">0</span></div>
                 </div>
+
+                <!-- 🥧 PORTFOLIO PIE CHART -->
+                <div class="portfolio-chart-section" id="portfolioChartSection" style="display:none;">
+                    <h3 class="portfolio-chart-title">🥧 Alokasi Portfolio</h3>
+                    <div class="portfolio-chart-wrapper">
+                        <canvas id="portfolioPieChart" class="portfolio-pie-chart"></canvas>
+                        <div class="portfolio-chart-center">
+                            <div class="chart-center-label">TOTAL</div>
+                            <div class="chart-center-value" id="chartCenterValue">$0</div>
+                        </div>
+                    </div>
+                    <div class="portfolio-legend" id="portfolioLegend"></div>
+                </div>
+
                 <button class="primary-btn" id="addHolding">＋ Tambah Holding</button>
                 <div class="holdings" id="holdings"></div>
             </section>
@@ -109,7 +123,6 @@
                 <button class="analysis-close" id="closeChartModal">×</button>
             </div>
 
-            <!-- 🔔 ALERT BUTTON -->
             <button class="alert-set-btn" id="setAlertBtn">🔔 Set Price Alert</button>
 
             <div class="indicators-panel">
@@ -269,7 +282,7 @@
         </div>
     </div>
 
-    <!-- 🔔 ALERT TRIGGERED TOAST -->
+    <!-- 🔔 ALERT TOAST -->
     <div class="alert-toast" id="alertToast">
         <div class="alert-toast-icon">🔔</div>
         <div class="alert-toast-content">
@@ -280,7 +293,7 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=9000"></script>
+    <script src="app.js?v=10000"></script>
     
     <script>
         document.getElementById('indeksTabLink').addEventListener('click', function(e) {
@@ -289,4 +302,4 @@
         });
     </script>
 </body>
-    </html>
+</html>
