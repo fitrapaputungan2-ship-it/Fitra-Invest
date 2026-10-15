@@ -18,6 +18,7 @@ let currentAlertPrice = 0;
 let currentNewsItem = null;
 let newsCache = [];
 let heatmapData = [];
+let compareChart = null;
 
 // ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
@@ -126,7 +127,6 @@ const CHART_COLORS = ['#fbbf24', '#22d3ee', '#10b981', '#a855f7', '#ef4444', '#e
 
 // ============ STOCK UNIVERSE (130+ ASET) ============
 const STOCK_UNIVERSE = [
-    // US TECH
     { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', category: 'us-tech' },
     { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', category: 'us-tech' },
     { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock', category: 'us-tech' },
@@ -152,7 +152,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'PLTR', name: 'Palantir Technologies', type: 'stock', category: 'us-tech' },
     { symbol: 'SQ', name: 'Block Inc.', type: 'stock', category: 'us-tech' },
     { symbol: 'PYPL', name: 'PayPal Holdings', type: 'stock', category: 'us-tech' },
-    // US FINANCE
     { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'stock', category: 'us-finance' },
     { symbol: 'BAC', name: 'Bank of America', type: 'stock', category: 'us-finance' },
     { symbol: 'WFC', name: 'Wells Fargo & Co.', type: 'stock', category: 'us-finance' },
@@ -165,7 +164,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'C', name: 'Citigroup Inc.', type: 'stock', category: 'us-finance' },
     { symbol: 'SCHW', name: 'Charles Schwab', type: 'stock', category: 'us-finance' },
     { symbol: 'BRK-B', name: 'Berkshire Hathaway B', type: 'stock', category: 'us-finance' },
-    // US HEALTHCARE
     { symbol: 'JNJ', name: 'Johnson & Johnson', type: 'stock', category: 'us-healthcare' },
     { symbol: 'PFE', name: 'Pfizer Inc.', type: 'stock', category: 'us-healthcare' },
     { symbol: 'UNH', name: 'UnitedHealth Group', type: 'stock', category: 'us-healthcare' },
@@ -178,7 +176,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'BMY', name: 'Bristol-Myers Squibb', type: 'stock', category: 'us-healthcare' },
     { symbol: 'AMGN', name: 'Amgen Inc.', type: 'stock', category: 'us-healthcare' },
     { symbol: 'GILD', name: 'Gilead Sciences', type: 'stock', category: 'us-healthcare' },
-    // US CONSUMER
     { symbol: 'WMT', name: 'Walmart Inc.', type: 'stock', category: 'us-consumer' },
     { symbol: 'COST', name: 'Costco Wholesale', type: 'stock', category: 'us-consumer' },
     { symbol: 'HD', name: 'Home Depot Inc.', type: 'stock', category: 'us-consumer' },
@@ -193,7 +190,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'LOW', name: 'Lowe\'s Companies', type: 'stock', category: 'us-consumer' },
     { symbol: 'BKNG', name: 'Booking Holdings', type: 'stock', category: 'us-consumer' },
     { symbol: 'LULU', name: 'Lululemon Athletica', type: 'stock', category: 'us-consumer' },
-    // US INDUSTRIAL
     { symbol: 'BA', name: 'Boeing Co.', type: 'stock', category: 'us-industrial' },
     { symbol: 'CAT', name: 'Caterpillar Inc.', type: 'stock', category: 'us-industrial' },
     { symbol: 'GE', name: 'General Electric', type: 'stock', category: 'us-industrial' },
@@ -205,14 +201,12 @@ const STOCK_UNIVERSE = [
     { symbol: 'DE', name: 'Deere & Company', type: 'stock', category: 'us-industrial' },
     { symbol: 'F', name: 'Ford Motor Co.', type: 'stock', category: 'us-industrial' },
     { symbol: 'GM', name: 'General Motors', type: 'stock', category: 'us-industrial' },
-    // US ENERGY
     { symbol: 'XOM', name: 'Exxon Mobil Corp.', type: 'stock', category: 'us-energy' },
     { symbol: 'CVX', name: 'Chevron Corp.', type: 'stock', category: 'us-energy' },
     { symbol: 'COP', name: 'ConocoPhillips', type: 'stock', category: 'us-energy' },
     { symbol: 'SLB', name: 'Schlumberger Ltd.', type: 'stock', category: 'us-energy' },
     { symbol: 'NEE', name: 'NextEra Energy', type: 'stock', category: 'us-energy' },
     { symbol: 'OXY', name: 'Occidental Petroleum', type: 'stock', category: 'us-energy' },
-    // INTERNATIONAL
     { symbol: 'TSM', name: 'Taiwan Semiconductor', type: 'stock', category: 'international' },
     { symbol: 'ASML', name: 'ASML Holding N.V.', type: 'stock', category: 'international' },
     { symbol: 'BABA', name: 'Alibaba Group', type: 'stock', category: 'international' },
@@ -226,7 +220,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'NVO', name: 'Novo Nordisk A/S', type: 'stock', category: 'international' },
     { symbol: 'HSBC', name: 'HSBC Holdings', type: 'stock', category: 'international' },
     { symbol: 'TCEHY', name: 'Tencent Holdings', type: 'stock', category: 'international' },
-    // CRYPTO
     { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', category: 'crypto' },
     { symbol: 'ETH', name: 'Ethereum', type: 'crypto', category: 'crypto' },
     { symbol: 'SOL', name: 'Solana', type: 'crypto', category: 'crypto' },
@@ -241,7 +234,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'LTC', name: 'Litecoin', type: 'crypto', category: 'crypto' },
     { symbol: 'ATOM', name: 'Cosmos', type: 'crypto', category: 'crypto' },
     { symbol: 'TRX', name: 'TRON', type: 'crypto', category: 'crypto' },
-    // COMMODITY
     { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity', category: 'commodity' },
     { symbol: 'SI=F', name: 'Silver Futures', type: 'commodity', category: 'commodity' },
     { symbol: 'CL=F', name: 'Crude Oil WTI', type: 'commodity', category: 'commodity' },
@@ -250,7 +242,6 @@ const STOCK_UNIVERSE = [
     { symbol: 'PL=F', name: 'Platinum Futures', type: 'commodity', category: 'commodity' },
     { symbol: 'ZC=F', name: 'Corn Futures', type: 'commodity', category: 'commodity' },
     { symbol: 'ZW=F', name: 'Wheat Futures', type: 'commodity', category: 'commodity' },
-    // INDEX
     { symbol: '^GSPC', name: 'S&P 500', type: 'stock', category: 'index' },
     { symbol: '^DJI', name: 'Dow Jones Industrial', type: 'stock', category: 'index' },
     { symbol: '^IXIC', name: 'NASDAQ Composite', type: 'stock', category: 'index' },
@@ -288,6 +279,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'news') renderNews();
         if (tab.dataset.tab === 'portfolio') { renderPortfolio(); analyzePortfolioRisk(); }
         if (tab.dataset.tab === 'heatmap') renderSectorHeatmap();
+        if (tab.dataset.tab === 'compare') populateCompareDropdowns();
     });
 });
 
@@ -720,7 +712,6 @@ async function analyzePortfolioRisk() {
 
 // ============ 🔥 SECTOR HEATMAP ============
 function getHeatColor(change) {
-    // Change dalam persen
     if (change >= 3) return '#10b981';
     if (change >= 1.5) return '#34d399';
     if (change >= 0.5) return '#6ee7b7';
@@ -744,13 +735,11 @@ async function fetchSectorData(sectorKey) {
 
 async function renderSectorHeatmap() {
     const grid = document.getElementById('heatmapGrid');
-    const sentimentBar = document.getElementById('heatmapSentiment');
     if (!grid) return;
     
     grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 30px 20px;"><div class="loading-spinner"></div><p class="loading-text">Memuat data sektor...</p></div>';
     
     try {
-        // Fetch semua sektor secara paralel (batch biar gak overwhelming)
         const sectorResults = [];
         for (const sector of SECTOR_CONFIG) {
             const stocks = await fetchSectorData(sector.key);
@@ -758,14 +747,7 @@ async function renderSectorHeatmap() {
             const avgChange = stocks.reduce((sum, s) => sum + s.change, 0) / stocks.length;
             const bullishCount = stocks.filter(s => s.change > 0).length;
             const bearishCount = stocks.filter(s => s.change < 0).length;
-            sectorResults.push({
-                ...sector,
-                stocks,
-                avgChange,
-                bullishCount,
-                bearishCount,
-                totalStocks: stocks.length
-            });
+            sectorResults.push({ ...sector, stocks, avgChange, bullishCount, bearishCount, totalStocks: stocks.length });
         }
         
         if (sectorResults.length === 0) {
@@ -775,14 +757,12 @@ async function renderSectorHeatmap() {
         
         heatmapData = sectorResults.sort((a, b) => b.avgChange - a.avgChange);
         
-        // Hitung market breadth overall
         let totalBullish = 0, totalBearish = 0;
         sectorResults.forEach(s => { totalBullish += s.bullishCount; totalBearish += s.bearishCount; });
         const totalStocks = totalBullish + totalBearish;
         const bullPct = totalStocks > 0 ? (totalBullish / totalStocks) * 100 : 50;
         const bearPct = 100 - bullPct;
         
-        // Update sentiment bar
         document.getElementById('hmBullFill').style.width = bullPct + '%';
         document.getElementById('hmBearFill').style.width = bearPct + '%';
         document.getElementById('heatmapSentimentStats').innerHTML = `
@@ -790,20 +770,16 @@ async function renderSectorHeatmap() {
             <span class="sentiment-stat bearish">🔴 ${bearPct.toFixed(1)}% Bearish (${totalBearish})</span>
         `;
         
-        // Render grid
         grid.innerHTML = heatmapData.map((sector, idx) => {
             const avgChange = sector.avgChange;
             const trendClass = avgChange > 0 ? 'up' : avgChange < 0 ? 'down' : 'flat';
             const trendSign = avgChange > 0 ? '+' : '';
             const heatColor = getHeatColor(avgChange);
-            
-            // Mini heat dots (max 10 dots)
             const dotsToShow = sector.stocks.slice(0, 10);
             const dotsHtml = dotsToShow.map(s => {
                 const dotColor = getHeatColor(s.change);
                 return `<div class="sector-heat-dot" style="background:${dotColor}; box-shadow: 0 0 4px ${dotColor}80;"></div>`;
             }).join('');
-            
             return `<div class="sector-card" style="border-left: 3px solid ${heatColor};" onclick="openSectorDetail(${idx})">
                 <div class="sector-card-header">
                     <span class="sector-card-icon">${sector.icon}</span>
@@ -839,14 +815,13 @@ function openSectorDetail(index) {
     document.getElementById('sdBullish').textContent = sector.bullishCount;
     document.getElementById('sdBearish').textContent = sector.bearishCount;
     
-    // Sort stocks by change
     const sortedStocks = [...sector.stocks].sort((a, b) => b.change - a.change);
     
     document.getElementById('sdStocksList').innerHTML = sortedStocks.map(s => {
         const trendClass = s.change > 0 ? 'up' : s.change < 0 ? 'down' : 'flat';
         const sign = s.change > 0 ? '+' : '';
         const barColor = getHeatColor(s.change);
-        const barWidth = Math.min(Math.abs(s.change) * 20, 100); // Max 5% = 100%
+        const barWidth = Math.min(Math.abs(s.change) * 20, 100);
         
         return `<div class="sector-stock-item" onclick="closeSectorDetail(); openAssetDetail('${s.symbol}', '${s.name.replace(/'/g, "\\'")}', ${s.price}, ${s.change}, '${s.type}')">
             <div class="sector-stock-top">
@@ -943,6 +918,311 @@ function fallbackCopy(text) { const temp = document.createElement('textarea'); t
 function showToastSimple(message) { const toast = document.createElement('div'); toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1a1a2e,#0f0f1a);color:#fff;padding:12px 20px;border-radius:12px;border:1px solid rgba(251,191,36,0.4);font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9999;animation:toastIn 0.3s ease;`; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease'; setTimeout(() => document.body.removeChild(toast), 300); }, 2000); }
 function formatTime(timeStr) { if (!timeStr) return ''; const date = new Date(timeStr * 1000); const day = String(date.getDate()).padStart(2, '0'); const month = String(date.getMonth() + 1).padStart(2, '0'); const year = date.getFullYear(); const hour = String(date.getHours()).padStart(2, '0'); const minute = String(date.getMinutes()).padStart(2, '0'); return `${day}/${month}/${year} ${hour}:${minute}`; }
 
+// ============ ⚖️ COMPARE STOCKS ============
+function populateCompareDropdowns() {
+    const selA = document.getElementById('compareStockA');
+    const selB = document.getElementById('compareStockB');
+    if (!selA || !selB) return;
+    if (selA.options.length > 0) return;
+    
+    const options = STOCK_UNIVERSE.map(s => 
+        `<option value="${s.symbol}">${s.symbol} — ${s.name}</option>`
+    ).join('');
+    
+    selA.innerHTML = options;
+    selB.innerHTML = options;
+    selA.value = 'AAPL';
+    selB.value = 'MSFT';
+}
+
+function swapCompareStocks() {
+    const selA = document.getElementById('compareStockA');
+    const selB = document.getElementById('compareStockB');
+    if (!selA || !selB) return;
+    const temp = selA.value;
+    selA.value = selB.value;
+    selB.value = temp;
+    
+    const btn = document.getElementById('compareVsBtn');
+    if (btn) {
+        btn.style.transform = 'rotate(180deg)';
+        setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 300);
+    }
+    
+    const result = document.getElementById('compareResult');
+    if (result && !result.querySelector('.empty-state')) {
+        runCompare();
+    }
+}
+
+async function runCompare() {
+    const selA = document.getElementById('compareStockA');
+    const selB = document.getElementById('compareStockB');
+    const container = document.getElementById('compareResult');
+    const btn = document.getElementById('runCompareBtn');
+    
+    if (!selA || !selB || !container) return;
+    
+    const symbolA = selA.value;
+    const symbolB = selB.value;
+    
+    if (symbolA === symbolB) {
+        alert('Pilih 2 saham yang berbeda!');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Loading...';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    
+    container.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Membandingkan ${symbolA} vs ${symbolB}...</p>
+        </div>
+    `;
+    
+    try {
+        const stockA = STOCK_UNIVERSE.find(s => s.symbol === symbolA) || { type: 'stock' };
+        const stockB = STOCK_UNIVERSE.find(s => s.symbol === symbolB) || { type: 'stock' };
+        
+        const [priceA, priceB, fundA, fundB, chartA, chartB] = await Promise.all([
+            fetchPrice(symbolA, stockA.type),
+            fetchPrice(symbolB, stockB.type),
+            fetchFundamental(symbolA, stockA.type),
+            fetchFundamental(symbolB, stockB.type),
+            fetchChartData(symbolA, stockA.type, '1d', '1y'),
+            fetchChartData(symbolB, stockB.type, '1d', '1y')
+        ]);
+        
+        if (!priceA || !priceB) {
+            container.innerHTML = '<div class="empty-state">❌ Gagal fetch data harga. Coba lagi.</div>';
+            return;
+        }
+        
+        renderCompareResult(symbolA, symbolB, priceA, priceB, fundA, fundB, chartA, chartB, container);
+        
+    } catch (error) {
+        console.error('Compare error:', error);
+        container.innerHTML = `<div class="empty-state">❌ Error: ${error.message}</div>`;
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}
+
+function renderCompareResult(symbolA, symbolB, priceA, priceB, fundA, fundB, chartA, chartB, container) {
+    const nameA = priceA.name || symbolA;
+    const nameB = priceB.name || symbolB;
+    const changeA = priceA.change || 0;
+    const changeB = priceB.change || 0;
+    
+    const headCardA = buildCompareHead('a', symbolA, nameA, priceA.price, changeA);
+    const headCardB = buildCompareHead('b', symbolB, nameB, priceB.price, changeB);
+    
+    const metrics = [
+        { label: 'Harga', valA: priceA.price, valB: priceB.price, format: 'money', higherBetter: false },
+        { label: 'Change Hari Ini', valA: changeA, valB: changeB, format: 'pct', higherBetter: true },
+        { label: 'P/E Ratio', valA: fundA.pe_ratio, valB: fundB.pe_ratio, format: 'num', higherBetter: false },
+        { label: 'P/B Ratio', valA: fundA.pb_ratio, valB: fundB.pb_ratio, format: 'num', higherBetter: false },
+        { label: 'ROE', valA: fundA.roe, valB: fundB.roe, format: 'pct-raw', higherBetter: true },
+        { label: 'Debt/Equity', valA: fundA.debt_to_equity, valB: fundB.debt_to_equity, format: 'num', higherBetter: false },
+        { label: 'Dividend Yield', valA: fundA.dividend_yield, valB: fundB.dividend_yield, format: 'pct-raw', higherBetter: true },
+        { label: 'EPS Growth', valA: fundA.eps_growth, valB: fundB.eps_growth, format: 'pct-raw', higherBetter: true }
+    ];
+    
+    const rowsHtml = metrics.map(m => {
+        const formattedA = formatCompareValue(m.valA, m.format);
+        const formattedB = formatCompareValue(m.valB, m.format);
+        
+        let classA = '', classB = '';
+        if (m.valA != null && m.valB != null && !isNaN(m.valA) && !isNaN(m.valB) && m.valA !== 0 && m.valB !== 0) {
+            if (m.higherBetter) {
+                if (m.valA > m.valB) { classA = 'winner'; classB = 'loser'; }
+                else if (m.valB > m.valA) { classB = 'winner'; classA = 'loser'; }
+            } else {
+                if (m.valA < m.valB && m.valA > 0) { classA = 'winner'; classB = 'loser'; }
+                else if (m.valB < m.valA && m.valB > 0) { classB = 'winner'; classA = 'loser'; }
+            }
+        }
+        
+        return `<div class="compare-row">
+            <div class="compare-row-label">${m.label}</div>
+            <div class="compare-row-value ${classA}">${formattedA}</div>
+            <div class="compare-row-value ${classB}">${formattedB}</div>
+        </div>`;
+    }).join('');
+    
+    const winner = calculateCompareWinner(symbolA, symbolB, fundA, fundB, chartA, chartB);
+    const chartId = 'compareChart_' + Date.now();
+    
+    container.innerHTML = `
+        <div class="compare-heads">
+            ${headCardA}
+            ${headCardB}
+        </div>
+        
+        <div class="compare-table-section">
+            <div class="compare-table-title">📊 Fundamental Comparison</div>
+            <div class="compare-table">
+                <div class="compare-row header">
+                    <div class="compare-row-label">METRIC</div>
+                    <div class="compare-row-value">${symbolA}</div>
+                    <div class="compare-row-value">${symbolB}</div>
+                </div>
+                ${rowsHtml}
+            </div>
+        </div>
+        
+        <div class="compare-chart-section">
+            <div class="compare-table-title">📈 Chart Overlay (1 Tahun)</div>
+            <div id="${chartId}" class="compare-chart-container"></div>
+        </div>
+        
+        <div class="compare-winner">
+            <div class="compare-winner-icon">🏆</div>
+            <div class="compare-winner-title">WINNER</div>
+            <div class="compare-winner-symbol">${winner.symbol}</div>
+            <div class="compare-winner-reason">${winner.reason}</div>
+        </div>
+    `;
+    
+    requestAnimationFrame(() => {
+        renderCompareChart(chartId, symbolA, chartA, symbolB, chartB);
+    });
+}
+
+function buildCompareHead(side, symbol, name, price, change) {
+    const trend = change >= 0 ? 'up' : 'down';
+    const sign = change >= 0 ? '+' : '';
+    return `
+        <div class="compare-head-card ${side}">
+            <div class="compare-head-symbol">${symbol}</div>
+            <div class="compare-head-name">${name}</div>
+            <div class="compare-head-price">$${price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
+            <div class="compare-head-change ${trend}">${sign}${change.toFixed(2)}%</div>
+        </div>
+    `;
+}
+
+function formatCompareValue(val, format) {
+    if (val == null || isNaN(val) || val === 0) return '-';
+    if (format === 'money') return '$' + val.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    if (format === 'pct') return (val >= 0 ? '+' : '') + val.toFixed(2) + '%';
+    if (format === 'pct-raw') return (val * 100).toFixed(2) + '%';
+    if (format === 'num') return val.toFixed(2);
+    return val.toString();
+}
+
+function calculateCompareWinner(symbolA, symbolB, fundA, fundB, chartA, chartB) {
+    let scoreA = 0;
+    let scoreB = 0;
+    const reasonsA = [];
+    const reasonsB = [];
+    
+    if (fundA.roe && fundB.roe) {
+        if (fundA.roe > fundB.roe) { scoreA += 25; reasonsA.push(`ROE lebih tinggi (${(fundA.roe*100).toFixed(1)}%)`); }
+        else { scoreB += 25; reasonsB.push(`ROE lebih tinggi (${(fundB.roe*100).toFixed(1)}%)`); }
+    }
+    
+    const peA = fundA.pe_ratio > 0 ? fundA.pe_ratio : 999;
+    const peB = fundB.pe_ratio > 0 ? fundB.pe_ratio : 999;
+    if (peA < peB) { scoreA += 20; reasonsA.push(`P/E lebih murah (${peA.toFixed(1)})`); }
+    else if (peB < peA) { scoreB += 20; reasonsB.push(`P/E lebih murah (${peB.toFixed(1)})`); }
+    
+    if (fundA.debt_to_equity && fundB.debt_to_equity) {
+        if (fundA.debt_to_equity < fundB.debt_to_equity) { scoreA += 15; reasonsA.push('Utang lebih rendah'); }
+        else { scoreB += 15; reasonsB.push('Utang lebih rendah'); }
+    }
+    
+    if (fundA.dividend_yield && fundB.dividend_yield) {
+        if (fundA.dividend_yield > fundB.dividend_yield) { scoreA += 15; reasonsA.push('Dividen lebih besar'); }
+        else { scoreB += 15; reasonsB.push('Dividen lebih besar'); }
+    }
+    
+    if (chartA && chartA.length > 0 && chartB && chartB.length > 0) {
+        const perfA = ((chartA[chartA.length-1].close / chartA[0].close) - 1) * 100;
+        const perfB = ((chartB[chartB.length-1].close / chartB[0].close) - 1) * 100;
+        if (perfA > perfB) { scoreA += 25; reasonsA.push(`Return 1 tahun lebih tinggi (${perfA.toFixed(1)}%)`); }
+        else { scoreB += 25; reasonsB.push(`Return 1 tahun lebih tinggi (${perfB.toFixed(1)}%)`); }
+    }
+    
+    if (scoreA >= scoreB) {
+        return { symbol: symbolA, reason: `Skor: ${scoreA}/100. ${reasonsA.slice(0, 2).join(', ')}.` };
+    }
+    return { symbol: symbolB, reason: `Skor: ${scoreB}/100. ${reasonsB.slice(0, 2).join(', ')}.` };
+}
+
+function renderCompareChart(containerId, symbolA, chartA, symbolB, chartB) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    if (typeof LightweightCharts === 'undefined') {
+        container.innerHTML = '<div style="color:#f00;padding:20px;text-align:center;font-size:12px;">❌ Chart library tidak tersedia</div>';
+        return;
+    }
+    
+    if (!chartA || chartA.length === 0 || !chartB || chartB.length === 0) {
+        container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:20px;text-align:center;font-size:12px;">Data chart tidak tersedia</div>';
+        return;
+    }
+    
+    if (compareChart) {
+        try { compareChart.remove(); } catch(e) {}
+        compareChart = null;
+    }
+    
+    compareChart = LightweightCharts.createChart(container, {
+        width: container.clientWidth,
+        height: 320,
+        layout: {
+            background: { color: 'transparent' },
+            textColor: 'rgba(255, 255, 255, 0.6)',
+            fontFamily: 'Inter, sans-serif'
+        },
+        grid: {
+            vertLines: { color: 'rgba(255, 255, 255, 0.04)' },
+            horzLines: { color: 'rgba(255, 255, 255, 0.04)' }
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+            vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' },
+            horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }
+        },
+        rightPriceScale: {
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            scaleMargins: { top: 0.1, bottom: 0.1 }
+        },
+        timeScale: {
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            timeVisible: false
+        },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+    });
+    
+    const baseA = chartA[0].close;
+    const baseB = chartB[0].close;
+    
+    const seriesA = compareChart.addLineSeries({ color: '#22d3ee', lineWidth: 2, title: symbolA });
+    const seriesB = compareChart.addLineSeries({ color: '#a855f7', lineWidth: 2, title: symbolB });
+    
+    const dataA = chartA.map(c => ({ time: c.time, value: ((c.close / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    const dataB = chartB.map(c => ({ time: c.time, value: ((c.close / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    
+    seriesA.setData(dataA);
+    seriesB.setData(dataB);
+    compareChart.timeScale().fitContent();
+    
+    const legend = document.createElement('div');
+    legend.style.cssText = 'position:absolute;top:8px;left:8px;display:flex;gap:12px;font-size:11px;font-weight:700;z-index:10;pointer-events:none;flex-wrap:wrap;';
+    legend.innerHTML = `<span style="color:#22d3ee;">● ${symbolA}</span><span style="color:#a855f7;">● ${symbolB}</span><span style="color:rgba(255,255,255,0.4);font-weight:500;">% dari harga awal</span>`;
+    container.style.position = 'relative';
+    container.appendChild(legend);
+}
+
 // ============ EVENT LISTENERS & INIT ============
 document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal); document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal); document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
 document.querySelectorAll('.cat-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentBrowseCategory = btn.dataset.cat; renderBrowseStocks(); }); });
@@ -952,7 +1232,6 @@ document.getElementById('setAlertBtn').addEventListener('click', () => openAlert
 document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview); document.getElementById('alertRsiValue').addEventListener('input', updateAlertPreview); document.getElementById('alertEmaPeriod').addEventListener('change', updateAlertPreview); document.getElementById('alertVolumeMultiplier').addEventListener('input', updateAlertPreview);
 document.getElementById('alertToastClose').addEventListener('click', closeAlertToast); document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail); document.getElementById('runScreener').addEventListener('click', runScreener);
 
-// SORT AI
 document.getElementById('sortAiBtn').addEventListener('click', sortWatchlistByAI);
 
 const holdingModal = document.getElementById('holdingModal'); document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active')); document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active')); document.getElementById('cancelHolding').addEventListener('click', () => holdingModal.classList.remove('active'));
@@ -964,10 +1243,14 @@ document.getElementById('currencySwapBtn').addEventListener('click', () => { con
 document.getElementById('currencyRefreshBtn').addEventListener('click', async () => { const btn = document.getElementById('currencyRefreshBtn'); btn.querySelector('.refresh-icon').style.animation = 'spin 1s linear infinite'; await fetchCurrencyRates(true); await convertCurrency(); btn.querySelector('.refresh-icon').style.animation = ''; });
 document.querySelectorAll('.quick-amount-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('currencyFromAmount').value = btn.dataset.amount; convertCurrency(); }); });
 
-// SECTOR DETAIL
 document.getElementById('closeSectorDetail').addEventListener('click', closeSectorDetail);
+
+// COMPARE STOCKS
+document.getElementById('runCompareBtn').addEventListener('click', runCompare);
+document.getElementById('compareVsBtn').addEventListener('click', swapCompareStocks);
 
 // INIT
 populateCurrencyDropdowns();
+populateCompareDropdowns();
 renderWatchlist(); renderPriceAlerts(); fetchMarketMovers();
 setTimeout(() => checkAlerts(), 5000); alertCheckInterval = setInterval(checkAlerts, 60000);
