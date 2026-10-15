@@ -1072,4 +1072,229 @@ function renderCompareChart(containerId, symbolA, chartA, symbolB, chartB) {
         width: container.clientWidth, height: 320,
         layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
         grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }, horzLine:
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }, horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' } },
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.1 } },
+        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+    });
+    const baseA = chartA[0].close; const baseB = chartB[0].close;
+    const seriesA = compareChart.addLineSeries({ color: '#22d3ee', lineWidth: 2, title: symbolA });
+    const seriesB = compareChart.addLineSeries({ color: '#a855f7', lineWidth: 2, title: symbolB });
+    const dataA = chartA.map(c => ({ time: c.time, value: ((c.close / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    const dataB = chartB.map(c => ({ time: c.time, value: ((c.close / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    seriesA.setData(dataA); seriesB.setData(dataB); compareChart.timeScale().fitContent();
+    const legend = document.createElement('div');
+    legend.style.cssText = 'position:absolute;top:8px;left:8px;display:flex;gap:12px;font-size:11px;font-weight:700;z-index:10;pointer-events:none;flex-wrap:wrap;';
+    legend.innerHTML = `<span style="color:#22d3ee;">● ${symbolA}</span><span style="color:#a855f7;">● ${symbolB}</span><span style="color:rgba(255,255,255,0.4);font-weight:500;">% dari harga awal</span>`;
+    container.style.position = 'relative';
+    container.appendChild(legend);
+}
+
+// ============ 🌍 GLOBAL INDEKS ============
+function renderIndeksCard(idx) {
+    const d = idx.data;
+    if (!d || d.price == null) {
+        return `<div class="indeks-card" onclick="openIndeksDetail('${idx.symbol}')"><div class="indeks-card-header"><div class="indeks-card-title"><span class="indeks-card-flag">${idx.flag}</span><div class="indeks-card-name-wrap"><span class="indeks-card-name">${idx.name}</span><span class="indeks-card-country">${idx.country}</span></div></div><div class="indeks-card-price-wrap"><div class="indeks-card-price" style="color:rgba(255,255,255,0.4);">N/A</div><div class="indeks-card-change" style="color:rgba(255,255,255,0.3);">Data gak tersedia</div></div></div></div>`;
+    }
+    const trend = d.change >= 0 ? 'up' : 'down';
+    const sign = d.change >= 0 ? '+' : '';
+    const changeStr = `${sign}${d.change.toFixed(2)}%`;
+    const changeNominalStr = `${sign}${d.changeNominal.toFixed(2)}`;
+    const priceStr = formatIndeksNumber(d.price, 2);
+    const sectorBars = idx.sectors.slice(0, 5).map(s => `<div class="indeks-sector-mini-bar" style="flex:${s.pct}; background:${s.color};"></div>`).join('');
+    return `<div class="indeks-card" onclick="openIndeksDetail('${idx.symbol}')"><div class="indeks-card-header"><div class="indeks-card-title"><span class="indeks-card-flag">${idx.flag}</span><div class="indeks-card-name-wrap"><span class="indeks-card-name">${idx.name}</span><span class="indeks-card-country">${idx.country}</span></div></div><div class="indeks-card-price-wrap"><div class="indeks-card-price">${priceStr}</div><div class="indeks-card-change ${trend}">${changeStr} (${changeNominalStr})</div></div></div><div class="indeks-card-stats"><div class="indeks-stat-cell"><span class="indeks-stat-cell-label">High</span><span class="indeks-stat-cell-value up">${formatIndeksNumber(d.high, 2)}</span></div><div class="indeks-stat-cell"><span class="indeks-stat-cell-label">Low</span><span class="indeks-stat-cell-value down">${formatIndeksNumber(d.low, 2)}</span></div><div class="indeks-stat-cell"><span class="indeks-stat-cell-label">Volume</span><span class="indeks-stat-cell-value">${formatIndeksVolume(d.volume)}</span></div></div><div class="indeks-card-sectors">${sectorBars}</div></div>`;
+}
+function formatIndeksNumber(num, decimals = 2) {
+    if (num == null || isNaN(num)) return '-';
+    return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function formatIndeksVolume(vol) {
+    if (!vol || vol === 0) return '-';
+    if (vol >= 1e12) return (vol / 1e12).toFixed(2) + ' T';
+    if (vol >= 1e9) return (vol / 1e9).toFixed(2) + ' B';
+    if (vol >= 1e6) return (vol / 1e6).toFixed(2) + ' M';
+    if (vol >= 1e3) return (vol / 1e3).toFixed(2) + ' K';
+    return vol.toString();
+}
+async function renderIndices() {
+    const list = document.getElementById('indeksList');
+    if (!list) return;
+    const myToken = ++indeksRenderToken;
+    let filtered = GLOBAL_INDICES;
+    if (indeksFilter !== 'all') filtered = filtered.filter(i => i.region === indeksFilter);
+    if (indeksSearch) {
+        const q = indeksSearch.toLowerCase();
+        filtered = filtered.filter(i => i.name.toLowerCase().includes(q) || i.symbol.toLowerCase().includes(q) || i.country.toLowerCase().includes(q));
+    }
+    if (filtered.length === 0) { list.innerHTML = '<div class="empty-state">Gak ada indeks yang match. Coba kata kunci lain.</div>'; return; }
+    list.innerHTML = filtered.map((idx, i) => {
+        const safeId = idx.symbol.replace(/\W/g, '_');
+        return `<div class="indeks-card" id="indeks-card-${safeId}" style="opacity:0.6;"><div class="indeks-card-header"><div class="indeks-card-title"><span class="indeks-card-flag">${idx.flag}</span><div class="indeks-card-name-wrap"><span class="indeks-card-name">${idx.name}</span><span class="indeks-card-country">${idx.country}</span></div></div><div class="indeks-card-price-wrap"><div class="indeks-card-price" style="color:rgba(255,255,255,0.3);">⏳</div><div class="indeks-card-change" style="color:rgba(255,255,255,0.3);">Loading...</div></div></div><div class="indeks-card-sectors">${idx.sectors.slice(0, 5).map(s => `<div class="indeks-sector-mini-bar" style="flex:${s.pct}; background:${s.color}; opacity:0.4;"></div>`).join('')}</div></div>`;
+    }).join('');
+    filtered.forEach(async (idx) => {
+        const data = await fetchIndexData(idx.symbol);
+        if (myToken !== indeksRenderToken) return;
+        const safeId = idx.symbol.replace(/\W/g, '_');
+        const cardEl = document.getElementById('indeks-card-' + safeId);
+        if (!cardEl) return;
+        const updatedIdx = { ...idx, data };
+        cardEl.outerHTML = renderIndeksCard(updatedIdx);
+    });
+    const now = new Date();
+    const lastEl = document.getElementById('lastUpdated');
+    if (lastEl) lastEl.textContent = 'Terakhir diupdate: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+async function openIndeksDetail(symbol) {
+    const idx = GLOBAL_INDICES.find(i => i.symbol === symbol);
+    if (!idx) return;
+    indeksDetailSymbol = symbol;
+    const modal = document.getElementById('indeksDetailModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.getElementById('detailFlag').textContent = idx.flag;
+    document.getElementById('detailTitle').textContent = idx.name;
+    document.getElementById('detailSubtitle').textContent = idx.country;
+    document.getElementById('detailPrice').textContent = '⏳';
+    document.getElementById('detailChange').textContent = 'Loading...';
+    document.getElementById('detailChange').className = 'indeks-detail-change';
+    document.getElementById('detailHigh').textContent = '-';
+    document.getElementById('detailLow').textContent = '-';
+    document.getElementById('detailPrevClose').textContent = '-';
+    document.getElementById('detailVolume').textContent = '-';
+    renderIndeksSectors(idx.sectors);
+    renderIndeksTopHoldings(idx.topHoldings);
+    const data = await fetchIndexData(symbol);
+    if (indeksDetailSymbol !== symbol) return;
+    if (data && data.price != null) {
+        const trend = data.change >= 0 ? 'up' : 'down';
+        const sign = data.change >= 0 ? '+' : '';
+        document.getElementById('detailPrice').textContent = formatIndeksNumber(data.price, 2);
+        const changeEl = document.getElementById('detailChange');
+        changeEl.textContent = `${sign}${data.change.toFixed(2)}%  (${sign}${data.changeNominal.toFixed(2)})`;
+        changeEl.className = 'indeks-detail-change ' + trend;
+        document.getElementById('detailHigh').textContent = formatIndeksNumber(data.high, 2);
+        document.getElementById('detailLow').textContent = formatIndeksNumber(data.low, 2);
+        document.getElementById('detailPrevClose').textContent = formatIndeksNumber(data.prevClose, 2);
+        document.getElementById('detailVolume').textContent = formatIndeksVolume(data.volume);
+    } else {
+        document.getElementById('detailPrice').textContent = 'N/A';
+        document.getElementById('detailChange').textContent = 'Data gak tersedia';
+    }
+    loadIndeksChart(symbol);
+    loadIndeksTopHoldingsPrices(idx.topHoldings);
+}
+function renderIndeksSectors(sectors) {
+    const container = document.getElementById('detailSectors');
+    if (!container) return;
+    container.innerHTML = sectors.map(s => `<div class="indeks-sector-row"><div class="indeks-sector-row-top"><span class="indeks-sector-name">${s.name}</span><span class="indeks-sector-pct">${s.pct.toFixed(1)}%</span></div><div class="indeks-sector-bar-bg"><div class="indeks-sector-bar-fill" style="width: ${s.pct}%; background: ${s.color};"></div></div></div>`).join('');
+}
+function renderIndeksTopHoldings(holdings) {
+    const container = document.getElementById('detailConstituents');
+    if (!container) return;
+    container.innerHTML = holdings.map(h => {
+        const safeSym = h.symbol.replace(/\W/g, '_');
+        return `<div class="indeks-constituent-item" data-symbol="${h.symbol}"><div class="indeks-constituent-left"><span class="indeks-constituent-symbol">${h.symbol}</span><span class="indeks-constituent-name">${h.name}</span></div><div class="indeks-constituent-right"><span class="indeks-constituent-price" id="const-price-${safeSym}">⏳</span><span class="indeks-constituent-change" id="const-change-${safeSym}">-</span></div></div>`;
+    }).join('');
+}
+async function loadIndeksTopHoldingsPrices(holdings) {
+    await Promise.allSettled(holdings.map(async (h) => {
+        try {
+            const data = await fetchIndexData(h.symbol);
+            const safeSym = h.symbol.replace(/\W/g, '_');
+            const priceEl = document.getElementById('const-price-' + safeSym);
+            const changeEl = document.getElementById('const-change-' + safeSym);
+            if (!priceEl || !changeEl) return;
+            if (data && data.price != null) {
+                priceEl.textContent = formatIndeksNumber(data.price, 2);
+                const trend = data.change >= 0 ? 'up' : 'down';
+                const sign = data.change >= 0 ? '+' : '';
+                changeEl.textContent = `${sign}${data.change.toFixed(2)}%`;
+                changeEl.className = 'indeks-constituent-change ' + trend;
+            } else {
+                priceEl.textContent = 'N/A';
+                changeEl.textContent = '-';
+            }
+        } catch (e) {}
+    }));
+}
+async function loadIndeksChart(symbol) {
+    const container = document.getElementById('indeksChartContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    if (indeksDetailChart) { try { indeksDetailChart.remove(); } catch(e) {} indeksDetailChart = null; }
+    if (typeof LightweightCharts === 'undefined') { container.innerHTML = '<div style="color:#f00;padding:20px;text-align:center;font-size:12px;">❌ Library chart gagal dimuat</div>'; return; }
+    indeksDetailChart = LightweightCharts.createChart(container, {
+        width: container.clientWidth, height: 260,
+        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }, horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' } },
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.1 } },
+        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+    });
+    const series = indeksDetailChart.addCandlestickSeries({ upColor: '#ffffff', downColor: '#a855f7', borderUpColor: '#ffffff', borderDownColor: '#a855f7', wickUpColor: '#ffffff', wickDownColor: '#a855f7' });
+    const candles = await fetchIndexChartData(symbol, '1d', '1y');
+    if (!candles || candles.length === 0) { container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:20px;text-align:center;font-size:12px;">Data chart gak tersedia</div>'; return; }
+    const formattedData = candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })).filter(d => d.time != null && !isNaN(d.open) && !isNaN(d.close));
+    series.setData(formattedData);
+    indeksDetailChart.timeScale().fitContent();
+}
+function closeIndeksDetail() {
+    document.getElementById('indeksDetailModal').classList.remove('active');
+    if (indeksDetailChart) { try { indeksDetailChart.remove(); } catch(e) {} indeksDetailChart = null; }
+    document.getElementById('indeksChartContainer').innerHTML = '';
+    indeksDetailSymbol = null;
+}
+
+// ============ EVENT LISTENERS & INIT ============
+document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal); document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal); document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
+document.querySelectorAll('.cat-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentBrowseCategory = btn.dataset.cat; renderBrowseStocks(); }); });
+const assetModal = document.getElementById('assetModal'); document.getElementById('addAssetBtn').addEventListener('click', () => assetModal.classList.add('active')); document.getElementById('closeAssetModal').addEventListener('click', () => assetModal.classList.remove('active')); document.getElementById('cancelAsset').addEventListener('click', () => assetModal.classList.remove('active'));
+document.getElementById('saveAsset').addEventListener('click', () => { const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase(); const name = document.getElementById('assetName').value.trim(); const type = document.getElementById('assetType').value; if (!symbol || !name) { alert('Isi semua field!'); return; } if (watchlist.some(a => a.symbol === symbol)) { alert(`${symbol} udah ada!`); return; } watchlist.push({ symbol, name, type }); saveWatchlist(); assetModal.classList.remove('active'); document.getElementById('assetSymbol').value = ''; document.getElementById('assetName').value = ''; renderWatchlist(); });
+document.getElementById('setAlertBtn').addEventListener('click', () => openAlertModal(currentSymbol, currentName, currentPrice, currentType)); document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal); document.getElementById('cancelAlert').addEventListener('click', closeAlertModal); document.getElementById('saveAlert').addEventListener('click', saveAlert);
+document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview); document.getElementById('alertRsiValue').addEventListener('input', updateAlertPreview); document.getElementById('alertEmaPeriod').addEventListener('change', updateAlertPreview); document.getElementById('alertVolumeMultiplier').addEventListener('input', updateAlertPreview);
+document.getElementById('alertToastClose').addEventListener('click', closeAlertToast); document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail); document.getElementById('runScreener').addEventListener('click', runScreener);
+
+document.getElementById('sortAiBtn').addEventListener('click', sortWatchlistByAI);
+
+const holdingModal = document.getElementById('holdingModal'); document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active')); document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active')); document.getElementById('cancelHolding').addEventListener('click', () => holdingModal.classList.remove('active'));
+document.getElementById('saveHolding').addEventListener('click', () => { const symbol = document.getElementById('holdingSymbol').value.trim().toUpperCase(); const name = document.getElementById('holdingName').value.trim(); const type = document.getElementById('holdingType').value; const shares = parseFloat(document.getElementById('holdingShares').value); const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value); if (!symbol || !name || !shares || !avgPrice) { alert('Isi semua field!'); return; } portfolio.push({ id: 'holding-' + Date.now(), symbol, name, type, shares, avgPrice, addedAt: Date.now() }); savePortfolio(); holdingModal.classList.remove('active'); document.getElementById('holdingSymbol').value = ''; document.getElementById('holdingName').value = ''; document.getElementById('holdingShares').value = ''; document.getElementById('holdingAvgPrice').value = ''; renderPortfolio(); analyzePortfolioRisk(); });
+document.getElementById('closeNewsDetail').addEventListener('click', closeNewsDetail); document.getElementById('ndOpenOriginal').addEventListener('click', openNewsOriginal); document.getElementById('ndCopyLink').addEventListener('click', copyNewsLink);
+document.getElementById('currencyOpenBtn').addEventListener('click', openCurrencyModal); document.getElementById('closeCurrencyModal').addEventListener('click', closeCurrencyModal); document.getElementById('currencyFromAmount').addEventListener('input', convertCurrency); document.getElementById('currencyFromSelect').addEventListener('change', convertCurrency);
+document.getElementById('currencyToSelect').addEventListener('change', () => { const val = document.getElementById('currencyToSelect').value; document.querySelectorAll('.quick-target-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === val)); convertCurrency(); });
+document.getElementById('currencySwapBtn').addEventListener('click', () => { const btn = document.getElementById('currencySwapBtn'); btn.style.transform = 'rotate(180deg)'; setTimeout(() => btn.style.transform = 'rotate(0deg)', 300); swapCurrencies(); });
+document.getElementById('currencyRefreshBtn').addEventListener('click', async () => { const btn = document.getElementById('currencyRefreshBtn'); btn.querySelector('.refresh-icon').style.animation = 'spin 1s linear infinite'; await fetchCurrencyRates(true); await convertCurrency(); btn.querySelector('.refresh-icon').style.animation = ''; });
+document.querySelectorAll('.quick-amount-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('currencyFromAmount').value = btn.dataset.amount; convertCurrency(); }); });
+
+document.getElementById('closeSectorDetail').addEventListener('click', closeSectorDetail);
+
+// COMPARE STOCKS
+document.getElementById('runCompareBtn').addEventListener('click', runCompare);
+document.getElementById('compareVsBtn').addEventListener('click', swapCompareStocks);
+
+// INDEKS PAGE
+document.getElementById('closeDetailModal').addEventListener('click', closeIndeksDetail);
+let indeksSearchDebounce;
+document.getElementById('indeksSearch').addEventListener('input', (e) => {
+    clearTimeout(indeksSearchDebounce);
+    indeksSearchDebounce = setTimeout(() => {
+        indeksSearch = e.target.value.trim();
+        renderIndices();
+    }, 300);
+});
+document.querySelectorAll('.indeks-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.indeks-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        indeksFilter = btn.dataset.region;
+        renderIndices();
+    });
+});
+
+// INIT
+populateCurrencyDropdowns();
+populateCompareDropdowns();
+renderWatchlist(); renderPriceAlerts(); fetchMarketMovers();
+setTimeout(() => checkAlerts(), 5000); alertCheckInterval = setInterval(checkAlerts, 60000);
