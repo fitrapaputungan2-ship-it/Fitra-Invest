@@ -17,6 +17,7 @@ let currentAlertAssetType = null;
 let currentAlertPrice = 0;
 let currentNewsItem = null;
 let newsCache = [];
+let heatmapData = [];
 
 // ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
@@ -39,6 +40,15 @@ let currencyRates = JSON.parse(localStorage.getItem('fitraCurrencyRates') || 'nu
 let currencyLastFetch = parseInt(localStorage.getItem('fitraCurrencyLastFetch') || '0');
 const CURRENCY_CACHE_TTL = 60 * 60 * 1000;
 const QUICK_TARGETS = ['IDR', 'EUR', 'JPY', 'GBP', 'SGD', 'MYR', 'CNY', 'AUD', 'KRW', 'THB'];
+const ALL_CURRENCIES = [
+    { code: 'USD', flag: '🇺🇸', name: 'USD' }, { code: 'IDR', flag: '🇮🇩', name: 'IDR' },
+    { code: 'EUR', flag: '🇪🇺', name: 'EUR' }, { code: 'JPY', flag: '🇯🇵', name: 'JPY' },
+    { code: 'GBP', flag: '🇬🇧', name: 'GBP' }, { code: 'SGD', flag: '🇸🇬', name: 'SGD' },
+    { code: 'MYR', flag: '🇲🇾', name: 'MYR' }, { code: 'CNY', flag: '🇨🇳', name: 'CNY' },
+    { code: 'AUD', flag: '🇦🇺', name: 'AUD' }, { code: 'KRW', flag: '🇰🇷', name: 'KRW' },
+    { code: 'THB', flag: '🇹🇭', name: 'THB' }, { code: 'INR', flag: '🇮🇳', name: 'INR' },
+    { code: 'SAR', flag: '🇸🇦', name: 'SAR' }, { code: 'AED', flag: '🇦🇪', name: 'AED' }
+];
 
 async function fetchCurrencyRates(forceRefresh = false) {
     const now = Date.now();
@@ -55,9 +65,19 @@ async function fetchCurrencyRates(forceRefresh = false) {
 }
 function formatCurrencyAmount(amount, currency) {
     const decimals = ['JPY', 'KRW', 'IDR'].includes(currency) ? 0 : 2;
-    const symbols = { 'USD': '$', 'IDR': 'Rp ', 'EUR': '€', 'JPY': '¥', 'GBP': '£', 'SGD': 'S$', 'MYR': 'RM ', 'CNY': '¥', 'AUD': 'A$', 'KRW': '₩', 'THB': '฿' };
+    const symbols = { 'USD': '$', 'IDR': 'Rp ', 'EUR': '€', 'JPY': '¥', 'GBP': '£', 'SGD': 'S$', 'MYR': 'RM ', 'CNY': '¥', 'AUD': 'A$', 'KRW': '₩', 'THB': '฿', 'INR': '₹', 'SAR': 'SR ', 'AED': 'AED ' };
     const symbol = symbols[currency] || currency + ' ';
     return symbol + amount.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function populateCurrencyDropdowns() {
+    const fromSel = document.getElementById('currencyFromSelect');
+    const toSel = document.getElementById('currencyToSelect');
+    if (!fromSel || !toSel) return;
+    const options = ALL_CURRENCIES.map(c => `<option value="${c.code}">${c.flag} ${c.name}</option>`).join('');
+    fromSel.innerHTML = options;
+    toSel.innerHTML = options;
+    fromSel.value = 'USD';
+    toSel.value = 'IDR';
 }
 async function convertCurrency() {
     const fromAmount = parseFloat(document.getElementById('currencyFromAmount').value) || 0;
@@ -98,25 +118,168 @@ function renderCurrencyQuickTargets() {
         });
     });
 }
-async function openCurrencyModal() { document.getElementById('currencyModal').classList.add('active'); renderCurrencyQuickTargets(); await convertCurrency(); }
+async function openCurrencyModal() { populateCurrencyDropdowns(); document.getElementById('currencyModal').classList.add('active'); renderCurrencyQuickTargets(); await convertCurrency(); }
 function closeCurrencyModal() { document.getElementById('currencyModal').classList.remove('active'); }
 
-// ============ CHART COLORS & UNIVERSE ============
+// ============ CHART COLORS ============
 const CHART_COLORS = ['#fbbf24', '#22d3ee', '#10b981', '#a855f7', '#ef4444', '#ec4899', '#f97316', '#3b82f6', '#84cc16', '#06b6d4', '#8b5cf6', '#eab308', '#14b8a6', '#f43f5e', '#facc15', '#fb7185', '#4ade80', '#60a5fa'];
+
+// ============ STOCK UNIVERSE (130+ ASET) ============
 const STOCK_UNIVERSE = [
-    { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', category: 'us-tech' }, { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', category: 'us-tech' },
-    { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock', category: 'us-tech' }, { symbol: 'AMZN', name: 'Amazon.com Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'META', name: 'Meta Platforms Inc.', type: 'stock', category: 'us-tech' }, { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock', category: 'us-tech' },
-    { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock', category: 'us-tech' }, { symbol: 'AMD', name: 'Advanced Micro Devices', type: 'stock', category: 'us-tech' },
-    { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'stock', category: 'us-finance' }, { symbol: 'V', name: 'Visa Inc.', type: 'stock', category: 'us-finance' },
-    { symbol: 'JNJ', name: 'Johnson & Johnson', type: 'stock', category: 'us-healthcare' }, { symbol: 'WMT', name: 'Walmart Inc.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'XOM', name: 'Exxon Mobil Corp.', type: 'stock', category: 'us-energy' }, { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', category: 'crypto' },
-    { symbol: 'ETH', name: 'Ethereum', type: 'crypto', category: 'crypto' }, { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity', category: 'commodity' }
+    // US TECH
+    { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'AMZN', name: 'Amazon.com Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'META', name: 'Meta Platforms Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'AMD', name: 'Advanced Micro Devices', type: 'stock', category: 'us-tech' },
+    { symbol: 'INTC', name: 'Intel Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'ORCL', name: 'Oracle Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'CRM', name: 'Salesforce Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'ADBE', name: 'Adobe Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'NFLX', name: 'Netflix Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'AVGO', name: 'Broadcom Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'QCOM', name: 'Qualcomm Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'TXN', name: 'Texas Instruments', type: 'stock', category: 'us-tech' },
+    { symbol: 'CSCO', name: 'Cisco Systems', type: 'stock', category: 'us-tech' },
+    { symbol: 'IBM', name: 'IBM Corp.', type: 'stock', category: 'us-tech' },
+    { symbol: 'NOW', name: 'ServiceNow Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'UBER', name: 'Uber Technologies', type: 'stock', category: 'us-tech' },
+    { symbol: 'SHOP', name: 'Shopify Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'SNOW', name: 'Snowflake Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'PLTR', name: 'Palantir Technologies', type: 'stock', category: 'us-tech' },
+    { symbol: 'SQ', name: 'Block Inc.', type: 'stock', category: 'us-tech' },
+    { symbol: 'PYPL', name: 'PayPal Holdings', type: 'stock', category: 'us-tech' },
+    // US FINANCE
+    { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'stock', category: 'us-finance' },
+    { symbol: 'BAC', name: 'Bank of America', type: 'stock', category: 'us-finance' },
+    { symbol: 'WFC', name: 'Wells Fargo & Co.', type: 'stock', category: 'us-finance' },
+    { symbol: 'GS', name: 'Goldman Sachs', type: 'stock', category: 'us-finance' },
+    { symbol: 'MS', name: 'Morgan Stanley', type: 'stock', category: 'us-finance' },
+    { symbol: 'V', name: 'Visa Inc.', type: 'stock', category: 'us-finance' },
+    { symbol: 'MA', name: 'Mastercard Inc.', type: 'stock', category: 'us-finance' },
+    { symbol: 'AXP', name: 'American Express', type: 'stock', category: 'us-finance' },
+    { symbol: 'BLK', name: 'BlackRock Inc.', type: 'stock', category: 'us-finance' },
+    { symbol: 'C', name: 'Citigroup Inc.', type: 'stock', category: 'us-finance' },
+    { symbol: 'SCHW', name: 'Charles Schwab', type: 'stock', category: 'us-finance' },
+    { symbol: 'BRK-B', name: 'Berkshire Hathaway B', type: 'stock', category: 'us-finance' },
+    // US HEALTHCARE
+    { symbol: 'JNJ', name: 'Johnson & Johnson', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'PFE', name: 'Pfizer Inc.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'UNH', name: 'UnitedHealth Group', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'ABBV', name: 'AbbVie Inc.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'LLY', name: 'Eli Lilly and Co.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'MRK', name: 'Merck & Co.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'TMO', name: 'Thermo Fisher Scientific', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'ABT', name: 'Abbott Laboratories', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'DHR', name: 'Danaher Corp.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'BMY', name: 'Bristol-Myers Squibb', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'AMGN', name: 'Amgen Inc.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'GILD', name: 'Gilead Sciences', type: 'stock', category: 'us-healthcare' },
+    // US CONSUMER
+    { symbol: 'WMT', name: 'Walmart Inc.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'COST', name: 'Costco Wholesale', type: 'stock', category: 'us-consumer' },
+    { symbol: 'HD', name: 'Home Depot Inc.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'MCD', name: 'McDonald\'s Corp.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'NKE', name: 'Nike Inc.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'SBUX', name: 'Starbucks Corp.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'KO', name: 'Coca-Cola Co.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'PEP', name: 'PepsiCo Inc.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'PG', name: 'Procter & Gamble', type: 'stock', category: 'us-consumer' },
+    { symbol: 'DIS', name: 'Walt Disney Co.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'TGT', name: 'Target Corp.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'LOW', name: 'Lowe\'s Companies', type: 'stock', category: 'us-consumer' },
+    { symbol: 'BKNG', name: 'Booking Holdings', type: 'stock', category: 'us-consumer' },
+    { symbol: 'LULU', name: 'Lululemon Athletica', type: 'stock', category: 'us-consumer' },
+    // US INDUSTRIAL
+    { symbol: 'BA', name: 'Boeing Co.', type: 'stock', category: 'us-industrial' },
+    { symbol: 'CAT', name: 'Caterpillar Inc.', type: 'stock', category: 'us-industrial' },
+    { symbol: 'GE', name: 'General Electric', type: 'stock', category: 'us-industrial' },
+    { symbol: 'MMM', name: '3M Company', type: 'stock', category: 'us-industrial' },
+    { symbol: 'HON', name: 'Honeywell International', type: 'stock', category: 'us-industrial' },
+    { symbol: 'UPS', name: 'United Parcel Service', type: 'stock', category: 'us-industrial' },
+    { symbol: 'LMT', name: 'Lockheed Martin', type: 'stock', category: 'us-industrial' },
+    { symbol: 'RTX', name: 'Raytheon Technologies', type: 'stock', category: 'us-industrial' },
+    { symbol: 'DE', name: 'Deere & Company', type: 'stock', category: 'us-industrial' },
+    { symbol: 'F', name: 'Ford Motor Co.', type: 'stock', category: 'us-industrial' },
+    { symbol: 'GM', name: 'General Motors', type: 'stock', category: 'us-industrial' },
+    // US ENERGY
+    { symbol: 'XOM', name: 'Exxon Mobil Corp.', type: 'stock', category: 'us-energy' },
+    { symbol: 'CVX', name: 'Chevron Corp.', type: 'stock', category: 'us-energy' },
+    { symbol: 'COP', name: 'ConocoPhillips', type: 'stock', category: 'us-energy' },
+    { symbol: 'SLB', name: 'Schlumberger Ltd.', type: 'stock', category: 'us-energy' },
+    { symbol: 'NEE', name: 'NextEra Energy', type: 'stock', category: 'us-energy' },
+    { symbol: 'OXY', name: 'Occidental Petroleum', type: 'stock', category: 'us-energy' },
+    // INTERNATIONAL
+    { symbol: 'TSM', name: 'Taiwan Semiconductor', type: 'stock', category: 'international' },
+    { symbol: 'ASML', name: 'ASML Holding N.V.', type: 'stock', category: 'international' },
+    { symbol: 'BABA', name: 'Alibaba Group', type: 'stock', category: 'international' },
+    { symbol: 'TM', name: 'Toyota Motor Corp.', type: 'stock', category: 'international' },
+    { symbol: 'SONY', name: 'Sony Group Corp.', type: 'stock', category: 'international' },
+    { symbol: 'SAP', name: 'SAP SE', type: 'stock', category: 'international' },
+    { symbol: 'NESN.SW', name: 'Nestlé S.A.', type: 'stock', category: 'international' },
+    { symbol: 'LVMH.PA', name: 'LVMH Moët Hennessy', type: 'stock', category: 'international' },
+    { symbol: 'SHEL', name: 'Shell plc', type: 'stock', category: 'international' },
+    { symbol: 'AZN', name: 'AstraZeneca PLC', type: 'stock', category: 'international' },
+    { symbol: 'NVO', name: 'Novo Nordisk A/S', type: 'stock', category: 'international' },
+    { symbol: 'HSBC', name: 'HSBC Holdings', type: 'stock', category: 'international' },
+    { symbol: 'TCEHY', name: 'Tencent Holdings', type: 'stock', category: 'international' },
+    // CRYPTO
+    { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', category: 'crypto' },
+    { symbol: 'ETH', name: 'Ethereum', type: 'crypto', category: 'crypto' },
+    { symbol: 'SOL', name: 'Solana', type: 'crypto', category: 'crypto' },
+    { symbol: 'BNB', name: 'Binance Coin', type: 'crypto', category: 'crypto' },
+    { symbol: 'XRP', name: 'Ripple', type: 'crypto', category: 'crypto' },
+    { symbol: 'ADA', name: 'Cardano', type: 'crypto', category: 'crypto' },
+    { symbol: 'DOGE', name: 'Dogecoin', type: 'crypto', category: 'crypto' },
+    { symbol: 'AVAX', name: 'Avalanche', type: 'crypto', category: 'crypto' },
+    { symbol: 'DOT', name: 'Polkadot', type: 'crypto', category: 'crypto' },
+    { symbol: 'MATIC', name: 'Polygon', type: 'crypto', category: 'crypto' },
+    { symbol: 'LINK', name: 'Chainlink', type: 'crypto', category: 'crypto' },
+    { symbol: 'LTC', name: 'Litecoin', type: 'crypto', category: 'crypto' },
+    { symbol: 'ATOM', name: 'Cosmos', type: 'crypto', category: 'crypto' },
+    { symbol: 'TRX', name: 'TRON', type: 'crypto', category: 'crypto' },
+    // COMMODITY
+    { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'SI=F', name: 'Silver Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'CL=F', name: 'Crude Oil WTI', type: 'commodity', category: 'commodity' },
+    { symbol: 'NG=F', name: 'Natural Gas', type: 'commodity', category: 'commodity' },
+    { symbol: 'HG=F', name: 'Copper Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'PL=F', name: 'Platinum Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'ZC=F', name: 'Corn Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'ZW=F', name: 'Wheat Futures', type: 'commodity', category: 'commodity' },
+    // INDEX
+    { symbol: '^GSPC', name: 'S&P 500', type: 'stock', category: 'index' },
+    { symbol: '^DJI', name: 'Dow Jones Industrial', type: 'stock', category: 'index' },
+    { symbol: '^IXIC', name: 'NASDAQ Composite', type: 'stock', category: 'index' },
+    { symbol: '^RUT', name: 'Russell 2000', type: 'stock', category: 'index' },
+    { symbol: '^N225', name: 'Nikkei 225', type: 'stock', category: 'index' },
+    { symbol: '^HSI', name: 'Hang Seng Index', type: 'stock', category: 'index' },
+    { symbol: '^FTSE', name: 'FTSE 100', type: 'stock', category: 'index' },
+    { symbol: '^GDAXI', name: 'DAX Index', type: 'stock', category: 'index' },
 ];
-const MOVERS_UNIVERSE = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'JPM', 'V', 'WMT', 'JNJ', 'XOM', 'BTC', 'ETH'];
+
+// ============ MOVERS UNIVERSE ============
+const MOVERS_UNIVERSE = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'INTC', 'NFLX', 'AVGO', 'ADBE', 'JPM', 'BAC', 'V', 'MA', 'GS', 'WFC', 'WMT', 'DIS', 'MCD', 'NKE', 'SBUX', 'KO', 'PEP', 'JNJ', 'PFE', 'UNH', 'LLY', 'BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
 let marketMoversData = { gainers: [], losers: [] };
 
-// ============ TAB NAV & DATA ============
+// ============ SECTOR CONFIG (buat Heatmap) ============
+const SECTOR_CONFIG = [
+    { key: 'us-tech', name: 'Technology', icon: '💻' },
+    { key: 'us-finance', name: 'Finance', icon: '🏦' },
+    { key: 'us-healthcare', name: 'Healthcare', icon: '💊' },
+    { key: 'us-consumer', name: 'Consumer', icon: '🛒' },
+    { key: 'us-industrial', name: 'Industrial', icon: '🏭' },
+    { key: 'us-energy', name: 'Energy', icon: '⚡' },
+    { key: 'international', name: 'International', icon: '🌍' },
+    { key: 'crypto', name: 'Crypto', icon: '₿' },
+    { key: 'commodity', name: 'Commodity', icon: '🥇' },
+    { key: 'index', name: 'Index', icon: '📊' }
+];
+
+// ============ TAB NAV ============
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -124,9 +287,11 @@ document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.add('active'); document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
         if (tab.dataset.tab === 'news') renderNews();
         if (tab.dataset.tab === 'portfolio') { renderPortfolio(); analyzePortfolioRisk(); }
+        if (tab.dataset.tab === 'heatmap') renderSectorHeatmap();
     });
 });
 
+// ============ DATA ============
 let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
     { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock' }, { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock' },
     { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock' }, { symbol: 'BTC', name: 'Bitcoin', type: 'crypto' }
@@ -141,14 +306,13 @@ function toggleFavorite(symbol, event) {
     if (idx >= 0) favorites.splice(idx, 1); else favorites.push(symbol);
     saveFavorites(); renderWatchlist();
 }
-
 let alerts = JSON.parse(localStorage.getItem('fitraAlerts')) || [];
 function saveAlerts() { localStorage.setItem('fitraAlerts', JSON.stringify(alerts)); }
 function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol && !a.triggered); }
 let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
 function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
 
-// ============ 🆕 SMART ALERT MODAL ============
+// ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol; currentAlertName = name; currentAlertAssetType = type; currentAlertPrice = price;
     currentAlertType = 'price'; currentAlertDirection = 'above';
@@ -201,7 +365,7 @@ function updateAlertPreview() {
         else { const target = parseFloat(priceInput); const dirText = currentAlertDirection === 'above' ? 'naik ke atas' : 'turun ke bawah'; previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> ${dirText} <strong>$${target.toLocaleString('en-US', { maximumFractionDigits: 2 })}</strong>`; }
     } else if (currentAlertType === 'rsi') {
         if (!rsiInput || isNaN(parseFloat(rsiInput))) previewText = '🔔 Alert bakal aktif kalau RSI nyentuh target';
-        else { const rsi = parseFloat(rsiInput); const zone = rsi <= 30 ? 'oversold (beli)' : rsi >= 70 ? 'overbought (jual)' : 'netral'; previewText = ` Notif kalau <strong>${currentAlertSymbol}</strong> RSI ${rsi} (${zone})`; }
+        else { const rsi = parseFloat(rsiInput); const zone = rsi <= 30 ? 'oversold (beli)' : rsi >= 70 ? 'overbought (jual)' : 'netral'; previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> RSI ${rsi} (${zone})`; }
     } else if (currentAlertType === 'ema') {
         const period = document.getElementById('alertEmaPeriod').value || '20'; previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> menyentuh EMA ${period}`;
     } else if (currentAlertType === 'volume') {
@@ -215,7 +379,7 @@ function saveAlert() {
         const targetInput = document.getElementById('alertTargetPrice').value;
         if (!targetInput || isNaN(parseFloat(targetInput))) { alert('Isi target harga dulu!'); return; }
         const target = parseFloat(targetInput);
-        if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('️ Alert "Di Atas" harus LEBIH TINGGI!'); return; }
+        if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('⚠️ Alert "Di Atas" harus LEBIH TINGGI!'); return; }
         if (currentAlertDirection === 'below' && target >= currentAlertPrice) { alert('⚠️ Alert "Di Bawah" harus LEBIH RENDAH!'); return; }
         alertData.targetPrice = target; alertData.direction = currentAlertDirection;
     } else if (currentAlertType === 'rsi') {
@@ -278,7 +442,7 @@ function renderPriceAlerts() {
     const activeAlerts = alerts.filter(a => !a.triggered);
     if (activeAlerts.length === 0) { section.style.display = 'none'; return; }
     section.style.display = 'block'; count.textContent = activeAlerts.length;
-    const typeIcons = { price: '💰', rsi: '', ema: '📈', volume: '📶', multi: '🧠' };
+    const typeIcons = { price: '💰', rsi: '📊', ema: '📈', volume: '📶', multi: '🧠' };
     const typeLabels = { price: 'Price', rsi: 'RSI', ema: 'EMA', volume: 'Volume', multi: 'Multi' };
     list.innerHTML = activeAlerts.map(a => {
         const icon = typeIcons[a.alertType] || '🔔'; const label = typeLabels[a.alertType] || 'Price'; let detail = '';
@@ -339,7 +503,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
     } catch (error) { return []; }
 }
 
-// ============ MARKET MOVERS & RENDER ============
+// ============ MARKET MOVERS ============
 async function fetchMarketMovers() {
     const container = document.getElementById('marketMovers'); if (!container) return;
     container.innerHTML = '<div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat pergerakan pasar...</p></div>';
@@ -364,6 +528,7 @@ function renderMarketMovers() {
     container.innerHTML = html;
 }
 
+// ============ RENDER WATCHLIST ============
 function renderAssetCard(asset, priceData, index) {
     const p = priceData; const isFav = isFavorite(asset.symbol); const hasAl = hasAlert(asset.symbol);
     if (!p) return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card"><div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
@@ -386,68 +551,32 @@ function deleteFromWatchlist(index, event) {
     alerts = alerts.filter(a => a.symbol !== asset.symbol); saveAlerts(); renderPriceAlerts(); watchlist.splice(index, 1); saveWatchlist(); renderWatchlist();
 }
 
-// ============ 🤖 AI SMART WATCHLIST RANKING ============
+// ============ 🤖 AI SORT WATCHLIST ============
 async function sortWatchlistByAI() {
     const btn = document.getElementById('sortAiBtn');
     if (!btn) return;
-    
     const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Sorting...';
-    btn.style.opacity = '0.7';
-    btn.disabled = true;
-
+    btn.innerHTML = '⏳ Sorting...'; btn.style.opacity = '0.7'; btn.disabled = true;
     try {
-        // Fetch fundamental data for all assets in watchlist
         const scoredWatchlist = await Promise.all(watchlist.map(async (asset) => {
             const fund = await fetchFundamental(asset.symbol, asset.type);
-            
-            // Calculate a quick AI score (mirroring backend logic roughly)
-            let score = 50; // Start neutral
-            const roe = fund.roe || 0;
-            const der = fund.debt_to_equity || 0;
-            const pe = fund.pe_ratio || 0;
-            const epsGrowth = fund.eps_growth || 0;
-
-            if (roe > 0.15) score += 25;
-            else if (roe > 0.10) score += 10;
-            
-            if (der < 0.5) score += 20;
-            else if (der < 1.0) score += 10;
-            else score -= 10;
-
-            if (epsGrowth > 0.10) score += 20;
-            else if (epsGrowth > 0) score += 10;
-
-            if (pe > 0 && pe < 15) score += 15;
-            else if (pe >= 15 && pe < 25) score += 5;
-            else if (pe >= 35) score -= 10;
-
-            // Cap score
+            let score = 50;
+            const roe = fund.roe || 0; const der = fund.debt_to_equity || 0; const pe = fund.pe_ratio || 0; const epsGrowth = fund.eps_growth || 0;
+            if (roe > 0.15) score += 25; else if (roe > 0.10) score += 10;
+            if (der < 0.5) score += 20; else if (der < 1.0) score += 10; else score -= 10;
+            if (epsGrowth > 0.10) score += 20; else if (epsGrowth > 0) score += 10;
+            if (pe > 0 && pe < 15) score += 15; else if (pe >= 15 && pe < 25) score += 5; else if (pe >= 35) score -= 10;
             score = Math.max(0, Math.min(100, score));
-
             return { ...asset, aiScore: score };
         }));
-
-        // Sort descending by score
         scoredWatchlist.sort((a, b) => b.aiScore - a.aiScore);
-
-        // Update watchlist and re-render
         watchlist = scoredWatchlist;
-        // Optional: save to localStorage if you want the sort to persist
-        // saveWatchlist(); 
         renderWatchlist();
-
-    } catch (error) {
-        console.error("Error sorting watchlist:", error);
-        alert("Gagal mengurutkan watchlist. Coba lagi nanti.");
-    } finally {
-        btn.innerHTML = originalText;
-        btn.style.opacity = '1';
-        btn.disabled = false;
-    }
+    } catch (error) { console.error("Error sorting watchlist:", error); alert("Gagal mengurutkan watchlist."); }
+    finally { btn.innerHTML = originalText; btn.style.opacity = '1'; btn.disabled = false; }
 }
 
-// ============ INDIKATOR & CHART ============
+// ============ INDIKATOR ============
 function calcEMA(closes, period) { if (closes.length < period) return closes[closes.length - 1] || 0; const k = 2 / (period + 1); let ema = closes[0]; for (let i = 1; i < closes.length; i++) ema = closes[i] * k + ema * (1 - k); return ema; }
 function calcRSI(closes, period = 14) { if (closes.length < period + 1) return 50; let gains = 0, losses = 0; for (let i = 1; i <= period; i++) { const diff = closes[i] - closes[i - 1]; if (diff >= 0) gains += diff; else losses -= diff; } let avgGain = gains / period, avgLoss = losses / period; for (let i = period + 1; i < closes.length; i++) { const diff = closes[i] - closes[i - 1]; avgGain = (avgGain * (period - 1) + (diff > 0 ? diff : 0)) / period; avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period; } if (avgLoss === 0) return 100; const rs = avgGain / avgLoss; return 100 - 100 / (1 + rs); }
 function calcSentiment(candles) { const recent = candles.slice(-20); let buyVol = 0, sellVol = 0; recent.forEach(c => { if (c.close >= c.open) buyVol += c.volume || 0; else sellVol += c.volume || 0; }); const total = buyVol + sellVol; if (total === 0) return { buyPct: 50, sellPct: 50 }; const buyPct = (buyVol / total) * 100; return { buyPct, sellPct: 100 - buyPct }; }
@@ -464,10 +593,11 @@ async function updateIndicators(symbol, type) {
     const bid = currentPrice - (currentPrice * 0.0001); const ask = currentPrice + (currentPrice * 0.0001);
     document.getElementById('bidValue').textContent = '$' + bid.toFixed(2); document.getElementById('askValue').textContent = '$' + ask.toFixed(2);
     const sentiment = calcSentiment(candles);
-    document.getElementById('buyerPct').textContent = sentiment.buyPct.toFixed(0); document.getElementById('sellerPct').textContent = sentiment.sellPct.toFixed(0);
+    document.getElementById('buyerPct').textContent = sentiment.buyPct.toFixed(0) + '% Buy'; document.getElementById('sellerPct').textContent = sentiment.sellPct.toFixed(0) + '% Sell';
     document.getElementById('buyerBar').style.width = sentiment.buyPct + '%'; document.getElementById('sellerBar').style.width = sentiment.sellPct + '%';
 }
 
+// ============ ASSET DETAIL & CHART ============
 let currentSymbol = null, currentType = null, currentName = null, currentPrice = 0, currentChange = 0;
 async function openAssetDetail(symbol, name, price, change, type) {
     currentSymbol = symbol; currentType = type; currentName = name; currentPrice = price; currentChange = change;
@@ -486,7 +616,7 @@ function loadChart(symbol, type) {
     currentChart = LightweightCharts.createChart(container, { width: container.clientWidth, height: chartHeight, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }, horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.25 } }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: true, secondsVisible: false, rightOffset: 10, barSpacing: 12 }, handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true } });
     candleSeries = currentChart.addCandlestickSeries({ upColor: '#ffffff', downColor: '#a855f7', borderUpColor: '#ffffff', borderDownColor: '#a855f7', wickUpColor: '#ffffff', wickDownColor: '#a855f7' });
     volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' }); volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
-    const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered); if (activeAlert && candleSeries) candleSeries.createPriceLine({ price: activeAlert.targetPrice, color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert' });
+    const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered && (a.alertType === 'price' || !a.alertType)); if (activeAlert && candleSeries) candleSeries.createPriceLine({ price: activeAlert.targetPrice, color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert' });
     loadChartData(symbol, type, currentTimeframe); setupTimeframeButtons(); window.addEventListener('resize', resizeChart);
 }
 async function loadChartData(symbol, type, timeframe) {
@@ -506,9 +636,7 @@ function aggregateToYearly(monthlyCandles) {
 function setupTimeframeButtons() { document.querySelectorAll('.tf-btn').forEach(btn => { const newBtn = btn.cloneNode(true); btn.parentNode.replaceChild(newBtn, btn); newBtn.addEventListener('click', () => { document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active')); newBtn.classList.add('active'); currentTimeframe = newBtn.dataset.tf; if (currentSymbol && currentType) loadChartData(currentSymbol, currentType, currentTimeframe); }); }); }
 function resizeChart() { if (currentChart) { const container = document.getElementById('tradingviewContainer'); currentChart.applyOptions({ width: container.clientWidth }); } }
 
-// ==========================================
-//  AI BUFFETT ANALYSIS ENGINE
-// ==========================================
+// ============ AI BUFFETT ANALYSIS ============
 async function loadAnalysis(symbol, name, price, type) {
     const container = document.getElementById('analysisBody');
     container.innerHTML = `<div style="text-align:center; padding: 30px 0;"><div class="loading-spinner"></div><p class="loading-text" style="margin-top:10px;">🤖 AI Warren Buffett sedang menganalisis ${symbol}...</p></div>`;
@@ -525,14 +653,14 @@ function renderAISignalUI(data, container) {
     let signalClass = 'hold'; let signalIcon = '⏸️'; let barColor = 'var(--gold)';
     if (signal.includes('BUY')) { signalClass = 'buy'; signalIcon = '🚀'; barColor = 'var(--green)'; }
     else if (signal.includes('SELL') || signal.includes('AVOID')) { signalClass = 'sell'; signalIcon = '⚠️'; barColor = 'var(--red)'; }
-    const reasonsHtml = reasons.length > 0 ? `<div class="ai-reasons-title"> Alasan Fundamental:</div><div class="ai-reasons-list">${reasons.map(reason => `<div class="ai-reason-item"><span class="ai-reason-icon">✦</span><span>${reason}</span></div>`).join('')}</div>` : '';
-    container.innerHTML = `<div class="ai-signal-container"><div class="ai-signal-badge ${signalClass}"><span style="font-size: 16px;">${signalIcon}</span><span>AI Signal: ${signal}</span></div><div class="ai-confidence-wrap"><div class="ai-confidence-header"><span>Buffett Confidence Score</span><span style="color: ${barColor}; font-size: 13px;">${confidence}/100</span></div><div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: 0%; background: ${barColor};"></div></div></div>${reasonsHtml}${data.analysis ? `<div class="ai-analysis-text"><strong> Kesimpulan AI:</strong><br>${formatAnalysis(data.analysis)}</div>` : ''}</div>`;
+    const reasonsHtml = reasons.length > 0 ? `<div class="ai-reasons-title">💡 Alasan Fundamental:</div><div class="ai-reasons-list">${reasons.map(reason => `<div class="ai-reason-item"><span class="ai-reason-icon">✦</span><span>${reason}</span></div>`).join('')}</div>` : '';
+    container.innerHTML = `<div class="ai-signal-container"><div class="ai-signal-badge ${signalClass}"><span style="font-size: 16px;">${signalIcon}</span><span>AI Signal: ${signal}</span></div><div class="ai-confidence-wrap"><div class="ai-confidence-header"><span>Buffett Confidence Score</span><span style="color: ${barColor}; font-size: 13px;">${confidence}/100</span></div><div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: 0%; background: ${barColor};"></div></div></div>${reasonsHtml}${data.analysis ? `<div class="ai-analysis-text"><strong>📝 Kesimpulan AI:</strong><br>${formatAnalysis(data.analysis)}</div>` : ''}</div>`;
     setTimeout(() => { const fillBar = container.querySelector('.ai-confidence-fill'); if (fillBar) fillBar.style.width = confidence + '%'; }, 100);
 }
 function formatAnalysis(text) { if (!text) return ''; return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
 function closeAssetDetail() { document.getElementById('chartModal').classList.remove('active'); document.getElementById('tradingviewContainer').innerHTML = ''; if (currentChart) { currentChart.remove(); currentChart = null; candleSeries = null; volumeSeries = null; } if (indicatorInterval) { clearInterval(indicatorInterval); indicatorInterval = null; } window.removeEventListener('resize', resizeChart); }
 
-// ============ SCREENER & PORTFOLIO ============
+// ============ SCREENER ============
 async function runScreener() {
     const results = document.getElementById('screenerResults'); results.innerHTML = '<div class="empty-state">Screener lagi diproses...</div>';
     const peMax = parseFloat(document.getElementById('peMax').value) || 15; const pbMax = parseFloat(document.getElementById('pbMax').value) || 1.5;
@@ -544,6 +672,8 @@ async function runScreener() {
         results.innerHTML = `<p class="description">${data.count} saham lolos filter:</p>` + data.results.map(stock => `<div class="asset-card"><div class="asset-info"><span class="asset-symbol">${stock.symbol}</span><span class="asset-name">${stock.company_name}</span><span class="asset-metrics">P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%</span></div></div>`).join('');
     } catch (error) { results.innerHTML = `<div class="empty-state">❌ Gagal: ${error.message}</div>`; }
 }
+
+// ============ PORTFOLIO ============
 async function renderPortfolio() {
     const container = document.getElementById('holdings'); const totalValueEl = document.getElementById('totalValue'); const unrealizedPLEl = document.getElementById('unrealizedPL');
     const totalCostEl = document.getElementById('totalCost'); const totalHoldingsEl = document.getElementById('totalHoldings'); const chartSection = document.getElementById('portfolioChartSection');
@@ -568,29 +698,177 @@ function renderPortfolioPieChart(holdings, totalValue) {
     centerValue.textContent = '$' + totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
     legend.innerHTML = sorted.map((h, i) => { const pct = (h.currentValue / totalValue) * 100; const color = CHART_COLORS[i % CHART_COLORS.length]; return `<div class="portfolio-legend-item"><span class="legend-dot" style="background: ${color}; box-shadow: 0 0 8px ${color}80;"></span><span class="legend-symbol">${h.symbol}</span><span class="legend-pct">${pct.toFixed(1)}%</span><span class="legend-value">$${h.currentValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></div>`; }).join('');
 }
-function deleteHolding(id) { if (!confirm('Hapus holding ini?')) return; portfolio = portfolio.filter(h => h.id !== id); savePortfolio(); renderPortfolio(); }
+function deleteHolding(id) { if (!confirm('Hapus holding ini?')) return; portfolio = portfolio.filter(h => h.id !== id); savePortfolio(); renderPortfolio(); analyzePortfolioRisk(); }
 
-// ============ 🧠 AI PORTFOLIO RISK ANALYZER ============
+// ============ AI PORTFOLIO RISK ============
 async function analyzePortfolioRisk() {
     const container = document.getElementById('portfolioRiskAnalysis'); if (!container || portfolio.length === 0) { if (container) container.style.display = 'none'; return; }
     container.style.display = 'block'; container.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">🧠 AI sedang menganalisis risiko portofolio...</p>';
     try {
         const sectorMap = { 'us-tech': 'Technology', 'us-finance': 'Finance', 'us-healthcare': 'Healthcare', 'us-consumer': 'Consumer', 'us-industrial': 'Industrial', 'us-energy': 'Energy', 'international': 'International', 'crypto': 'Crypto', 'commodity': 'Commodity', 'index': 'Index' };
         const sectorAllocation = {}; let totalValue = 0;
-        const holdingsWithPrice = await Promise.all(portfolio.map(async (h) => { const priceData = await fetchPrice(h.symbol, h.type); const value = (priceData?.price || 0) * h.shares; totalValue += value; const stockInfo = STOCK_UNIVERSE.find(s => s.symbol === h.symbol); const sector = stockInfo ? sectorMap[stockInfo.category] || 'Other' : 'Other'; if (!sectorAllocation[sector]) sectorAllocation[sector] = 0; sectorAllocation[sector] += value; return { ...h, value, sector }; }));
+        await Promise.all(portfolio.map(async (h) => { const priceData = await fetchPrice(h.symbol, h.type); const value = (priceData?.price || 0) * h.shares; totalValue += value; const stockInfo = STOCK_UNIVERSE.find(s => s.symbol === h.symbol); const sector = stockInfo ? sectorMap[stockInfo.category] || 'Other' : 'Other'; if (!sectorAllocation[sector]) sectorAllocation[sector] = 0; sectorAllocation[sector] += value; }));
         const sectorPercentages = Object.entries(sectorAllocation).map(([sector, value]) => ({ sector, percentage: (value / totalValue) * 100 })).sort((a, b) => b.percentage - a.percentage);
         let riskLevel = 'LOW'; let riskColor = 'var(--green)'; let riskMessage = 'Portofolio terdiversifikasi dengan baik.';
         const topSector = sectorPercentages[0];
         if (topSector && topSector.percentage > 60) { riskLevel = 'HIGH'; riskColor = 'var(--red)'; riskMessage = `⚠️ Terlalu terkonsentrasi di ${topSector.sector} (${topSector.percentage.toFixed(1)}%). Pertimbangkan diversifikasi!`; }
         else if (topSector && topSector.percentage > 40) { riskLevel = 'MEDIUM'; riskColor = 'var(--gold)'; riskMessage = `⚠️ ${topSector.sector} mendominasi (${topSector.percentage.toFixed(1)}%). Monitor closely.`; }
         const sectorHtml = sectorPercentages.map(s => `<div class="risk-sector-item"><span class="risk-sector-name">${s.sector}</span><span class="risk-sector-pct" style="color: ${s.percentage > 40 ? 'var(--red)' : 'var(--green)'}">${s.percentage.toFixed(1)}%</span></div>`).join('');
-        container.innerHTML = `<div class="risk-analysis-container"><div class="risk-header"><span class="risk-level-badge" style="background: ${riskColor}20; color: ${riskColor}; border-color: ${riskColor}">${riskLevel} RISK</span></div><p class="risk-message">${riskMessage}</p><div class="risk-sectors"><div class="risk-section-title"> Alokasi Sektor:</div>${sectorHtml}</div></div>`;
+        container.innerHTML = `<div class="risk-analysis-container"><div class="risk-header"><span class="risk-level-badge" style="background: ${riskColor}20; color: ${riskColor}; border-color: ${riskColor}">${riskLevel} RISK</span></div><p class="risk-message">${riskMessage}</p><div class="risk-sectors"><div class="risk-section-title">📊 Alokasi Sektor:</div>${sectorHtml}</div></div>`;
     } catch (error) { container.innerHTML = `<div class="analysis-error"><p>❌ Gagal menganalisis risiko</p></div>`; }
 }
 
-// ==========================================
-//  AI NEWS SENTIMENT ANALYZER
-// ==========================================
+// ============ 🔥 SECTOR HEATMAP ============
+function getHeatColor(change) {
+    // Change dalam persen
+    if (change >= 3) return '#10b981';
+    if (change >= 1.5) return '#34d399';
+    if (change >= 0.5) return '#6ee7b7';
+    if (change > 0) return '#a7f3d0';
+    if (change === 0) return '#64748b';
+    if (change > -0.5) return '#fecaca';
+    if (change > -1.5) return '#f87171';
+    if (change > -3) return '#ef4444';
+    return '#dc2626';
+}
+
+async function fetchSectorData(sectorKey) {
+    const stocks = STOCK_UNIVERSE.filter(s => s.category === sectorKey);
+    const results = await Promise.all(stocks.map(async (stock) => {
+        const priceData = await fetchPrice(stock.symbol, stock.type);
+        if (!priceData) return null;
+        return { symbol: stock.symbol, name: stock.name, type: stock.type, price: priceData.price, change: priceData.change };
+    }));
+    return results.filter(Boolean);
+}
+
+async function renderSectorHeatmap() {
+    const grid = document.getElementById('heatmapGrid');
+    const sentimentBar = document.getElementById('heatmapSentiment');
+    if (!grid) return;
+    
+    grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 30px 20px;"><div class="loading-spinner"></div><p class="loading-text">Memuat data sektor...</p></div>';
+    
+    try {
+        // Fetch semua sektor secara paralel (batch biar gak overwhelming)
+        const sectorResults = [];
+        for (const sector of SECTOR_CONFIG) {
+            const stocks = await fetchSectorData(sector.key);
+            if (stocks.length === 0) continue;
+            const avgChange = stocks.reduce((sum, s) => sum + s.change, 0) / stocks.length;
+            const bullishCount = stocks.filter(s => s.change > 0).length;
+            const bearishCount = stocks.filter(s => s.change < 0).length;
+            sectorResults.push({
+                ...sector,
+                stocks,
+                avgChange,
+                bullishCount,
+                bearishCount,
+                totalStocks: stocks.length
+            });
+        }
+        
+        if (sectorResults.length === 0) {
+            grid.innerHTML = '<div class="empty-state">Gagal memuat data sektor</div>';
+            return;
+        }
+        
+        heatmapData = sectorResults.sort((a, b) => b.avgChange - a.avgChange);
+        
+        // Hitung market breadth overall
+        let totalBullish = 0, totalBearish = 0;
+        sectorResults.forEach(s => { totalBullish += s.bullishCount; totalBearish += s.bearishCount; });
+        const totalStocks = totalBullish + totalBearish;
+        const bullPct = totalStocks > 0 ? (totalBullish / totalStocks) * 100 : 50;
+        const bearPct = 100 - bullPct;
+        
+        // Update sentiment bar
+        document.getElementById('hmBullFill').style.width = bullPct + '%';
+        document.getElementById('hmBearFill').style.width = bearPct + '%';
+        document.getElementById('heatmapSentimentStats').innerHTML = `
+            <span class="sentiment-stat bullish">🟢 ${bullPct.toFixed(1)}% Bullish (${totalBullish})</span>
+            <span class="sentiment-stat bearish">🔴 ${bearPct.toFixed(1)}% Bearish (${totalBearish})</span>
+        `;
+        
+        // Render grid
+        grid.innerHTML = heatmapData.map((sector, idx) => {
+            const avgChange = sector.avgChange;
+            const trendClass = avgChange > 0 ? 'up' : avgChange < 0 ? 'down' : 'flat';
+            const trendSign = avgChange > 0 ? '+' : '';
+            const heatColor = getHeatColor(avgChange);
+            
+            // Mini heat dots (max 10 dots)
+            const dotsToShow = sector.stocks.slice(0, 10);
+            const dotsHtml = dotsToShow.map(s => {
+                const dotColor = getHeatColor(s.change);
+                return `<div class="sector-heat-dot" style="background:${dotColor}; box-shadow: 0 0 4px ${dotColor}80;"></div>`;
+            }).join('');
+            
+            return `<div class="sector-card" style="border-left: 3px solid ${heatColor};" onclick="openSectorDetail(${idx})">
+                <div class="sector-card-header">
+                    <span class="sector-card-icon">${sector.icon}</span>
+                    <span class="sector-card-name">${sector.name}</span>
+                </div>
+                <div class="sector-card-avg ${trendClass}">${trendSign}${avgChange.toFixed(2)}%</div>
+                <div class="sector-card-count">${sector.totalStocks} stocks · 🟢 ${sector.bullishCount} · 🔴 ${sector.bearishCount}</div>
+                <div class="sector-card-heat-dots">${dotsHtml}</div>
+            </div>`;
+        }).join('');
+    } catch (error) {
+        console.error('Heatmap error:', error);
+        grid.innerHTML = '<div class="empty-state">❌ Gagal memuat heatmap</div>';
+    }
+}
+
+function openSectorDetail(index) {
+    const sector = heatmapData[index];
+    if (!sector) return;
+    
+    const modal = document.getElementById('sectorDetailModal');
+    modal.classList.add('active');
+    
+    document.getElementById('sdIcon').textContent = sector.icon;
+    document.getElementById('sdName').textContent = sector.name;
+    document.getElementById('sdSubtitle').textContent = `${sector.totalStocks} stocks dalam sektor ini`;
+    
+    const avgChange = sector.avgChange;
+    const avgEl = document.getElementById('sdAvgChange');
+    avgEl.textContent = (avgChange > 0 ? '+' : '') + avgChange.toFixed(2) + '%';
+    avgEl.className = 'summary-value ' + (avgChange > 0 ? 'up' : avgChange < 0 ? 'down' : '');
+    
+    document.getElementById('sdBullish').textContent = sector.bullishCount;
+    document.getElementById('sdBearish').textContent = sector.bearishCount;
+    
+    // Sort stocks by change
+    const sortedStocks = [...sector.stocks].sort((a, b) => b.change - a.change);
+    
+    document.getElementById('sdStocksList').innerHTML = sortedStocks.map(s => {
+        const trendClass = s.change > 0 ? 'up' : s.change < 0 ? 'down' : 'flat';
+        const sign = s.change > 0 ? '+' : '';
+        const barColor = getHeatColor(s.change);
+        const barWidth = Math.min(Math.abs(s.change) * 20, 100); // Max 5% = 100%
+        
+        return `<div class="sector-stock-item" onclick="closeSectorDetail(); openAssetDetail('${s.symbol}', '${s.name.replace(/'/g, "\\'")}', ${s.price}, ${s.change}, '${s.type}')">
+            <div class="sector-stock-top">
+                <div class="sector-stock-info">
+                    <span class="sector-stock-symbol">${s.symbol}</span>
+                    <span class="sector-stock-name">${s.name}</span>
+                </div>
+                <div class="sector-stock-price-wrap">
+                    <div class="sector-stock-price">$${s.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
+                    <div class="sector-stock-change ${trendClass}">${sign}${s.change.toFixed(2)}%</div>
+                </div>
+            </div>
+            <div class="sector-stock-bar"><div class="sector-stock-bar-fill" style="width: ${barWidth}%; background: ${barColor};"></div></div>
+        </div>`;
+    }).join('');
+}
+
+function closeSectorDetail() {
+    document.getElementById('sectorDetailModal').classList.remove('active');
+}
+
+// ============ NEWS SENTIMENT ============
 function getNewsSentiment(text) {
     if (!text) return { label: 'NEUTRAL', class: 'neutral', icon: '⚪' };
     const lowerText = text.toLowerCase();
@@ -599,7 +877,7 @@ function getNewsSentiment(text) {
     let bullScore = 0; let bearScore = 0;
     bullishWords.forEach(word => { if (lowerText.includes(word)) bullScore++; });
     bearishWords.forEach(word => { if (lowerText.includes(word)) bearScore++; });
-    if (bullScore > bearScore) return { label: 'BULLISH', class: 'positive', icon: '' };
+    if (bullScore > bearScore) return { label: 'BULLISH', class: 'positive', icon: '🟢' };
     if (bearScore > bullScore) return { label: 'BEARISH', class: 'negative', icon: '🔴' };
     return { label: 'NEUTRAL', class: 'neutral', icon: '⚪' };
 }
@@ -622,12 +900,12 @@ async function renderNews() {
                 <div class="news-meta">
                     <span class="sentiment-tag ${sentiment.class}">${sentiment.icon} ${sentiment.label}</span>
                     <span>${item.source || 'Unknown'}</span><span>${time}</span>
-                    <span class="trans-done-badge" id="trans-badge-${i}" style="display:none;"> ID</span>
+                    <span class="trans-done-badge" id="trans-badge-${i}" style="display:none;">🌐 ID</span>
                 </div>
             </div>`;
         }).join('');
         translateNewsInBackground(news);
-    } catch (error) { container.innerHTML = `<div class="empty-state"> ${error.message}</div>`; }
+    } catch (error) { container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`; }
 }
 async function translateNewsInBackground(news) {
     for (let i = 0; i < news.length; i++) {
@@ -661,7 +939,7 @@ function copyNewsLink() {
     if (!currentNewsItem || !currentNewsItem.url) return; const url = currentNewsItem.url;
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(() => showToastSimple('📋 Link berhasil dicopy!')).catch(() => fallbackCopy(url)); else fallbackCopy(url);
 }
-function fallbackCopy(text) { const temp = document.createElement('textarea'); temp.value = text; temp.style.position = 'fixed'; temp.style.left = '-9999px'; document.body.appendChild(temp); temp.select(); try { document.execCommand('copy'); showToastSimple('📋 Link berhasil dicopy!'); } catch (e) { showToastSimple(' Gagal copy link'); } document.body.removeChild(temp); }
+function fallbackCopy(text) { const temp = document.createElement('textarea'); temp.value = text; temp.style.position = 'fixed'; temp.style.left = '-9999px'; document.body.appendChild(temp); temp.select(); try { document.execCommand('copy'); showToastSimple('📋 Link berhasil dicopy!'); } catch (e) { showToastSimple('❌ Gagal copy link'); } document.body.removeChild(temp); }
 function showToastSimple(message) { const toast = document.createElement('div'); toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1a1a2e,#0f0f1a);color:#fff;padding:12px 20px;border-radius:12px;border:1px solid rgba(251,191,36,0.4);font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9999;animation:toastIn 0.3s ease;`; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease'; setTimeout(() => document.body.removeChild(toast), 300); }, 2000); }
 function formatTime(timeStr) { if (!timeStr) return ''; const date = new Date(timeStr * 1000); const day = String(date.getDate()).padStart(2, '0'); const month = String(date.getMonth() + 1).padStart(2, '0'); const year = date.getFullYear(); const hour = String(date.getHours()).padStart(2, '0'); const minute = String(date.getMinutes()).padStart(2, '0'); return `${day}/${month}/${year} ${hour}:${minute}`; }
 
@@ -674,7 +952,7 @@ document.getElementById('setAlertBtn').addEventListener('click', () => openAlert
 document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview); document.getElementById('alertRsiValue').addEventListener('input', updateAlertPreview); document.getElementById('alertEmaPeriod').addEventListener('change', updateAlertPreview); document.getElementById('alertVolumeMultiplier').addEventListener('input', updateAlertPreview);
 document.getElementById('alertToastClose').addEventListener('click', closeAlertToast); document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail); document.getElementById('runScreener').addEventListener('click', runScreener);
 
-//  EVENT LISTENER UNTUK SORT AI
+// SORT AI
 document.getElementById('sortAiBtn').addEventListener('click', sortWatchlistByAI);
 
 const holdingModal = document.getElementById('holdingModal'); document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active')); document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active')); document.getElementById('cancelHolding').addEventListener('click', () => holdingModal.classList.remove('active'));
@@ -686,5 +964,10 @@ document.getElementById('currencySwapBtn').addEventListener('click', () => { con
 document.getElementById('currencyRefreshBtn').addEventListener('click', async () => { const btn = document.getElementById('currencyRefreshBtn'); btn.querySelector('.refresh-icon').style.animation = 'spin 1s linear infinite'; await fetchCurrencyRates(true); await convertCurrency(); btn.querySelector('.refresh-icon').style.animation = ''; });
 document.querySelectorAll('.quick-amount-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('currencyFromAmount').value = btn.dataset.amount; convertCurrency(); }); });
 
+// SECTOR DETAIL
+document.getElementById('closeSectorDetail').addEventListener('click', closeSectorDetail);
+
+// INIT
+populateCurrencyDropdowns();
 renderWatchlist(); renderPriceAlerts(); fetchMarketMovers();
 setTimeout(() => checkAlerts(), 5000); alertCheckInterval = setInterval(checkAlerts, 60000);
