@@ -22,9 +22,7 @@
                 </div>
             </div>
             <div class="header-right-actions">
-                <!-- 🌍 TOMBOL INDEKS SAHAM DUNIA (SUDAH DIPULIHKAN) -->
                 <a href="indeks.html" class="browse-btn" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 211, 238, 0.2)); border-color: rgba(16, 185, 129, 0.3); color: var(--green); margin-right: 8px; text-decoration: none;">🌍 Indices</a>
-                
                 <button class="currency-open-btn" id="currencyOpenBtn" aria-label="Currency">💱</button>
                 <button class="browse-btn" id="browseStockBtn">+ Browse</button>
             </div>
@@ -63,7 +61,10 @@
 
                 <div class="section-header" style="margin-top: 24px;">
                     <h2>My Watchlist</h2>
-                    <button class="add-btn" id="addAssetBtn">+</button>
+                    <div style="display:flex; gap:8px;">
+                        <button class="sort-ai-btn" id="sortAiBtn">🤖 Sort AI</button>
+                        <button class="add-btn" id="addAssetBtn">+</button>
+                    </div>
                 </div>
                 <div class="watchlist" id="watchlist">
                     <div class="empty-state">Memuat watchlist...</div>
@@ -142,7 +143,6 @@
                     <div class="portfolio-legend" id="portfolioLegend"></div>
                 </div>
 
-                <!-- AI Portfolio Risk Analyzer -->
                 <div id="portfolioRiskAnalysis" style="display: none; margin-top: 20px;"></div>
 
                 <div class="holdings" id="holdings">
@@ -164,7 +164,9 @@
     </div>
 
     <!-- ================= MODALS ================= -->
-
+    <!-- (Semua modal sama seperti sebelumnya: assetModal, browseModal, holdingModal, chartModal, alertModal, newsDetailModal, currencyModal, alertToast) -->
+    <!-- Untuk menghemat ruang, pastikan struktur modal di file index.html lu yang sebelumnya tetap ada. Jika butuh full modal code, copy dari file index.html sebelumnya yang sudah berhasil. -->
+    
     <!-- 1. ADD ASSET MODAL -->
     <div class="modal-overlay" id="assetModal">
         <div class="modal-content">
@@ -268,7 +270,6 @@
                 </div>
                 <button class="analysis-close" id="closeChartModal">×</button>
             </div>
-
             <div class="chart-toolbar">
                 <div class="tf-group">
                     <button class="tf-btn" data-tf="5M">5M</button>
@@ -280,21 +281,17 @@
                     <button class="tf-btn" data-tf="Y">Y</button>
                 </div>
             </div>
-
             <div class="tradingview-container" id="tradingviewContainer"></div>
-
             <div class="indicators-panel">
                 <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
                 <div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div>
                 <div class="indicator-item"><span class="ind-label">EMA 20</span><span class="ind-value" id="ema20Value">-</span></div>
                 <div class="indicator-item"><span class="ind-label">RSI 14</span><span class="ind-value" id="rsiValue">-</span></div>
             </div>
-
             <div class="bidask-panel">
                 <div class="bidask-item bid"><span class="bidask-label">BID</span><span class="bidask-value" id="bidValue">-</span></div>
                 <div class="bidask-item ask"><span class="bidask-label">ASK</span><span class="bidask-value" id="askValue">-</span></div>
             </div>
-
             <div class="sentiment-panel">
                 <div class="sentiment-header">
                     <span class="sentiment-title">MARKET SENTIMENT</span>
@@ -308,11 +305,9 @@
                     <div class="sentiment-fill sell" id="sellerBar" style="width: 50%;"></div>
                 </div>
             </div>
-
             <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
-
             <div class="analysis-section">
-                <div class="analysis-title">🧠 Analisis AI Value Investing</div>
+                <div class="analysis-title"> Analisis AI Value Investing</div>
                 <div class="analysis-body-inline" id="analysisBody">
                     <div class="loading-spinner"></div>
                     <p class="loading-text">Mengambil data...</p>
@@ -334,28 +329,16 @@
                     <div class="alert-info-name" id="alertName">Apple Inc.</div>
                     <div class="alert-info-current" id="alertCurrentPrice">Harga Sekarang: $0.00</div>
                 </div>
-
                 <div>
                     <label style="font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; display: block;">Jenis Alert:</label>
                     <div class="alert-type-selector">
-                        <button class="alert-type-btn active" data-type="price" onclick="selectAlertType('price')">
-                            <span class="type-icon">💰</span><span>Harga</span>
-                        </button>
-                        <button class="alert-type-btn" data-type="rsi" onclick="selectAlertType('rsi')">
-                            <span class="type-icon">📊</span><span>RSI</span>
-                        </button>
-                        <button class="alert-type-btn" data-type="ema" onclick="selectAlertType('ema')">
-                            <span class="type-icon">📈</span><span>EMA</span>
-                        </button>
-                        <button class="alert-type-btn" data-type="volume" onclick="selectAlertType('volume')">
-                            <span class="type-icon">📶</span><span>Volume</span>
-                        </button>
-                        <button class="alert-type-btn" data-type="multi" onclick="selectAlertType('multi')">
-                            <span class="type-icon">🧠</span><span>Multi</span>
-                        </button>
+                        <button class="alert-type-btn active" data-type="price" onclick="selectAlertType('price')"><span class="type-icon"></span><span>Harga</span></button>
+                        <button class="alert-type-btn" data-type="rsi" onclick="selectAlertType('rsi')"><span class="type-icon">📊</span><span>RSI</span></button>
+                        <button class="alert-type-btn" data-type="ema" onclick="selectAlertType('ema')"><span class="type-icon">📈</span><span>EMA</span></button>
+                        <button class="alert-type-btn" data-type="volume" onclick="selectAlertType('volume')"><span class="type-icon">📶</span><span>Volume</span></button>
+                        <button class="alert-type-btn" data-type="multi" onclick="selectAlertType('multi')"><span class="type-icon">🧠</span><span>Multi</span></button>
                     </div>
                 </div>
-
                 <div class="form-group" id="alertPriceField">
                     <label>Target Harga ($)</label>
                     <input type="number" id="alertTargetPrice" placeholder="Masukkan target harga" step="0.01">
@@ -377,21 +360,14 @@
                     <label>Multiplier Volume (x dari rata-rata)</label>
                     <input type="number" id="alertVolumeMultiplier" placeholder="2" min="1" max="10" step="0.5" value="2">
                 </div>
-
                 <div class="alert-direction-group" id="alertDirectionGroup">
-                    <button class="direction-btn active" data-dir="above" onclick="selectDirection('above')">
-                        <span class="dir-icon">↑</span><span class="dir-label">Di Atas</span>
-                    </button>
-                    <button class="direction-btn" data-dir="below" onclick="selectDirection('below')">
-                        <span class="dir-icon">↓</span><span class="dir-label">Di Bawah</span>
-                    </button>
+                    <button class="direction-btn active" data-dir="above" onclick="selectDirection('above')"><span class="dir-icon">↑</span><span class="dir-label">Di Atas</span></button>
+                    <button class="direction-btn" data-dir="below" onclick="selectDirection('below')"><span class="dir-icon">↓</span><span class="dir-label">Di Bawah</span></button>
                 </div>
-
                 <div class="form-group">
                     <label>Catatan (Opsional)</label>
                     <input type="text" id="alertNote" placeholder="Contoh: Buy the dip">
                 </div>
-
                 <div class="alert-preview" id="alertPreview">
                     <span class="alert-preview-icon">🔔</span>
                     <span class="alert-preview-text">Alert bakal aktif kalau harga nyentuh target</span>
@@ -422,7 +398,7 @@
             <div class="news-detail-summary" id="ndSummary">Ringkasan berita...</div>
             <div class="news-detail-actions">
                 <button class="news-action-btn primary" id="ndOpenOriginal"> Baca Asli</button>
-                <button class="news-action-btn" id="ndCopyLink"> Copy Link</button>
+                <button class="news-action-btn" id="ndCopyLink">🔗 Copy Link</button>
             </div>
         </div>
     </div>
@@ -431,7 +407,7 @@
     <div class="currency-modal" id="currencyModal">
         <div class="currency-content">
             <div class="currency-header">
-                <h3> Currency Converter</h3>
+                <h3>💱 Currency Converter</h3>
                 <button class="modal-close" id="closeCurrencyModal">×</button>
             </div>
             <div class="currency-card">
@@ -439,18 +415,14 @@
                     <span class="currency-field-label">Dari</span>
                     <div class="currency-input-row">
                         <input type="number" id="currencyFromAmount" value="1" min="0" step="any">
-                        <select id="currencyFromSelect">
-                            <option value="USD" selected>🇸 USD</option>
-                        </select>
+                        <select id="currencyFromSelect"><option value="USD" selected>🇸 USD</option></select>
                     </div>
                 </div>
                 <button class="currency-swap-btn" id="currencySwapBtn">⇅</button>
                 <div class="currency-field">
                     <span class="currency-field-label">Ke</span>
                     <div class="currency-input-row">
-                        <select class="currency-to-select" id="currencyToSelect">
-                            <option value="IDR" selected>🇩 IDR</option>
-                        </select>
+                        <select class="currency-to-select" id="currencyToSelect"><option value="IDR" selected>🇮🇩 IDR</option></select>
                     </div>
                 </div>
                 <div class="currency-result-box" id="currencyToResult">Rp 0</div>
@@ -482,7 +454,7 @@
 
     <!-- 8. ALERT TOAST -->
     <div class="alert-toast" id="alertToast">
-        <div class="alert-toast-icon"></div>
+        <div class="alert-toast-icon">🔔</div>
         <div class="alert-toast-content">
             <div class="alert-toast-title" id="alertToastTitle">Alert!</div>
             <div class="alert-toast-message" id="alertToastMessage">Pesan alert...</div>
@@ -490,8 +462,7 @@
         <button class="alert-toast-close" id="alertToastClose">×</button>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="./lightweight-charts.js"></script>
     <script src="app.js"></script>
 </body>
-                    </html>
+</html>
