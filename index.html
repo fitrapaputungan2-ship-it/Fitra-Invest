@@ -35,6 +35,7 @@
             <button class="tab" data-tab="portfolio">Portfolio</button>
             <button class="tab" data-tab="news">News</button>
             <button class="tab" data-tab="heatmap">🔥 Heatmap</button>
+            <button class="tab" data-tab="compare">⚖️ Compare</button>
         </div>
 
         <!-- CONTENT -->
@@ -188,6 +189,33 @@
                 </div>
             </div>
 
+            <!-- TAB 6: COMPARE STOCKS -->
+            <div class="tab-content" id="tab-compare">
+                <div class="section-header">
+                    <h2>⚖️ Compare Stocks</h2>
+                </div>
+                <p class="description">Bandingin 2 saham head-to-head: harga, fundamental, dan chart.</p>
+
+                <!-- PICKER -->
+                <div class="compare-picker">
+                    <div class="compare-picker-field">
+                        <label>Stock A</label>
+                        <select id="compareStockA"></select>
+                    </div>
+                    <button class="compare-vs-btn" id="compareVsBtn">VS</button>
+                    <div class="compare-picker-field">
+                        <label>Stock B</label>
+                        <select id="compareStockB"></select>
+                    </div>
+                </div>
+                <button class="primary-btn" id="runCompareBtn">⚖️ Compare Now</button>
+
+                <!-- RESULT -->
+                <div id="compareResult">
+                    <div class="empty-state">Pilih 2 saham terus tap "Compare Now"</div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -225,7 +253,7 @@
         </div>
     </div>
 
-    <!-- 2. BROWSE STOCK MODAL (11 KATEGORI) -->
+    <!-- 2. BROWSE STOCK MODAL -->
     <div class="modal-overlay" id="browseModal">
         <div class="modal-content browse-content">
             <div class="modal-header">
@@ -483,7 +511,7 @@
         </div>
     </div>
 
-    <!-- 8. 🔥 SECTOR DETAIL MODAL -->
+    <!-- 8. SECTOR DETAIL MODAL -->
     <div class="sector-detail-modal" id="sectorDetailModal">
         <div class="sector-detail-content">
             <div class="sector-detail-header">
@@ -525,6 +553,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=14000"></script>
+    <script src="app.js?v=15000"></script>
 </body>
 </html>
