@@ -22,7 +22,6 @@
                 </div>
             </div>
             <div class="header-right-actions">
-                <a href="indeks.html" class="browse-btn" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 211, 238, 0.2)); border-color: rgba(16, 185, 129, 0.3); color: var(--green); margin-right: 8px; text-decoration: none;">🌍 Indices</a>
                 <button class="currency-open-btn" id="currencyOpenBtn" aria-label="Currency">💱</button>
                 <button class="browse-btn" id="browseStockBtn">+ Browse</button>
             </div>
@@ -36,6 +35,7 @@
             <button class="tab" data-tab="news">News</button>
             <button class="tab" data-tab="heatmap">🔥 Heatmap</button>
             <button class="tab" data-tab="compare">⚖️ Compare</button>
+            <button class="tab" data-tab="indeks">🌍 Indeks</button>
         </div>
 
         <!-- CONTENT -->
@@ -133,7 +133,7 @@
                     </div>
                 </div>
 
-                <div id="portfolioChartSection" style="display:none;">
+                <div class="portfolio-chart-section" id="portfolioChartSection" style="display:none;">
                     <div class="portfolio-chart-title">🥧 Alokasi Aset</div>
                     <div class="portfolio-chart-wrapper">
                         <canvas id="portfolioPieChart" class="portfolio-pie-chart"></canvas>
@@ -196,7 +196,6 @@
                 </div>
                 <p class="description">Bandingin 2 saham head-to-head: harga, fundamental, dan chart.</p>
 
-                <!-- PICKER -->
                 <div class="compare-picker">
                     <div class="compare-picker-field">
                         <label>Stock A</label>
@@ -210,9 +209,42 @@
                 </div>
                 <button class="primary-btn" id="runCompareBtn">⚖️ Compare Now</button>
 
-                <!-- RESULT -->
                 <div id="compareResult">
                     <div class="empty-state">Pilih 2 saham terus tap "Compare Now"</div>
+                </div>
+            </div>
+
+            <!-- TAB 7: GLOBAL INDEKS -->
+            <div class="tab-content" id="tab-indeks">
+                <div class="indeks-banner">
+                    <div class="indeks-banner-icon">🌍</div>
+                    <div class="indeks-banner-text">
+                        <strong>Pantau Pasar Global</strong>
+                        <span>Lihat kinerja indeks saham utama dari berbagai negara secara real-time</span>
+                    </div>
+                </div>
+
+                <div class="indeks-search-bar">
+                    <input type="text" id="indeksSearch" placeholder="🔍 Cari indeks... (contoh: S&P 500, Nikkei, DAX)" autocomplete="off">
+                </div>
+
+                <div class="indeks-filters" id="indeksFilters">
+                    <button class="indeks-filter-btn active" data-region="all">🌍 Semua</button>
+                    <button class="indeks-filter-btn" data-region="americas">🌎 Americas</button>
+                    <button class="indeks-filter-btn" data-region="europe">🇪🇺 Europe</button>
+                    <button class="indeks-filter-btn" data-region="asia">🌏 Asia</button>
+                    <button class="indeks-filter-btn" data-region="oceania">🌊 Oceania</button>
+                </div>
+
+                <div class="indeks-list" id="indeksList">
+                    <div class="indeks-loading">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text">Memuat indeks global...</p>
+                    </div>
+                </div>
+
+                <div class="indeks-footer">
+                    <span class="indeks-update-info" id="lastUpdated">Terakhir diupdate: --</span>
                 </div>
             </div>
 
@@ -542,7 +574,62 @@
         </div>
     </div>
 
-    <!-- 9. ALERT TOAST -->
+    <!-- 9. INDEKS DETAIL MODAL -->
+    <div class="indeks-detail-modal" id="indeksDetailModal">
+        <div class="indeks-detail-content">
+            <div class="indeks-detail-header">
+                <div class="indeks-detail-title-wrap">
+                    <span class="indeks-detail-flag" id="detailFlag">🌍</span>
+                    <div>
+                        <h3 id="detailTitle">Indeks</h3>
+                        <p class="indeks-detail-subtitle" id="detailSubtitle">Region</p>
+                    </div>
+                </div>
+                <button class="analysis-close" id="closeDetailModal">×</button>
+            </div>
+
+            <div class="indeks-detail-price-box">
+                <div class="indeks-detail-price" id="detailPrice">-</div>
+                <div class="indeks-detail-change" id="detailChange">-</div>
+            </div>
+
+            <div class="indeks-detail-stats">
+                <div class="indeks-stat-item">
+                    <span class="indeks-stat-label">DAY HIGH</span>
+                    <span class="indeks-stat-value up" id="detailHigh">-</span>
+                </div>
+                <div class="indeks-stat-item">
+                    <span class="indeks-stat-label">DAY LOW</span>
+                    <span class="indeks-stat-value down" id="detailLow">-</span>
+                </div>
+                <div class="indeks-stat-item">
+                    <span class="indeks-stat-label">PREV CLOSE</span>
+                    <span class="indeks-stat-value" id="detailPrevClose">-</span>
+                </div>
+                <div class="indeks-stat-item">
+                    <span class="indeks-stat-label">VOLUME</span>
+                    <span class="indeks-stat-value" id="detailVolume">-</span>
+                </div>
+            </div>
+
+            <div class="indeks-detail-sectors-section">
+                <h4 class="indeks-section-title">🏭 Sektor Breakdown</h4>
+                <div class="indeks-sectors-list" id="detailSectors"></div>
+            </div>
+
+            <div class="indeks-detail-chart-section">
+                <h4 class="indeks-section-title">📈 Chart 1 Tahun</h4>
+                <div id="indeksChartContainer" class="indeks-chart-container"></div>
+            </div>
+
+            <div class="indeks-detail-constituents-section">
+                <h4 class="indeks-section-title">🏆 Top Holdings</h4>
+                <div class="indeks-constituents-list" id="detailConstituents"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10. ALERT TOAST -->
     <div class="alert-toast" id="alertToast">
         <div class="alert-toast-icon">🔔</div>
         <div class="alert-toast-content">
@@ -553,6 +640,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=15000"></script>
+    <script src="app.js?v=16000"></script>
 </body>
-</html>
+                        </html>
