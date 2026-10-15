@@ -776,23 +776,131 @@ function resizeChart() {
     }
 }
 
+// ==========================================
+// 🤖 AI BUFFETT ANALYSIS ENGINE (FRONTEND)
+// ==========================================
+
 async function loadAnalysis(symbol, name, price, type) {
     const container = document.getElementById('analysisBody');
+    
+    // Tampilkan loading state yang keren
+    container.innerHTML = `
+        <div style="text-align:center; padding: 30px 0;">
+            <div class="loading-spinner"></div>
+            <p class="loading-text" style="margin-top:10px;">🤖 AI Warren Buffett sedang menganalisis ${symbol}...</p>
+        </div>
+    `;
+    
     try {
+        // 1. Ambil data fundamental dari backend
         const fundamental = await fetchFundamental(symbol, type);
+        
+        // 2. Panggil Edge Function AI
         const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 
+                'apikey': SUPABASE_ANON_KEY 
+            },
             body: JSON.stringify({ symbol, name, price, fundamental })
         });
+        
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
-        container.innerHTML = formatAnalysis(data.analysis || 'Gagal memuat analisis.');
+        
+        // 3. Cek apakah backend mengembalikan format AI JSON baru
+        if (data.ai_signal && data.confidence !== undefined) {
+            renderAISignalUI(data, container);
+        } else {
+            // Fallback ke format teks lama (jaga-jaga kalau ada error di backend)
+            container.innerHTML = `<div class="ai-analysis-text">${formatAnalysis(data.analysis || 'Gagal memuat analisis.')}</div>`;
+        }
     } catch (error) {
-        container.innerHTML = `<div class="analysis-error"><p>❌ Gagal memuat analisis</p><p class="error-detail">${error.message}</p></div>`;
+        container.innerHTML = `
+            <div class="analysis-error">
+                <p>❌ Gagal memuat analisis AI</p>
+                <p class="error-detail">${error.message}</p>
+            </div>
+        `;
     }
 }
-function formatAnalysis(text) { return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
+
+// Fungsi baru untuk merender UI AI yang keren
+function renderAISignalUI(data, container) {
+    const signal = data.ai_signal.toUpperCase(); 
+    const confidence = data.confidence; 
+    const reasons = data.reasons || [];
+    
+    // Tentukan class dan warna berdasarkan sinyal
+    let signalClass = 'hold';
+    let signalIcon = '⏸️';
+    let barColor = 'var(--gold)';
+    
+    if (signal.includes('BUY')) {
+        signalClass = 'buy';
+        signalIcon = '🚀';
+        barColor = 'var(--green)';
+    } else if (signal.includes('SELL') || signal.includes('AVOID')) {
+        signalClass = 'sell';
+        signalIcon = '⚠️';
+        barColor = 'var(--red)';
+    }
+
+    // Generate HTML untuk daftar alasan
+    const reasonsHtml = reasons.length > 0 ? `
+        <div class="ai-reasons-title">🧠 Alasan Fundamental:</div>
+        <div class="ai-reasons-list">
+            ${reasons.map(reason => `
+                <div class="ai-reason-item">
+                    <span class="ai-reason-icon">✦</span>
+                    <span>${reason}</span>
+                </div>
+            `).join('')}
+        </div>
+    ` : '';
+
+    // Render ke container
+    container.innerHTML = `
+        <div class="ai-signal-container">
+            <div class="ai-signal-badge ${signalClass}">
+                <span style="font-size: 16px;">${signalIcon}</span>
+                <span>AI Signal: ${signal}</span>
+            </div>
+            
+            <div class="ai-confidence-wrap">
+                <div class="ai-confidence-header">
+                    <span>Buffett Confidence Score</span>
+                    <span style="color: ${barColor}; font-size: 13px;">${confidence}/100</span>
+                </div>
+                <div class="ai-confidence-bar">
+                    <div class="ai-confidence-fill" style="width: 0%; background: ${barColor};"></div>
+                </div>
+            </div>
+
+            ${reasonsHtml}
+            
+            ${data.analysis ? `
+                <div class="ai-analysis-text">
+                    <strong>📝 Kesimpulan AI:</strong><br>
+                    ${formatAnalysis(data.analysis)}
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    // Animasi bar confidence setelah DOM di-render (biar ada efek transisi mulus)
+    setTimeout(() => {
+        const fillBar = container.querySelector('.ai-confidence-fill');
+        if (fillBar) fillBar.style.width = confidence + '%';
+    }, 100);
+}
+
+// Fungsi helper untuk merapikan teks (ganti **text** jadi <strong>text</strong>)
+function formatAnalysis(text) { 
+    if (!text) return '';
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); 
+}
 
 function closeAssetDetail() {
     document.getElementById('chartModal').classList.remove('active');
@@ -1130,4 +1238,4 @@ renderPriceAlerts();
 fetchMarketMovers();
 
 setTimeout(() => checkAlerts(), 5000);
-alertCheckInterval = setInterval(checkAlerts, 60000);
+alertCheckInterval = setInterval(checkAlerts(), 60000);
