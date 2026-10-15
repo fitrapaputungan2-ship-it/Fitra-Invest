@@ -30,11 +30,12 @@ body { color: var(--text-primary); background: radial-gradient(ellipse at top ri
 h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .description { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
 
-/* SORT AI BUTTON */
+/* SORT AI */
 .sort-ai-btn { background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(168, 85, 247, 0.15)); border: 1px solid rgba(34, 211, 238, 0.3); color: var(--cyan); font-size: 11px; font-weight: 700; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: 0.2s; white-space: nowrap; }
 .sort-ai-btn:active { transform: scale(0.95); }
 .sort-ai-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
+/* WATCHLIST */
 .watchlist { display: flex; flex-direction: column; gap: 20px; }
 .watchlist-section { display: flex; flex-direction: column; gap: 10px; }
 .watchlist-section-header { display: flex; justify-content: space-between; align-items: center; padding: 0 2px; margin-bottom: 2px; }
@@ -350,9 +351,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .analysis-error .error-detail { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-/* ============================================ */
-/* 🧠 AI STYLES (Buffett Signal, Risk, etc.) */
-/* ============================================ */
+/* AI STYLES */
 .ai-signal-container { display: flex; flex-direction: column; gap: 14px; }
 .ai-signal-badge { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin: 0 auto; width: fit-content; }
 .ai-signal-badge.buy { background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(52, 211, 153, 0.15)); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.5); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
@@ -367,7 +366,6 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .ai-reason-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text-primary); line-height: 1.5; background: rgba(255, 255, 255, 0.03); padding: 8px 12px; border-radius: 8px; border-left: 2px solid var(--gold); }
 .ai-reason-icon { color: var(--gold); flex-shrink: 0; }
 .ai-analysis-text { font-size: 13px; line-height: 1.7; color: var(--text-primary); padding-top: 12px; border-top: 1px solid var(--glass-border); }
-
 .risk-analysis-container { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .risk-header { display: flex; justify-content: center; }
 .risk-level-badge { padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border: 1px solid; }
@@ -378,9 +376,7 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .risk-sector-name { color: var(--text-secondary); font-weight: 600; }
 .risk-sector-pct { font-weight: 800; }
 
-/* ============================================ */
-/* 🔥 SECTOR HEATMAP */
-/* ============================================ */
+/* SECTOR HEATMAP */
 .heatmap-sentiment { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
 .heatmap-sentiment-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.3px; text-transform: uppercase; }
 .heatmap-sentiment-bar { width: 100%; height: 12px; border-radius: 6px; overflow: hidden; display: flex; background: rgba(255, 255, 255, 0.05); }
@@ -436,3 +432,44 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .sector-stock-change.flat { color: var(--text-secondary); }
 .sector-stock-bar { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 2px; overflow: hidden; position: relative; }
 .sector-stock-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+/* ============================================ */
+/* ⚖️ COMPARE STOCKS */
+/* ============================================ */
+.compare-picker { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; margin-bottom: 12px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; }
+.compare-picker-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.compare-picker-field label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+.compare-picker-field select { padding: 12px 14px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 13px; font-weight: 700; outline: none; font-family: inherit; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='%23fbbf24' d='M6 9L1 4h10z'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; width: 100%; }
+.compare-picker-field select:focus { border-color: rgba(251, 191, 36, 0.5); }
+.compare-vs-btn { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-dark)); border: none; color: #0a0a0f; font-size: 11px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4); padding: 0; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.compare-heads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.compare-head-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 6px; position: relative; overflow: hidden; }
+.compare-head-card.a { border-left: 3px solid var(--cyan); }
+.compare-head-card.b { border-left: 3px solid var(--violet); }
+.compare-head-symbol { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+.compare-head-name { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.compare-head-price { font-size: 16px; font-weight: 800; color: var(--gold); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.compare-head-change { font-size: 12px; font-weight: 700; }
+.compare-head-change.up { color: var(--green); }
+.compare-head-change.down { color: var(--red); }
+.compare-table-section { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+.compare-table-title { font-size: 13px; font-weight: 700; background: linear-gradient(90deg, var(--gold), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px; letter-spacing: 0.3px; }
+.compare-table { display: flex; flex-direction: column; gap: 6px; }
+.compare-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 8px; background: rgba(255, 255, 255, 0.02); font-size: 12px; }
+.compare-row.header { background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2); font-weight: 800; color: var(--gold); }
+.compare-row-label { color: var(--text-secondary); font-weight: 600; font-size: 11px; }
+.compare-row-value { text-align: center; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.compare-row-value.winner { color: var(--green); position: relative; }
+.compare-row-value.winner::before { content: '🏆'; font-size: 10px; margin-right: 4px; }
+.compare-row-value.loser { color: var(--text-secondary); }
+.compare-chart-section { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+.compare-chart-container { width: 100%; height: 320px; margin-top: 10px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; overflow: hidden; position: relative; }
+.compare-winner { background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(34, 211, 238, 0.08)); border: 2px solid rgba(251, 191, 36, 0.4); border-radius: 14px; padding: 18px; text-align: center; box-shadow: 0 0 30px rgba(251, 191, 36, 0.15); }
+.compare-winner-icon { font-size: 36px; margin-bottom: 6px; }
+.compare-winner-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+.compare-winner-symbol { font-size: 24px; font-weight: 800; background: linear-gradient(90deg, var(--gold), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 6px; }
+.compare-winner-reason { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+/* Toast animation */
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes toastOut { from { opacity: 1; transform: translateX(-50%) translateY(0); } to { opacity: 0; transform: translateX(-50%) translateY(20px); } }
