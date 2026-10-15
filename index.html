@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0a0a0f">
-    <title>Fitra Invest</title>
+    <title>Fitra Invest — AI Trading App</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,127 +12,279 @@
 </head>
 <body>
     <div class="app">
+        <!-- HEADER -->
         <header class="header">
             <div class="header-left">
-                <div class="logo-mark">FI</div>
+                <div class="logo-mark">F</div>
                 <div>
                     <h1>Fitra Invest</h1>
-                    <p class="subtitle">Global Value Investing AI</p>
+                    <p class="subtitle">AI-Powered Trading</p>
                 </div>
             </div>
             <div class="header-right-actions">
-                <button class="currency-open-btn" id="currencyOpenBtn">💱</button>
-                <button class="menu-btn" id="menuBtn">⋮</button>
+                <button class="currency-open-btn" id="currencyOpenBtn" aria-label="Currency"></button>
+                <button class="browse-btn" id="browseStockBtn">+ Browse</button>
             </div>
         </header>
 
-        <nav class="tabs">
-            <button class="tab active" data-tab="dashboard">Dashboard</button>
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab active" data-tab="watchlist">Watchlist</button>
             <button class="tab" data-tab="screener">Screener</button>
             <button class="tab" data-tab="portfolio">Portfolio</button>
             <button class="tab" data-tab="news">News</button>
-            <a href="./indeks.html" class="tab tab-link" id="indeksTabLink">🌍 Indeks</a>
-        </nav>
+        </div>
 
-        <main class="content" id="content">
-            <section class="tab-content active" id="tab-dashboard">
-                <!-- 🔔 PRICE ALERTS SECTION -->
-                <div class="price-alerts-section" id="priceAlertsSection" style="display:none;">
-                    <div class="watchlist-section-header">
-                        <span class="watchlist-section-title" style="background: linear-gradient(90deg, var(--cyan), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🔔 Price Alerts</span>
+        <!-- CONTENT -->
+        <main class="content">
+            
+            <!-- TAB 1: WATCHLIST -->
+            <div class="tab-content active" id="tab-watchlist">
+                <div class="section-header">
+                    <h2>Market Movers</h2>
+                </div>
+                <div class="market-movers" id="marketMovers">
+                    <div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat...</p></div>
+                </div>
+
+                <div class="section-header" style="margin-top: 24px;">
+                    <h2>Price Alerts</h2>
+                </div>
+                <div class="price-alerts-section" id="priceAlertsSection" style="display: none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; color:var(--text-secondary);">Active Alerts</span>
                         <span class="watchlist-section-count" id="alertsCount">0</span>
                     </div>
                     <div class="price-alerts-list" id="priceAlertsList"></div>
                 </div>
 
-                <!-- MARKET MOVERS -->
-                <div class="market-movers" id="marketMovers">
-                    <div class="movers-loading">
-                        <div class="loading-spinner"></div>
-                        <p class="loading-text">Memuat pergerakan pasar...</p>
-                    </div>
-                </div>
-
-                <!-- WATCHLIST -->
-                <div class="section-header" style="margin-top: 20px;">
-                    <h2>Watchlist</h2>
-                    <div class="header-actions">
-                        <button class="browse-btn" id="browseStockBtn">🔍 Browse</button>
-                        <button class="add-btn" id="addAssetBtn">＋</button>
-                    </div>
+                <div class="section-header" style="margin-top: 24px;">
+                    <h2>My Watchlist</h2>
+                    <button class="add-btn" id="addAssetBtn">+</button>
                 </div>
                 <div class="watchlist" id="watchlist">
-                    <div class="empty-state">Memuat data...</div>
+                    <div class="empty-state">Memuat watchlist...</div>
                 </div>
-            </section>
+            </div>
 
-            <section class="tab-content" id="tab-screener">
-                <h2>Screener</h2>
-                <p class="description">Filter saham global berdasarkan kriteria value investing.</p>
+            <!-- TAB 2: SCREENER -->
+            <div class="tab-content" id="tab-screener">
+                <div class="section-header">
+                    <h2>Value Screener</h2>
+                </div>
+                <p class="description">Cari saham undervalued dengan fundamental kuat ala Warren Buffett.</p>
+                
                 <div class="screener-filters">
-                    <div class="filter-group"><label>P/E Ratio max</label><input type="number" id="peMax" value="25" step="0.1"></div>
-                    <div class="filter-group"><label>P/B Ratio max</label><input type="number" id="pbMax" value="5" step="0.1"></div>
-                    <div class="filter-group"><label>ROE min (%)</label><input type="number" id="roeMin" value="10" step="1"></div>
-                    <div class="filter-group"><label>DER max</label><input type="number" id="derMax" value="3" step="0.1"></div>
-                    <div class="filter-group"><label>Dividend Yield min (%)</label><input type="number" id="divMin" value="1" step="0.1"></div>
+                    <div class="filter-group">
+                        <label>Max P/E Ratio</label>
+                        <input type="number" id="peMax" value="15" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label>Max P/B Ratio</label>
+                        <input type="number" id="pbMax" value="1.5" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label>Min ROE (%)</label>
+                        <input type="number" id="roeMin" value="15" step="1">
+                    </div>
+                    <div class="filter-group">
+                        <label>Max DER</label>
+                        <input type="number" id="derMax" value="1" step="0.1">
+                    </div>
+                    <div class="filter-group">
+                        <label>Min Div Yield (%)</label>
+                        <input type="number" id="divMin" value="3" step="0.5">
+                    </div>
                 </div>
-                <button class="primary-btn" id="runScreener">Jalankan Screener</button>
-                <div class="screener-results" id="screenerResults"></div>
-            </section>
+                <button class="primary-btn" id="runScreener"> Scan Market</button>
+                
+                <div id="screenerResults"></div>
+            </div>
 
-            <section class="tab-content" id="tab-portfolio">
-                <h2>Portfolio</h2>
-                <p class="description">Track portofolio investasi global lu.</p>
+            <!-- TAB 3: PORTFOLIO -->
+            <div class="tab-content" id="tab-portfolio">
+                <div class="section-header">
+                    <h2>My Portfolio</h2>
+                    <button class="add-btn" id="addHolding">+</button>
+                </div>
+
                 <div class="portfolio-summary">
-                    <div class="summary-card"><span class="label">Total Value</span><span class="value" id="totalValue">$ 0</span></div>
-                    <div class="summary-card"><span class="label">Unrealized P/L</span><span class="value" id="unrealizedPL">$ 0</span></div>
-                    <div class="summary-card"><span class="label">Total Cost</span><span class="value" id="totalCost">$ 0</span></div>
-                    <div class="summary-card"><span class="label">Holdings</span><span class="value" id="totalHoldings">0</span></div>
+                    <div class="summary-card">
+                        <span class="label">Total Value</span>
+                        <span class="value" id="totalValue">$ 0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">Unrealized P/L</span>
+                        <span class="value" id="unrealizedPL">$ 0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">Total Cost</span>
+                        <span class="value" id="totalCost">$ 0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">Holdings</span>
+                        <span class="value" id="totalHoldings">0</span>
+                    </div>
                 </div>
 
-                <!-- 🥧 PORTFOLIO PIE CHART -->
-                <div class="portfolio-chart-section" id="portfolioChartSection" style="display:none;">
-                    <h3 class="portfolio-chart-title">🥧 Alokasi Portfolio</h3>
+                <div id="portfolioChartSection" style="display:none;">
+                    <div class="portfolio-chart-title">🥧 Alokasi Aset</div>
                     <div class="portfolio-chart-wrapper">
                         <canvas id="portfolioPieChart" class="portfolio-pie-chart"></canvas>
                         <div class="portfolio-chart-center">
-                            <div class="chart-center-label">TOTAL</div>
-                            <div class="chart-center-value" id="chartCenterValue">$0</div>
+                            <span class="chart-center-label">Total Value</span>
+                            <span class="chart-center-value" id="chartCenterValue">$0</span>
                         </div>
                     </div>
                     <div class="portfolio-legend" id="portfolioLegend"></div>
                 </div>
 
-                <button class="primary-btn" id="addHolding">＋ Tambah Holding</button>
-                <div class="holdings" id="holdings"></div>
-            </section>
+                <!-- AI Portfolio Risk Analyzer -->
+                <div id="portfolioRiskAnalysis" style="display: none; margin-top: 20px;"></div>
 
-            <section class="tab-content" id="tab-news">
-                <h2>News & Sentiment</h2>
-                <p class="description">Berita terkait aset global lu, dengan analisis sentimen AI.</p>
-                <div class="news-list" id="newsList"><div class="empty-state">Belum ada berita</div></div>
-            </section>
+                <div class="holdings" id="holdings">
+                    <div class="empty-state">Belum ada holding. Tambahkan saham pertamamu!</div>
+                </div>
+            </div>
+
+            <!-- TAB 4: NEWS -->
+            <div class="tab-content" id="tab-news">
+                <div class="section-header">
+                    <h2>Market News</h2>
+                </div>
+                <div class="news-list" id="newsList">
+                    <div class="empty-state">Memuat berita...</div>
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <!-- CHART MODAL -->
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. ADD ASSET MODAL -->
+    <div class="modal-overlay" id="assetModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tambah Aset ke Watchlist</h3>
+                <button class="modal-close" id="closeAssetModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Symbol</label>
+                    <input type="text" id="assetSymbol" placeholder="Contoh: AAPL, BTC">
+                </div>
+                <div class="form-group">
+                    <label>Nama Aset</label>
+                    <input type="text" id="assetName" placeholder="Contoh: Apple Inc.">
+                </div>
+                <div class="form-group">
+                    <label>Tipe</label>
+                    <select id="assetType">
+                        <option value="stock">Saham</option>
+                        <option value="crypto">Crypto</option>
+                        <option value="commodity">Commodity</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancelAsset">Batal</button>
+                <button class="btn-save" id="saveAsset">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. BROWSE STOCK MODAL -->
+    <div class="modal-overlay" id="browseModal">
+        <div class="modal-content browse-content">
+            <div class="modal-header">
+                <h3>Browse Market</h3>
+                <button class="modal-close" id="closeBrowseModal">×</button>
+            </div>
+            <div class="browse-search-bar">
+                <input type="text" id="browseSearch" placeholder="🔍 Cari symbol atau nama...">
+            </div>
+            <div class="browse-categories">
+                <button class="cat-btn active" data-cat="all">Semua</button>
+                <button class="cat-btn" data-cat="us-tech">US Tech</button>
+                <button class="cat-btn" data-cat="us-finance">Finance</button>
+                <button class="cat-btn" data-cat="us-healthcare">Healthcare</button>
+                <button class="cat-btn" data-cat="us-consumer">Consumer</button>
+                <button class="cat-btn" data-cat="crypto">Crypto</button>
+            </div>
+            <div class="browse-body" id="browseBody"></div>
+        </div>
+    </div>
+
+    <!-- 3. ADD HOLDING MODAL -->
+    <div class="modal-overlay" id="holdingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tambah Holding</h3>
+                <button class="modal-close" id="closeHoldingModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Symbol</label>
+                    <input type="text" id="holdingSymbol" placeholder="Contoh: AAPL">
+                </div>
+                <div class="form-group">
+                    <label>Nama Aset</label>
+                    <input type="text" id="holdingName" placeholder="Contoh: Apple Inc.">
+                </div>
+                <div class="form-group">
+                    <label>Tipe</label>
+                    <select id="holdingType">
+                        <option value="stock">Saham</option>
+                        <option value="crypto">Crypto</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah Lembar (Shares)</label>
+                    <input type="number" id="holdingShares" placeholder="10" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Harga Rata-rata Beli ($)</label>
+                    <input type="number" id="holdingAvgPrice" placeholder="150.00" step="0.01">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancelHolding">Batal</button>
+                <button class="btn-save" id="saveHolding">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. CHART & AI ANALYSIS MODAL -->
     <div class="chart-modal" id="chartModal">
         <div class="chart-content">
             <div class="chart-header">
                 <div>
-                    <h3 id="chartTitle">Chart</h3>
-                    <p class="chart-subtitle" id="chartPrice">-</p>
+                    <h3 id="chartTitle">AAPL — Apple Inc.</h3>
+                    <div class="chart-subtitle" id="chartPrice">$0.00 (+0.00%)</div>
                 </div>
                 <button class="analysis-close" id="closeChartModal">×</button>
             </div>
 
-            <button class="alert-set-btn" id="setAlertBtn">🔔 Set Price Alert</button>
+            <div class="chart-toolbar">
+                <div class="tf-group">
+                    <button class="tf-btn" data-tf="5M">5M</button>
+                    <button class="tf-btn" data-tf="30M">30M</button>
+                    <button class="tf-btn" data-tf="1H">1H</button>
+                    <button class="tf-btn active" data-tf="D">D</button>
+                    <button class="tf-btn" data-tf="W">W</button>
+                    <button class="tf-btn" data-tf="M">M</button>
+                    <button class="tf-btn" data-tf="Y">Y</button>
+                </div>
+            </div>
+
+            <div class="tradingview-container" id="tradingviewContainer"></div>
 
             <div class="indicators-panel">
                 <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
                 <div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div>
-                <div class="indicator-item"><span class="ind-label">EMA20</span><span class="ind-value" id="ema20Value">-</span></div>
-                <div class="indicator-item"><span class="ind-label">RSI</span><span class="ind-value" id="rsiValue">-</span></div>
+                <div class="indicator-item"><span class="ind-label">EMA 20</span><span class="ind-value" id="ema20Value">-</span></div>
+                <div class="indicator-item"><span class="ind-label">RSI 14</span><span class="ind-value" id="rsiValue">-</span></div>
             </div>
 
             <div class="bidask-panel">
@@ -144,133 +296,100 @@
                 <div class="sentiment-header">
                     <span class="sentiment-title">MARKET SENTIMENT</span>
                     <div class="sentiment-stats">
-                        <span class="buy-stat">BUYERS: <span id="buyerPct">-</span>%</span>
-                        <span class="sell-stat">SELLERS: <span id="sellerPct">-</span>%</span>
+                        <span class="buy-stat" id="buyerPct">50% Buy</span>
+                        <span class="sell-stat" id="sellerPct">50% Sell</span>
                     </div>
                 </div>
                 <div class="sentiment-bar">
-                    <div class="sentiment-fill buy" id="buyerBar" style="width: 50%"></div>
-                    <div class="sentiment-fill sell" id="sellerBar" style="width: 50%"></div>
+                    <div class="sentiment-fill buy" id="buyerBar" style="width: 50%;"></div>
+                    <div class="sentiment-fill sell" id="sellerBar" style="width: 50%;"></div>
                 </div>
             </div>
 
-            <div class="chart-toolbar">
-                <div class="tf-group">
-                    <button class="tf-btn" data-tf="5M">5M</button>
-                    <button class="tf-btn" data-tf="30M">30M</button>
-                    <button class="tf-btn" data-tf="1H">1H</button>
-                    <button class="tf-btn" data-tf="D">D</button>
-                    <button class="tf-btn" data-tf="W">W</button>
-                    <button class="tf-btn" data-tf="M">M</button>
-                    <button class="tf-btn active" data-tf="Y">Y</button>
-                </div>
-            </div>
-
-            <div id="tradingviewContainer" class="tradingview-container"></div>
+            <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
 
             <div class="analysis-section">
-                <h3 class="analysis-title">🧠 Analisis AI Value Investing</h3>
-                <div id="analysisBody" class="analysis-body-inline">
+                <div class="analysis-title">🧠 Analisis AI Value Investing</div>
+                <div class="analysis-body-inline" id="analysisBody">
                     <div class="loading-spinner"></div>
-                    <p class="loading-text" id="loadingText">Mengambil data fundamental...</p>
+                    <p class="loading-text">Mengambil data...</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- BROWSE MODAL -->
-    <div class="modal-overlay browse-modal" id="browseModal">
-        <div class="modal-content browse-content">
-            <div class="modal-header">
-                <h3>📚 Browse Stocks</h3>
-                <button class="modal-close" id="closeBrowseModal">×</button>
-            </div>
-            <div class="browse-search-bar">
-                <input type="text" id="browseSearch" placeholder="🔍 Cari saham... (contoh: AAPL, Tesla, Bank)" autocomplete="off">
-            </div>
-            <div class="browse-categories" id="browseCategories">
-                <button class="cat-btn active" data-cat="all">Semua</button>
-                <button class="cat-btn" data-cat="us-tech">US Tech</button>
-                <button class="cat-btn" data-cat="us-finance">Finance</button>
-                <button class="cat-btn" data-cat="us-healthcare">Healthcare</button>
-                <button class="cat-btn" data-cat="us-consumer">Consumer</button>
-                <button class="cat-btn" data-cat="us-industrial">Industrial</button>
-                <button class="cat-btn" data-cat="us-energy">Energy</button>
-                <button class="cat-btn" data-cat="international">International</button>
-                <button class="cat-btn" data-cat="crypto">Crypto</button>
-                <button class="cat-btn" data-cat="commodity">Commodity</button>
-                <button class="cat-btn" data-cat="index">Index</button>
-            </div>
-            <div class="browse-body" id="browseBody">
-                <div class="empty-state">Memuat katalog saham...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ASSET MODAL -->
-    <div class="modal-overlay" id="assetModal">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Tambah ke Watchlist</h3><button class="modal-close" id="closeAssetModal">×</button></div>
-            <div class="modal-body">
-                <div class="form-group"><label>Symbol (contoh: AAPL, BTC, GC=F)</label><input type="text" id="assetSymbol" placeholder="AAPL" autocomplete="off"></div>
-                <div class="form-group"><label>Nama Aset</label><input type="text" id="assetName" placeholder="Apple Inc." autocomplete="off"></div>
-                <div class="form-group"><label>Tipe</label><select id="assetType"><option value="stock">Stock</option><option value="crypto">Crypto</option><option value="commodity">Commodity</option></select></div>
-            </div>
-            <div class="modal-footer"><button class="btn-cancel" id="cancelAsset">Batal</button><button class="btn-save" id="saveAsset">Tambah</button></div>
-        </div>
-    </div>
-
-    <!-- HOLDING MODAL -->
-    <div class="modal-overlay" id="holdingModal">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Tambah Holding</h3><button class="modal-close" id="closeHoldingModal">×</button></div>
-            <div class="modal-body">
-                <div class="form-group"><label>Symbol (contoh: AAPL, BTC, GC=F)</label><input type="text" id="holdingSymbol" placeholder="AAPL" autocomplete="off"></div>
-                <div class="form-group"><label>Nama Aset</label><input type="text" id="holdingName" placeholder="Apple Inc." autocomplete="off"></div>
-                <div class="form-group"><label>Tipe</label><select id="holdingType"><option value="stock">Stock</option><option value="crypto">Crypto</option><option value="commodity">Commodity</option></select></div>
-                <div class="form-group"><label>Jumlah Saham</label><input type="number" id="holdingShares" placeholder="10" step="any"></div>
-                <div class="form-group"><label>Harga Beli Rata-rata (USD)</label><input type="number" id="holdingAvgPrice" placeholder="150" step="any"></div>
-            </div>
-            <div class="modal-footer"><button class="btn-cancel" id="cancelHolding">Batal</button><button class="btn-save" id="saveHolding">Simpan</button></div>
-        </div>
-    </div>
-
-    <!-- 🔔 PRICE ALERT MODAL -->
+    <!-- 5. SMART ALERT MODAL (UPDATED) -->
     <div class="modal-overlay" id="alertModal">
         <div class="modal-content alert-modal-content">
             <div class="modal-header">
-                <h3>🔔 Set Price Alert</h3>
+                <h3>Set Smart Alert</h3>
                 <button class="modal-close" id="closeAlertModal">×</button>
             </div>
             <div class="modal-body">
                 <div class="alert-info-box">
                     <div class="alert-info-symbol" id="alertSymbol">AAPL</div>
                     <div class="alert-info-name" id="alertName">Apple Inc.</div>
-                    <div class="alert-info-current" id="alertCurrentPrice">Current: $0.00</div>
+                    <div class="alert-info-current" id="alertCurrentPrice">Harga Sekarang: $0.00</div>
                 </div>
 
-                <div class="form-group">
-                    <label>Arah Pergerakan Harga</label>
-                    <div class="alert-direction-group">
-                        <button class="direction-btn active" data-dir="above">
-                            <span class="dir-icon">↑</span>
-                            <span class="dir-label">Di Atas</span>
+                <!-- Alert Type Selector -->
+                <div>
+                    <label style="font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; display: block;">Jenis Alert:</label>
+                    <div class="alert-type-selector">
+                        <button class="alert-type-btn active" data-type="price" onclick="selectAlertType('price')">
+                            <span class="type-icon"></span><span>Harga</span>
                         </button>
-                        <button class="direction-btn" data-dir="below">
-                            <span class="dir-icon">↓</span>
-                            <span class="dir-label">Di Bawah</span>
+                        <button class="alert-type-btn" data-type="rsi" onclick="selectAlertType('rsi')">
+                            <span class="type-icon">📊</span><span>RSI</span>
+                        </button>
+                        <button class="alert-type-btn" data-type="ema" onclick="selectAlertType('ema')">
+                            <span class="type-icon">📈</span><span>EMA</span>
+                        </button>
+                        <button class="alert-type-btn" data-type="volume" onclick="selectAlertType('volume')">
+                            <span class="type-icon">📶</span><span>Volume</span>
+                        </button>
+                        <button class="alert-type-btn" data-type="multi" onclick="selectAlertType('multi')">
+                            <span class="type-icon">🧠</span><span>Multi</span>
                         </button>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Target Harga (USD)</label>
-                    <input type="number" id="alertTargetPrice" placeholder="350.00" step="any">
+                <!-- Dynamic Fields -->
+                <div class="form-group" id="alertPriceField">
+                    <label>Target Harga ($)</label>
+                    <input type="number" id="alertTargetPrice" placeholder="Masukkan target harga" step="0.01">
+                </div>
+                <div class="form-group" id="alertRsiField" style="display: none;">
+                    <label>Target RSI (0-100)</label>
+                    <input type="number" id="alertRsiValue" placeholder="30 (oversold) atau 70 (overbought)" min="0" max="100" step="1">
+                </div>
+                <div class="form-group" id="alertEmaField" style="display: none;">
+                    <label>Periode EMA</label>
+                    <select id="alertEmaPeriod">
+                        <option value="9">EMA 9 (Cepat)</option>
+                        <option value="20" selected>EMA 20 (Standar)</option>
+                        <option value="50">EMA 50 (Menengah)</option>
+                        <option value="200">EMA 200 (Lambat)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="alertVolumeField" style="display: none;">
+                    <label>Multiplier Volume (x dari rata-rata)</label>
+                    <input type="number" id="alertVolumeMultiplier" placeholder="2" min="1" max="10" step="0.5" value="2">
+                </div>
+
+                <!-- Direction -->
+                <div class="alert-direction-group" id="alertDirectionGroup">
+                    <button class="direction-btn active" data-dir="above" onclick="selectDirection('above')">
+                        <span class="dir-icon">↑</span><span class="dir-label">Di Atas</span>
+                    </button>
+                    <button class="direction-btn" data-dir="below" onclick="selectDirection('below')">
+                        <span class="dir-icon">↓</span><span class="dir-label">Di Bawah</span>
+                    </button>
                 </div>
 
                 <div class="form-group">
-                    <label>Catatan (opsional)</label>
-                    <input type="text" id="alertNote" placeholder="Contoh: Beli kalau breakout" autocomplete="off">
+                    <label>Catatan (Opsional)</label>
+                    <input type="text" id="alertNote" placeholder="Contoh: Buy the dip">
                 </div>
 
                 <div class="alert-preview" id="alertPreview">
@@ -280,150 +399,99 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel" id="cancelAlert">Batal</button>
-                <button class="btn-save" id="saveAlert">🔔 Set Alert</button>
+                <button class="btn-save" id="saveAlert">Aktifkan Alert</button>
             </div>
         </div>
     </div>
 
-    <!-- 📰 NEWS DETAIL MODAL -->
+    <!-- 6. NEWS DETAIL MODAL -->
     <div class="news-detail-modal" id="newsDetailModal">
         <div class="news-detail-content">
             <div class="news-detail-header">
                 <div class="news-detail-header-info">
                     <span class="news-detail-source" id="ndSource">Source</span>
-                    <span class="news-detail-time" id="ndTime">-</span>
+                    <span class="news-detail-time" id="ndTime">Time</span>
                 </div>
-                <button class="analysis-close" id="closeNewsDetail">×</button>
+                <button class="modal-close" id="closeNewsDetail">×</button>
             </div>
-
             <div class="news-detail-badge-row">
                 <span class="sentiment-tag neutral" id="ndCategory">NEWS</span>
-                <span class="news-detail-translation-badge" id="ndTransBadge">
-                    <span class="trans-loading-spinner"></span> 🌐 Menerjemahkan...
-                </span>
+                <span class="news-detail-translation-badge" id="ndTransBadge"><span class="trans-loading-spinner"></span> Menerjemahkan...</span>
             </div>
-
-            <h2 class="news-detail-title" id="ndTitle">Memuat berita...</h2>
-
-            <div class="news-detail-summary" id="ndSummary">Loading...</div>
-
+            <h2 class="news-detail-title" id="ndTitle">Judul Berita</h2>
+            <div class="news-detail-summary" id="ndSummary">Ringkasan berita...</div>
             <div class="news-detail-actions">
-                <button class="news-action-btn primary" id="ndOpenOriginal">
-                    🌐 Baca Selengkapnya
-                </button>
-                <button class="news-action-btn" id="ndCopyLink">
-                    📋 Salin Link
-                </button>
+                <button class="news-action-btn primary" id="ndOpenOriginal"> Baca Asli</button>
+                <button class="news-action-btn" id="ndCopyLink"> Copy Link</button>
             </div>
         </div>
     </div>
 
-    <!-- 💱 CURRENCY CONVERTER MODAL -->
+    <!-- 7. CURRENCY MODAL -->
     <div class="currency-modal" id="currencyModal">
         <div class="currency-content">
             <div class="currency-header">
-                <h3>💱 Kurs Converter</h3>
-                <button class="analysis-close" id="closeCurrencyModal">×</button>
+                <h3>💱 Currency Converter</h3>
+                <button class="modal-close" id="closeCurrencyModal">×</button>
             </div>
-
             <div class="currency-card">
                 <div class="currency-field">
-                    <label class="currency-field-label">DARI</label>
+                    <span class="currency-field-label">Dari</span>
                     <div class="currency-input-row">
-                        <input type="number" id="currencyFromAmount" value="1" step="any" inputmode="decimal">
+                        <input type="number" id="currencyFromAmount" value="1" min="0" step="any">
                         <select id="currencyFromSelect">
                             <option value="USD" selected>🇺🇸 USD</option>
-                            <option value="IDR">🇮🇩 IDR</option>
-                            <option value="EUR">🇪🇺 EUR</option>
-                            <option value="JPY">🇯🇵 JPY</option>
-                            <option value="GBP">🇬🇧 GBP</option>
-                            <option value="SGD">🇸🇬 SGD</option>
-                            <option value="MYR">🇲🇾 MYR</option>
-                            <option value="CNY">🇨🇳 CNY</option>
-                            <option value="AUD">🇦🇺 AUD</option>
-                            <option value="KRW">🇰🇷 KRW</option>
-                            <option value="THB">🇹🇭 THB</option>
-                            <option value="INR">🇮🇳 INR</option>
-                            <option value="SAR">🇸🇦 SAR</option>
-                            <option value="AED">🇦🇪 AED</option>
                         </select>
                     </div>
                 </div>
-
-                <button class="currency-swap-btn" id="currencySwapBtn" aria-label="Tukar">
-                    <span class="swap-icon">⇅</span>
-                </button>
-
+                <button class="currency-swap-btn" id="currencySwapBtn">⇅</button>
                 <div class="currency-field">
-                    <label class="currency-field-label">KE</label>
-                    <div class="currency-result-box" id="currencyToResult">-</div>
-                    <select id="currencyToSelect" class="currency-to-select">
-                        <option value="USD">🇺🇸 USD</option>
-                        <option value="IDR" selected>🇮🇩 IDR</option>
-                        <option value="EUR">🇪🇺 EUR</option>
-                        <option value="JPY">🇯🇵 JPY</option>
-                        <option value="GBP">🇬🇧 GBP</option>
-                        <option value="SGD">🇸🇬 SGD</option>
-                        <option value="MYR">🇲🇾 MYR</option>
-                        <option value="CNY">🇨🇳 CNY</option>
-                        <option value="AUD">🇦🇺 AUD</option>
-                        <option value="KRW">🇰🇷 KRW</option>
-                        <option value="THB">🇹🇭 THB</option>
-                        <option value="INR">🇮🇳 INR</option>
-                        <option value="SAR">🇸🇦 SAR</option>
-                        <option value="AED">🇦🇪 AED</option>
-                    </select>
-                </div>
-
-                <div class="currency-rate-info">
-                    <div class="currency-rate-line" id="currencyRateLine">
-                        <span class="rate-loading-spinner"></span> Memuat rate...
+                    <span class="currency-field-label">Ke</span>
+                    <div class="currency-input-row">
+                        <select class="currency-to-select" id="currencyToSelect">
+                            <option value="IDR" selected>🇮🇩 IDR</option>
+                        </select>
                     </div>
+                </div>
+                <div class="currency-result-box" id="currencyToResult">Rp 0</div>
+            </div>
+            <div class="currency-card">
+                <div class="currency-rate-info">
+                    <div class="currency-rate-line" id="currencyRateLine"> 1 USD = ... IDR</div>
                     <div class="currency-rate-update" id="currencyRateUpdate">Terakhir diupdate: --</div>
                 </div>
             </div>
-
             <div class="currency-quick-section">
-                <div class="currency-quick-label">💵 Jumlah Cepat</div>
+                <span class="currency-quick-label">Jumlah Cepat</span>
                 <div class="currency-quick-amounts">
-                    <button class="quick-amount-btn" data-amount="1">$1</button>
-                    <button class="quick-amount-btn" data-amount="10">$10</button>
-                    <button class="quick-amount-btn" data-amount="100">$100</button>
-                    <button class="quick-amount-btn active" data-amount="1000">$1K</button>
-                    <button class="quick-amount-btn" data-amount="10000">$10K</button>
-                    <button class="quick-amount-btn" data-amount="100000">$100K</button>
+                    <button class="quick-amount-btn" data-amount="1">1</button>
+                    <button class="quick-amount-btn active" data-amount="100">100</button>
+                    <button class="quick-amount-btn" data-amount="1000">1K</button>
+                    <button class="quick-amount-btn" data-amount="10000">10K</button>
                 </div>
             </div>
-
             <div class="currency-quick-section">
-                <div class="currency-quick-label">🌏 Mata Uang Cepat</div>
+                <span class="currency-quick-label">Mata Uang Populer</span>
                 <div class="currency-quick-targets" id="currencyQuickTargets"></div>
             </div>
-
             <button class="currency-refresh-btn" id="currencyRefreshBtn">
-                <span class="refresh-icon">🔄</span> Refresh Rate
+                <span class="refresh-icon">⟳</span> Refresh Rate
             </button>
         </div>
     </div>
 
-    <!-- 🔔 ALERT TOAST -->
+    <!-- 8. ALERT TOAST -->
     <div class="alert-toast" id="alertToast">
         <div class="alert-toast-icon">🔔</div>
         <div class="alert-toast-content">
-            <div class="alert-toast-title" id="alertToastTitle">Price Alert!</div>
-            <div class="alert-toast-message" id="alertToastMessage">-</div>
+            <div class="alert-toast-title" id="alertToastTitle">Alert!</div>
+            <div class="alert-toast-message" id="alertToastMessage">Pesan alert...</div>
         </div>
         <button class="alert-toast-close" id="alertToastClose">×</button>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=12000"></script>
-    
-    <script>
-        document.getElementById('indeksTabLink').addEventListener('click', function(e) {
-            e.preventDefault();
-            window.location.href = './indeks.html';
-        });
-    </script>
+    <script src="app.js"></script>
 </body>
-</html>
+    </html>
