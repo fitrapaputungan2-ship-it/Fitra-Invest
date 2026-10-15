@@ -18,7 +18,7 @@ let currentAlertPrice = 0;
 let currentNewsItem = null;
 let newsCache = [];
 
-// ============  TRANSLATION CACHE ============
+// ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
 function saveTranslationCache() { try { localStorage.setItem('fitraTranslationCache', JSON.stringify(translationCache)); } catch (e) { translationCache = {}; } }
 async function translateText(text) {
@@ -68,7 +68,7 @@ async function convertCurrency() {
     if (!currencyRates) {
         resultEl.textContent = 'Memuat...'; rateLine.innerHTML = '<span class="rate-loading-spinner"></span> Mengambil rate...';
         const rates = await fetchCurrencyRates();
-        if (!rates) { resultEl.textContent = ' Gagal memuat'; rateLine.textContent = 'Error: rate gak tersedia'; return; }
+        if (!rates) { resultEl.textContent = '❌ Gagal memuat'; rateLine.textContent = 'Error: rate gak tersedia'; return; }
     }
     const fromRate = currencyRates[fromCur] || 1; const toRate = currencyRates[toCur] || 1;
     const result = (fromAmount / fromRate) * toRate;
@@ -89,7 +89,7 @@ function swapCurrencies() {
 }
 function renderCurrencyQuickTargets() {
     const container = document.getElementById('currencyQuickTargets'); if (!container) return;
-    const flags = { 'IDR': '🇮🇩', 'EUR': '🇺', 'JPY': '🇵', 'GBP': '🇧', 'SGD': '🇬', 'MYR': '🇾', 'CNY': '🇳', 'AUD': '🇦🇺', 'KRW': '🇰🇷', 'THB': '🇹🇭', 'USD': '🇺' };
+    const flags = { 'IDR': '🇮🇩', 'EUR': '🇪🇺', 'JPY': '🇯🇵', 'GBP': '🇬🇧', 'SGD': '🇸🇬', 'MYR': '🇲🇾', 'CNY': '🇨🇳', 'AUD': '🇦🇺', 'KRW': '🇰🇷', 'THB': '🇹🇭', 'USD': '🇺🇸' };
     container.innerHTML = QUICK_TARGETS.map(cur => `<button class="quick-target-btn ${cur === 'IDR' ? 'active' : ''}" data-cur="${cur}">${flags[cur]} ${cur}</button>`).join('');
     container.querySelectorAll('.quick-target-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -201,13 +201,13 @@ function updateAlertPreview() {
         else { const target = parseFloat(priceInput); const dirText = currentAlertDirection === 'above' ? 'naik ke atas' : 'turun ke bawah'; previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> ${dirText} <strong>$${target.toLocaleString('en-US', { maximumFractionDigits: 2 })}</strong>`; }
     } else if (currentAlertType === 'rsi') {
         if (!rsiInput || isNaN(parseFloat(rsiInput))) previewText = '🔔 Alert bakal aktif kalau RSI nyentuh target';
-        else { const rsi = parseFloat(rsiInput); const zone = rsi <= 30 ? 'oversold (beli)' : rsi >= 70 ? 'overbought (jual)' : 'netral'; previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> RSI ${rsi} (${zone})`; }
+        else { const rsi = parseFloat(rsiInput); const zone = rsi <= 30 ? 'oversold (beli)' : rsi >= 70 ? 'overbought (jual)' : 'netral'; previewText = ` Notif kalau <strong>${currentAlertSymbol}</strong> RSI ${rsi} (${zone})`; }
     } else if (currentAlertType === 'ema') {
         const period = document.getElementById('alertEmaPeriod').value || '20'; previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> menyentuh EMA ${period}`;
     } else if (currentAlertType === 'volume') {
         const multiplier = document.getElementById('alertVolumeMultiplier').value || '2'; previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> volume ${multiplier}x dari rata-rata`;
     } else if (currentAlertType === 'multi') { previewText = `🔔 Alert multi-kondisi untuk <strong>${currentAlertSymbol}</strong>`; }
-    preview.innerHTML = `<span class="alert-preview-icon"></span><span class="alert-preview-text">${previewText}</span>`;
+    preview.innerHTML = `<span class="alert-preview-icon">🔔</span><span class="alert-preview-text">${previewText}</span>`;
 }
 function saveAlert() {
     let alertData = { id: 'alert-' + Date.now(), symbol: currentAlertSymbol, name: currentAlertName, type: currentAlertAssetType, alertType: currentAlertType, createdAt: Date.now(), triggered: false, note: document.getElementById('alertNote').value.trim() };
@@ -215,7 +215,7 @@ function saveAlert() {
         const targetInput = document.getElementById('alertTargetPrice').value;
         if (!targetInput || isNaN(parseFloat(targetInput))) { alert('Isi target harga dulu!'); return; }
         const target = parseFloat(targetInput);
-        if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('⚠️ Alert "Di Atas" harus LEBIH TINGGI!'); return; }
+        if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('️ Alert "Di Atas" harus LEBIH TINGGI!'); return; }
         if (currentAlertDirection === 'below' && target >= currentAlertPrice) { alert('⚠️ Alert "Di Bawah" harus LEBIH RENDAH!'); return; }
         alertData.targetPrice = target; alertData.direction = currentAlertDirection;
     } else if (currentAlertType === 'rsi') {
@@ -278,7 +278,7 @@ function renderPriceAlerts() {
     const activeAlerts = alerts.filter(a => !a.triggered);
     if (activeAlerts.length === 0) { section.style.display = 'none'; return; }
     section.style.display = 'block'; count.textContent = activeAlerts.length;
-    const typeIcons = { price: '💰', rsi: '📊', ema: '', volume: '📶', multi: '🧠' };
+    const typeIcons = { price: '💰', rsi: '', ema: '📈', volume: '📶', multi: '🧠' };
     const typeLabels = { price: 'Price', rsi: 'RSI', ema: 'EMA', volume: 'Volume', multi: 'Multi' };
     list.innerHTML = activeAlerts.map(a => {
         const icon = typeIcons[a.alertType] || '🔔'; const label = typeLabels[a.alertType] || 'Price'; let detail = '';
@@ -386,6 +386,67 @@ function deleteFromWatchlist(index, event) {
     alerts = alerts.filter(a => a.symbol !== asset.symbol); saveAlerts(); renderPriceAlerts(); watchlist.splice(index, 1); saveWatchlist(); renderWatchlist();
 }
 
+// ============ 🤖 AI SMART WATCHLIST RANKING ============
+async function sortWatchlistByAI() {
+    const btn = document.getElementById('sortAiBtn');
+    if (!btn) return;
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Sorting...';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+
+    try {
+        // Fetch fundamental data for all assets in watchlist
+        const scoredWatchlist = await Promise.all(watchlist.map(async (asset) => {
+            const fund = await fetchFundamental(asset.symbol, asset.type);
+            
+            // Calculate a quick AI score (mirroring backend logic roughly)
+            let score = 50; // Start neutral
+            const roe = fund.roe || 0;
+            const der = fund.debt_to_equity || 0;
+            const pe = fund.pe_ratio || 0;
+            const epsGrowth = fund.eps_growth || 0;
+
+            if (roe > 0.15) score += 25;
+            else if (roe > 0.10) score += 10;
+            
+            if (der < 0.5) score += 20;
+            else if (der < 1.0) score += 10;
+            else score -= 10;
+
+            if (epsGrowth > 0.10) score += 20;
+            else if (epsGrowth > 0) score += 10;
+
+            if (pe > 0 && pe < 15) score += 15;
+            else if (pe >= 15 && pe < 25) score += 5;
+            else if (pe >= 35) score -= 10;
+
+            // Cap score
+            score = Math.max(0, Math.min(100, score));
+
+            return { ...asset, aiScore: score };
+        }));
+
+        // Sort descending by score
+        scoredWatchlist.sort((a, b) => b.aiScore - a.aiScore);
+
+        // Update watchlist and re-render
+        watchlist = scoredWatchlist;
+        // Optional: save to localStorage if you want the sort to persist
+        // saveWatchlist(); 
+        renderWatchlist();
+
+    } catch (error) {
+        console.error("Error sorting watchlist:", error);
+        alert("Gagal mengurutkan watchlist. Coba lagi nanti.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.style.opacity = '1';
+        btn.disabled = false;
+    }
+}
+
 // ============ INDIKATOR & CHART ============
 function calcEMA(closes, period) { if (closes.length < period) return closes[closes.length - 1] || 0; const k = 2 / (period + 1); let ema = closes[0]; for (let i = 1; i < closes.length; i++) ema = closes[i] * k + ema * (1 - k); return ema; }
 function calcRSI(closes, period = 14) { if (closes.length < period + 1) return 50; let gains = 0, losses = 0; for (let i = 1; i <= period; i++) { const diff = closes[i] - closes[i - 1]; if (diff >= 0) gains += diff; else losses -= diff; } let avgGain = gains / period, avgLoss = losses / period; for (let i = period + 1; i < closes.length; i++) { const diff = closes[i] - closes[i - 1]; avgGain = (avgGain * (period - 1) + (diff > 0 ? diff : 0)) / period; avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period; } if (avgLoss === 0) return 100; const rs = avgGain / avgLoss; return 100 - 100 / (1 + rs); }
@@ -446,7 +507,7 @@ function setupTimeframeButtons() { document.querySelectorAll('.tf-btn').forEach(
 function resizeChart() { if (currentChart) { const container = document.getElementById('tradingviewContainer'); currentChart.applyOptions({ width: container.clientWidth }); } }
 
 // ==========================================
-// 🤖 AI BUFFETT ANALYSIS ENGINE
+//  AI BUFFETT ANALYSIS ENGINE
 // ==========================================
 async function loadAnalysis(symbol, name, price, type) {
     const container = document.getElementById('analysisBody');
@@ -464,8 +525,8 @@ function renderAISignalUI(data, container) {
     let signalClass = 'hold'; let signalIcon = '⏸️'; let barColor = 'var(--gold)';
     if (signal.includes('BUY')) { signalClass = 'buy'; signalIcon = '🚀'; barColor = 'var(--green)'; }
     else if (signal.includes('SELL') || signal.includes('AVOID')) { signalClass = 'sell'; signalIcon = '⚠️'; barColor = 'var(--red)'; }
-    const reasonsHtml = reasons.length > 0 ? `<div class="ai-reasons-title">🧠 Alasan Fundamental:</div><div class="ai-reasons-list">${reasons.map(reason => `<div class="ai-reason-item"><span class="ai-reason-icon">✦</span><span>${reason}</span></div>`).join('')}</div>` : '';
-    container.innerHTML = `<div class="ai-signal-container"><div class="ai-signal-badge ${signalClass}"><span style="font-size: 16px;">${signalIcon}</span><span>AI Signal: ${signal}</span></div><div class="ai-confidence-wrap"><div class="ai-confidence-header"><span>Buffett Confidence Score</span><span style="color: ${barColor}; font-size: 13px;">${confidence}/100</span></div><div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: 0%; background: ${barColor};"></div></div></div>${reasonsHtml}${data.analysis ? `<div class="ai-analysis-text"><strong>📝 Kesimpulan AI:</strong><br>${formatAnalysis(data.analysis)}</div>` : ''}</div>`;
+    const reasonsHtml = reasons.length > 0 ? `<div class="ai-reasons-title"> Alasan Fundamental:</div><div class="ai-reasons-list">${reasons.map(reason => `<div class="ai-reason-item"><span class="ai-reason-icon">✦</span><span>${reason}</span></div>`).join('')}</div>` : '';
+    container.innerHTML = `<div class="ai-signal-container"><div class="ai-signal-badge ${signalClass}"><span style="font-size: 16px;">${signalIcon}</span><span>AI Signal: ${signal}</span></div><div class="ai-confidence-wrap"><div class="ai-confidence-header"><span>Buffett Confidence Score</span><span style="color: ${barColor}; font-size: 13px;">${confidence}/100</span></div><div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: 0%; background: ${barColor};"></div></div></div>${reasonsHtml}${data.analysis ? `<div class="ai-analysis-text"><strong> Kesimpulan AI:</strong><br>${formatAnalysis(data.analysis)}</div>` : ''}</div>`;
     setTimeout(() => { const fillBar = container.querySelector('.ai-confidence-fill'); if (fillBar) fillBar.style.width = confidence + '%'; }, 100);
 }
 function formatAnalysis(text) { if (!text) return ''; return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
@@ -512,7 +573,7 @@ function deleteHolding(id) { if (!confirm('Hapus holding ini?')) return; portfol
 // ============ 🧠 AI PORTFOLIO RISK ANALYZER ============
 async function analyzePortfolioRisk() {
     const container = document.getElementById('portfolioRiskAnalysis'); if (!container || portfolio.length === 0) { if (container) container.style.display = 'none'; return; }
-    container.style.display = 'block'; container.innerHTML = '<div class="loading-spinner"></div><p class="loading-text"> AI sedang menganalisis risiko portofolio...</p>';
+    container.style.display = 'block'; container.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">🧠 AI sedang menganalisis risiko portofolio...</p>';
     try {
         const sectorMap = { 'us-tech': 'Technology', 'us-finance': 'Finance', 'us-healthcare': 'Healthcare', 'us-consumer': 'Consumer', 'us-industrial': 'Industrial', 'us-energy': 'Energy', 'international': 'International', 'crypto': 'Crypto', 'commodity': 'Commodity', 'index': 'Index' };
         const sectorAllocation = {}; let totalValue = 0;
@@ -520,7 +581,7 @@ async function analyzePortfolioRisk() {
         const sectorPercentages = Object.entries(sectorAllocation).map(([sector, value]) => ({ sector, percentage: (value / totalValue) * 100 })).sort((a, b) => b.percentage - a.percentage);
         let riskLevel = 'LOW'; let riskColor = 'var(--green)'; let riskMessage = 'Portofolio terdiversifikasi dengan baik.';
         const topSector = sectorPercentages[0];
-        if (topSector && topSector.percentage > 60) { riskLevel = 'HIGH'; riskColor = 'var(--red)'; riskMessage = `️ Terlalu terkonsentrasi di ${topSector.sector} (${topSector.percentage.toFixed(1)}%). Pertimbangkan diversifikasi!`; }
+        if (topSector && topSector.percentage > 60) { riskLevel = 'HIGH'; riskColor = 'var(--red)'; riskMessage = `⚠️ Terlalu terkonsentrasi di ${topSector.sector} (${topSector.percentage.toFixed(1)}%). Pertimbangkan diversifikasi!`; }
         else if (topSector && topSector.percentage > 40) { riskLevel = 'MEDIUM'; riskColor = 'var(--gold)'; riskMessage = `⚠️ ${topSector.sector} mendominasi (${topSector.percentage.toFixed(1)}%). Monitor closely.`; }
         const sectorHtml = sectorPercentages.map(s => `<div class="risk-sector-item"><span class="risk-sector-name">${s.sector}</span><span class="risk-sector-pct" style="color: ${s.percentage > 40 ? 'var(--red)' : 'var(--green)'}">${s.percentage.toFixed(1)}%</span></div>`).join('');
         container.innerHTML = `<div class="risk-analysis-container"><div class="risk-header"><span class="risk-level-badge" style="background: ${riskColor}20; color: ${riskColor}; border-color: ${riskColor}">${riskLevel} RISK</span></div><p class="risk-message">${riskMessage}</p><div class="risk-sectors"><div class="risk-section-title"> Alokasi Sektor:</div>${sectorHtml}</div></div>`;
@@ -528,7 +589,7 @@ async function analyzePortfolioRisk() {
 }
 
 // ==========================================
-//  AI NEWS SENTIMENT ANALYZER (NEW!)
+//  AI NEWS SENTIMENT ANALYZER
 // ==========================================
 function getNewsSentiment(text) {
     if (!text) return { label: 'NEUTRAL', class: 'neutral', icon: '⚪' };
@@ -538,7 +599,7 @@ function getNewsSentiment(text) {
     let bullScore = 0; let bearScore = 0;
     bullishWords.forEach(word => { if (lowerText.includes(word)) bullScore++; });
     bearishWords.forEach(word => { if (lowerText.includes(word)) bearScore++; });
-    if (bullScore > bearScore) return { label: 'BULLISH', class: 'positive', icon: '🟢' };
+    if (bullScore > bearScore) return { label: 'BULLISH', class: 'positive', icon: '' };
     if (bearScore > bullScore) return { label: 'BEARISH', class: 'negative', icon: '🔴' };
     return { label: 'NEUTRAL', class: 'neutral', icon: '⚪' };
 }
@@ -553,7 +614,6 @@ async function renderNews() {
         if (news.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada berita</div>'; return; }
         container.innerHTML = news.map((item, i) => {
             const time = formatTime(item.timePublished); const category = (item.category || 'NEWS').toUpperCase();
-            // 🧠 PANGGIL AI SENTIMENT DI SINI
             const fullText = (item.title || '') + ' ' + (item.summary || '');
             const sentiment = getNewsSentiment(fullText);
             return `<div class="news-card" id="news-card-${i}" onclick="openNewsDetail(${i})">
@@ -562,12 +622,12 @@ async function renderNews() {
                 <div class="news-meta">
                     <span class="sentiment-tag ${sentiment.class}">${sentiment.icon} ${sentiment.label}</span>
                     <span>${item.source || 'Unknown'}</span><span>${time}</span>
-                    <span class="trans-done-badge" id="trans-badge-${i}" style="display:none;">🌐 ID</span>
+                    <span class="trans-done-badge" id="trans-badge-${i}" style="display:none;"> ID</span>
                 </div>
             </div>`;
         }).join('');
         translateNewsInBackground(news);
-    } catch (error) { container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`; }
+    } catch (error) { container.innerHTML = `<div class="empty-state"> ${error.message}</div>`; }
 }
 async function translateNewsInBackground(news) {
     for (let i = 0; i < news.length; i++) {
@@ -592,7 +652,7 @@ async function translateNewsDetail(item) {
         const [transTitle, transSummary] = await Promise.all([translateText(item.title), translateText(item.summary || '')]);
         if (currentNewsItem !== item) return;
         document.getElementById('ndTitle').textContent = transTitle; if (transSummary && transSummary.trim()) document.getElementById('ndSummary').textContent = transSummary;
-        badge.innerHTML = ' Diterjemahkan dari Bahasa Inggris'; badge.classList.add('trans-done');
+        badge.innerHTML = '🌐 Diterjemahkan dari Bahasa Inggris'; badge.classList.add('trans-done');
     } catch (e) { badge.style.display = 'none'; }
 }
 function closeNewsDetail() { document.getElementById('newsDetailModal').classList.remove('active'); currentNewsItem = null; }
@@ -601,7 +661,7 @@ function copyNewsLink() {
     if (!currentNewsItem || !currentNewsItem.url) return; const url = currentNewsItem.url;
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(() => showToastSimple('📋 Link berhasil dicopy!')).catch(() => fallbackCopy(url)); else fallbackCopy(url);
 }
-function fallbackCopy(text) { const temp = document.createElement('textarea'); temp.value = text; temp.style.position = 'fixed'; temp.style.left = '-9999px'; document.body.appendChild(temp); temp.select(); try { document.execCommand('copy'); showToastSimple('📋 Link berhasil dicopy!'); } catch (e) { showToastSimple('❌ Gagal copy link'); } document.body.removeChild(temp); }
+function fallbackCopy(text) { const temp = document.createElement('textarea'); temp.value = text; temp.style.position = 'fixed'; temp.style.left = '-9999px'; document.body.appendChild(temp); temp.select(); try { document.execCommand('copy'); showToastSimple('📋 Link berhasil dicopy!'); } catch (e) { showToastSimple(' Gagal copy link'); } document.body.removeChild(temp); }
 function showToastSimple(message) { const toast = document.createElement('div'); toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1a1a2e,#0f0f1a);color:#fff;padding:12px 20px;border-radius:12px;border:1px solid rgba(251,191,36,0.4);font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9999;animation:toastIn 0.3s ease;`; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease'; setTimeout(() => document.body.removeChild(toast), 300); }, 2000); }
 function formatTime(timeStr) { if (!timeStr) return ''; const date = new Date(timeStr * 1000); const day = String(date.getDate()).padStart(2, '0'); const month = String(date.getMonth() + 1).padStart(2, '0'); const year = date.getFullYear(); const hour = String(date.getHours()).padStart(2, '0'); const minute = String(date.getMinutes()).padStart(2, '0'); return `${day}/${month}/${year} ${hour}:${minute}`; }
 
@@ -613,6 +673,10 @@ document.getElementById('saveAsset').addEventListener('click', () => { const sym
 document.getElementById('setAlertBtn').addEventListener('click', () => openAlertModal(currentSymbol, currentName, currentPrice, currentType)); document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal); document.getElementById('cancelAlert').addEventListener('click', closeAlertModal); document.getElementById('saveAlert').addEventListener('click', saveAlert);
 document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview); document.getElementById('alertRsiValue').addEventListener('input', updateAlertPreview); document.getElementById('alertEmaPeriod').addEventListener('change', updateAlertPreview); document.getElementById('alertVolumeMultiplier').addEventListener('input', updateAlertPreview);
 document.getElementById('alertToastClose').addEventListener('click', closeAlertToast); document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail); document.getElementById('runScreener').addEventListener('click', runScreener);
+
+//  EVENT LISTENER UNTUK SORT AI
+document.getElementById('sortAiBtn').addEventListener('click', sortWatchlistByAI);
+
 const holdingModal = document.getElementById('holdingModal'); document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active')); document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active')); document.getElementById('cancelHolding').addEventListener('click', () => holdingModal.classList.remove('active'));
 document.getElementById('saveHolding').addEventListener('click', () => { const symbol = document.getElementById('holdingSymbol').value.trim().toUpperCase(); const name = document.getElementById('holdingName').value.trim(); const type = document.getElementById('holdingType').value; const shares = parseFloat(document.getElementById('holdingShares').value); const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value); if (!symbol || !name || !shares || !avgPrice) { alert('Isi semua field!'); return; } portfolio.push({ id: 'holding-' + Date.now(), symbol, name, type, shares, avgPrice, addedAt: Date.now() }); savePortfolio(); holdingModal.classList.remove('active'); document.getElementById('holdingSymbol').value = ''; document.getElementById('holdingName').value = ''; document.getElementById('holdingShares').value = ''; document.getElementById('holdingAvgPrice').value = ''; renderPortfolio(); analyzePortfolioRisk(); });
 document.getElementById('closeNewsDetail').addEventListener('click', closeNewsDetail); document.getElementById('ndOpenOriginal').addEventListener('click', openNewsOriginal); document.getElementById('ndCopyLink').addEventListener('click', copyNewsLink);
