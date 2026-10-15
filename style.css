@@ -470,6 +470,92 @@ h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .compare-winner-symbol { font-size: 24px; font-weight: 800; background: linear-gradient(90deg, var(--gold), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 6px; }
 .compare-winner-reason { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
 
+/* ============================================ */
+/* 🌍 GLOBAL INDEKS PAGE */
+/* ============================================ */
+.indeks-banner { display: flex; align-items: center; gap: 12px; padding: 14px 16px; margin-bottom: 12px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(34, 211, 238, 0.08)); border: 1px solid rgba(251, 191, 36, 0.2); border-radius: 14px; }
+.indeks-banner-icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+.indeks-banner-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.indeks-banner-text strong { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 0.3px; }
+.indeks-banner-text span { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+.indeks-search-bar { margin-bottom: 12px; }
+.indeks-search-bar input { width: 100%; padding: 12px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 14px; outline: none; font-family: inherit; transition: 0.2s; }
+.indeks-search-bar input:focus { border-color: rgba(251, 191, 36, 0.5); box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1); }
+.indeks-filters { display: flex; gap: 6px; padding-bottom: 12px; margin-bottom: 12px; overflow-x: auto; border-bottom: 1px solid var(--glass-border); }
+.indeks-filters::-webkit-scrollbar { height: 0; }
+.indeks-filter-btn { background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-secondary); font-size: 11px; font-weight: 700; padding: 8px 14px; border-radius: 16px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: 0.2s; flex-shrink: 0; }
+.indeks-filter-btn:active { transform: scale(0.95); }
+.indeks-filter-btn.active { background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(34, 211, 238, 0.2)); color: var(--gold); border-color: rgba(251, 191, 36, 0.4); box-shadow: 0 0 10px rgba(251, 191, 36, 0.15); }
+.indeks-list { display: flex; flex-direction: column; gap: 10px; }
+.indeks-loading { text-align: center; padding: 40px 20px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; }
+.indeks-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px 16px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 10px; }
+.indeks-card:active { transform: scale(0.98); border-color: rgba(251, 191, 36, 0.3); }
+.indeks-card-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.indeks-card-title { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.indeks-card-flag { font-size: 22px; line-height: 1; flex-shrink: 0; }
+.indeks-card-name-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.indeks-card-name { font-size: 14px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.indeks-card-country { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.indeks-card-price-wrap { text-align: right; flex-shrink: 0; }
+.indeks-card-price { font-size: 15px; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.indeks-card-change { font-size: 11px; font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.indeks-card-change.up { color: var(--green); }
+.indeks-card-change.down { color: var(--red); }
+.indeks-card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.indeks-stat-cell { display: flex; flex-direction: column; gap: 3px; align-items: center; padding: 6px 4px; background: rgba(255, 255, 255, 0.02); border-radius: 8px; }
+.indeks-stat-cell-label { font-size: 9px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.indeks-stat-cell-value { font-size: 11px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.indeks-stat-cell-value.up { color: var(--green); }
+.indeks-stat-cell-value.down { color: var(--red); }
+.indeks-card-sectors { display: flex; height: 4px; border-radius: 2px; overflow: hidden; gap: 1px; }
+.indeks-sector-mini-bar { height: 100%; transition: 0.3s; }
+.indeks-footer { text-align: center; padding: 20px; }
+.indeks-update-info { font-size: 10px; color: var(--text-muted); font-style: italic; }
+
+/* INDEKS DETAIL MODAL */
+.indeks-detail-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.98); z-index: 1500; display: none; flex-direction: column; animation: fadeIn 0.3s ease; }
+.indeks-detail-modal.active { display: flex; }
+.indeks-detail-content { flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; max-width: 700px; margin: 0 auto; width: 100%; }
+.indeks-detail-content::-webkit-scrollbar { width: 4px; }
+.indeks-detail-content::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.3); border-radius: 4px; }
+.indeks-detail-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); flex-shrink: 0; gap: 10px; }
+.indeks-detail-title-wrap { display: flex; align-items: center; gap: 12px; }
+.indeks-detail-flag { font-size: 36px; line-height: 1; }
+.indeks-detail-header h3 { font-size: 18px; font-weight: 800; background: linear-gradient(90deg, var(--gold), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.indeks-detail-subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+.indeks-detail-price-box { background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(34, 211, 238, 0.05)); border: 1px solid rgba(251, 191, 36, 0.2); border-radius: 14px; padding: 18px; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.indeks-detail-price { font-size: 28px; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+.indeks-detail-change { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.indeks-detail-change.up { color: var(--green); }
+.indeks-detail-change.down { color: var(--red); }
+.indeks-detail-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.indeks-stat-item { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.indeks-stat-label { font-size: 9px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.indeks-stat-value { font-size: 13px; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.indeks-stat-value.up { color: var(--green); }
+.indeks-stat-value.down { color: var(--red); }
+.indeks-detail-sectors-section, .indeks-detail-chart-section, .indeks-detail-constituents-section { display: flex; flex-direction: column; gap: 10px; }
+.indeks-section-title { font-size: 13px; font-weight: 700; background: linear-gradient(90deg, var(--gold), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 0.3px; }
+.indeks-sectors-list { display: flex; flex-direction: column; gap: 10px; }
+.indeks-sector-row { display: flex; flex-direction: column; gap: 6px; }
+.indeks-sector-row-top { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+.indeks-sector-name { color: var(--text-secondary); font-weight: 600; }
+.indeks-sector-pct { color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; }
+.indeks-sector-bar-bg { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.05); border-radius: 3px; overflow: hidden; }
+.indeks-sector-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.indeks-chart-container { width: 100%; height: 260px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; position: relative; }
+.indeks-constituents-list { display: flex; flex-direction: column; gap: 8px; }
+.indeks-constituent-item { display: flex; justify-content: space-between; align-items: center; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 14px; cursor: pointer; transition: 0.2s; gap: 10px; }
+.indeks-constituent-item:active { transform: scale(0.98); border-color: rgba(251, 191, 36, 0.3); }
+.indeks-constituent-left { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.indeks-constituent-symbol { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.indeks-constituent-name { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.indeks-constituent-right { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; }
+.indeks-constituent-price { font-size: 12px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.indeks-constituent-change { font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.indeks-constituent-change.up { color: var(--green); }
+.indeks-constituent-change.down { color: var(--red); }
+
 /* Toast animation */
 @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 @keyframes toastOut { from { opacity: 1; transform: translateX(-50%) translateY(0); } to { opacity: 0; transform: translateX(-50%) translateY(20px); } }
