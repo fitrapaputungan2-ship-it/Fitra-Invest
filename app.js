@@ -19,6 +19,12 @@ let currentNewsItem = null;
 let newsCache = [];
 let heatmapData = [];
 let compareChart = null;
+// Indeks globals
+let indeksFilter = 'all';
+let indeksSearch = '';
+let indeksDetailChart = null;
+let indeksDetailSymbol = null;
+let indeksRenderToken = 0;
 
 // ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
@@ -256,7 +262,7 @@ const STOCK_UNIVERSE = [
 const MOVERS_UNIVERSE = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'INTC', 'NFLX', 'AVGO', 'ADBE', 'JPM', 'BAC', 'V', 'MA', 'GS', 'WFC', 'WMT', 'DIS', 'MCD', 'NKE', 'SBUX', 'KO', 'PEP', 'JNJ', 'PFE', 'UNH', 'LLY', 'BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
 let marketMoversData = { gainers: [], losers: [] };
 
-// ============ SECTOR CONFIG (buat Heatmap) ============
+// ============ SECTOR CONFIG ============
 const SECTOR_CONFIG = [
     { key: 'us-tech', name: 'Technology', icon: '💻' },
     { key: 'us-finance', name: 'Finance', icon: '🏦' },
@@ -270,6 +276,55 @@ const SECTOR_CONFIG = [
     { key: 'index', name: 'Index', icon: '📊' }
 ];
 
+// ============ 🌍 GLOBAL INDICES DATABASE ============
+const GLOBAL_INDICES = [
+    { symbol: '^GSPC', name: 'S&P 500', country: 'United States', region: 'americas', flag: '🇺🇸',
+      sectors: [ { name: 'Technology', pct: 29.5, color: '#22d3ee' }, { name: 'Financials', pct: 13.2, color: '#fbbf24' }, { name: 'Healthcare', pct: 12.8, color: '#10b981' }, { name: 'Consumer Disc.', pct: 10.5, color: '#a855f7' }, { name: 'Communication', pct: 9.4, color: '#ec4899' }, { name: 'Others', pct: 24.6, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'AAPL', name: 'Apple Inc.' }, { symbol: 'MSFT', name: 'Microsoft Corp.' }, { symbol: 'NVDA', name: 'NVIDIA Corp.' }, { symbol: 'AMZN', name: 'Amazon.com Inc.' }, { symbol: 'META', name: 'Meta Platforms Inc.' } ] },
+    { symbol: '^DJI', name: 'Dow Jones', country: 'United States', region: 'americas', flag: '🇺🇸',
+      sectors: [ { name: 'Technology', pct: 22.1, color: '#22d3ee' }, { name: 'Financials', pct: 17.4, color: '#fbbf24' }, { name: 'Healthcare', pct: 15.2, color: '#10b981' }, { name: 'Industrials', pct: 14.8, color: '#f97316' }, { name: 'Consumer Disc.', pct: 12.3, color: '#a855f7' }, { name: 'Others', pct: 18.2, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'UNH', name: 'UnitedHealth' }, { symbol: 'GS', name: 'Goldman Sachs' }, { symbol: 'MSFT', name: 'Microsoft' }, { symbol: 'HD', name: 'Home Depot' }, { symbol: 'MCD', name: "McDonald's" } ] },
+    { symbol: '^IXIC', name: 'NASDAQ Composite', country: 'United States', region: 'americas', flag: '🇺🇸',
+      sectors: [ { name: 'Technology', pct: 51.2, color: '#22d3ee' }, { name: 'Communication', pct: 15.6, color: '#ec4899' }, { name: 'Consumer Disc.', pct: 12.4, color: '#a855f7' }, { name: 'Healthcare', pct: 7.8, color: '#10b981' }, { name: 'Financials', pct: 6.2, color: '#fbbf24' }, { name: 'Others', pct: 6.8, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'AAPL', name: 'Apple' }, { symbol: 'MSFT', name: 'Microsoft' }, { symbol: 'NVDA', name: 'NVIDIA' }, { symbol: 'AMZN', name: 'Amazon' }, { symbol: 'AVGO', name: 'Broadcom' } ] },
+    { symbol: '^RUT', name: 'Russell 2000', country: 'United States', region: 'americas', flag: '🇺🇸',
+      sectors: [ { name: 'Financials', pct: 18.4, color: '#fbbf24' }, { name: 'Healthcare', pct: 17.2, color: '#10b981' }, { name: 'Industrials', pct: 15.8, color: '#f97316' }, { name: 'Technology', pct: 14.6, color: '#22d3ee' }, { name: 'Consumer Disc.', pct: 12.1, color: '#a855f7' }, { name: 'Others', pct: 21.9, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'SMCI', name: 'Super Micro Computer' }, { symbol: 'INSM', name: 'Insmed Inc.' }, { symbol: 'FN', name: 'Fabrinet' }, { symbol: 'ONTO', name: 'Onto Innovation' }, { symbol: 'MSTR', name: 'MicroStrategy' } ] },
+    { symbol: '^BVSP', name: 'Bovespa', country: 'Brazil', region: 'americas', flag: '🇧🇷',
+      sectors: [ { name: 'Financials', pct: 24.8, color: '#fbbf24' }, { name: 'Materials', pct: 18.2, color: '#f97316' }, { name: 'Energy', pct: 14.5, color: '#ef4444' }, { name: 'Consumer Staples', pct: 11.6, color: '#10b981' }, { name: 'Utilities', pct: 8.4, color: '#22d3ee' }, { name: 'Others', pct: 22.5, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'VALE3.SA', name: 'Vale S.A.' }, { symbol: 'PETR4.SA', name: 'Petrobras' }, { symbol: 'ITUB4.SA', name: 'Itaú Unibanco' }, { symbol: 'BBDC4.SA', name: 'Banco Bradesco' }, { symbol: 'ABEV3.SA', name: 'Ambev' } ] },
+    { symbol: '^GSPTSE', name: 'S&P/TSX', country: 'Canada', region: 'americas', flag: '🇨🇦',
+      sectors: [ { name: 'Financials', pct: 32.4, color: '#fbbf24' }, { name: 'Energy', pct: 17.8, color: '#ef4444' }, { name: 'Industrials', pct: 12.6, color: '#f97316' }, { name: 'Materials', pct: 11.2, color: '#a855f7' }, { name: 'Technology', pct: 7.8, color: '#22d3ee' }, { name: 'Others', pct: 18.2, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'RY.TO', name: 'Royal Bank of Canada' }, { symbol: 'TD.TO', name: 'Toronto-Dominion Bank' }, { symbol: 'SHOP.TO', name: 'Shopify Inc.' }, { symbol: 'ENB.TO', name: 'Enbridge Inc.' }, { symbol: 'CNR.TO', name: 'Canadian National Railway' } ] },
+    { symbol: '^FTSE', name: 'FTSE 100', country: 'United Kingdom', region: 'europe', flag: '🇬🇧',
+      sectors: [ { name: 'Financials', pct: 20.5, color: '#fbbf24' }, { name: 'Consumer Staples', pct: 16.4, color: '#10b981' }, { name: 'Energy', pct: 13.8, color: '#ef4444' }, { name: 'Healthcare', pct: 12.2, color: '#22d3ee' }, { name: 'Industrials', pct: 11.6, color: '#f97316' }, { name: 'Others', pct: 25.5, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'SHEL.L', name: 'Shell plc' }, { symbol: 'AZN.L', name: 'AstraZeneca' }, { symbol: 'HSBA.L', name: 'HSBC Holdings' }, { symbol: 'ULVR.L', name: 'Unilever' }, { symbol: 'BP.L', name: 'BP plc' } ] },
+    { symbol: '^GDAXI', name: 'DAX', country: 'Germany', region: 'europe', flag: '🇩🇪',
+      sectors: [ { name: 'Industrials', pct: 22.4, color: '#f97316' }, { name: 'Technology', pct: 18.6, color: '#22d3ee' }, { name: 'Financials', pct: 16.8, color: '#fbbf24' }, { name: 'Consumer Disc.', pct: 14.2, color: '#a855f7' }, { name: 'Healthcare', pct: 12.1, color: '#10b981' }, { name: 'Others', pct: 15.9, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'SAP.DE', name: 'SAP SE' }, { symbol: 'SIE.DE', name: 'Siemens AG' }, { symbol: 'ALV.DE', name: 'Allianz SE' }, { symbol: 'DTE.DE', name: 'Deutsche Telekom' }, { symbol: 'AIR.DE', name: 'Airbus SE' } ] },
+    { symbol: '^FCHI', name: 'CAC 40', country: 'France', region: 'europe', flag: '🇫🇷',
+      sectors: [ { name: 'Consumer Disc.', pct: 20.8, color: '#a855f7' }, { name: 'Industrials', pct: 18.2, color: '#f97316' }, { name: 'Financials', pct: 15.6, color: '#fbbf24' }, { name: 'Consumer Staples', pct: 14.4, color: '#10b981' }, { name: 'Healthcare', pct: 11.8, color: '#22d3ee' }, { name: 'Others', pct: 19.2, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'MC.PA', name: 'LVMH' }, { symbol: 'OR.PA', name: "L'Oréal" }, { symbol: 'TTE.PA', name: 'TotalEnergies' }, { symbol: 'RMS.PA', name: 'Hermès' }, { symbol: 'SAN.PA', name: 'Sanofi' } ] },
+    { symbol: '^STOXX50E', name: 'Euro Stoxx 50', country: 'Eurozone', region: 'europe', flag: '🇪🇺',
+      sectors: [ { name: 'Financials', pct: 21.2, color: '#fbbf24' }, { name: 'Industrials', pct: 17.4, color: '#f97316' }, { name: 'Consumer Disc.', pct: 15.8, color: '#a855f7' }, { name: 'Technology', pct: 14.6, color: '#22d3ee' }, { name: 'Healthcare', pct: 12.2, color: '#10b981' }, { name: 'Others', pct: 18.8, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'ASML.AS', name: 'ASML Holding' }, { symbol: 'MC.PA', name: 'LVMH' }, { symbol: 'SAP.DE', name: 'SAP SE' }, { symbol: 'NESN.SW', name: 'Nestlé' }, { symbol: 'SIE.DE', name: 'Siemens' } ] },
+    { symbol: '^N225', name: 'Nikkei 225', country: 'Japan', region: 'asia', flag: '🇯🇵',
+      sectors: [ { name: 'Technology', pct: 24.5, color: '#22d3ee' }, { name: 'Industrials', pct: 18.4, color: '#f97316' }, { name: 'Consumer Disc.', pct: 16.2, color: '#a855f7' }, { name: 'Financials', pct: 13.8, color: '#fbbf24' }, { name: 'Healthcare', pct: 10.4, color: '#10b981' }, { name: 'Others', pct: 16.7, color: '#64748b' } ],
+      topHoldings: [ { symbol: '7203.T', name: 'Toyota Motor' }, { symbol: '6758.T', name: 'Sony Group' }, { symbol: '6861.T', name: 'Keyence' }, { symbol: '9984.T', name: 'SoftBank Group' }, { symbol: '8306.T', name: 'Mitsubishi UFJ' } ] },
+    { symbol: '^HSI', name: 'Hang Seng', country: 'Hong Kong', region: 'asia', flag: '🇭🇰',
+      sectors: [ { name: 'Financials', pct: 32.6, color: '#fbbf24' }, { name: 'Technology', pct: 21.4, color: '#22d3ee' }, { name: 'Consumer Disc.', pct: 15.2, color: '#a855f7' }, { name: 'Real Estate', pct: 11.8, color: '#ef4444' }, { name: 'Telecom', pct: 8.4, color: '#10b981' }, { name: 'Others', pct: 10.6, color: '#64748b' } ],
+      topHoldings: [ { symbol: '0700.HK', name: 'Tencent Holdings' }, { symbol: '0005.HK', name: 'HSBC Holdings' }, { symbol: '9988.HK', name: 'Alibaba Group' }, { symbol: '1299.HK', name: 'AIA Group' }, { symbol: '3690.HK', name: 'Meituan' } ] },
+    { symbol: '000001.SS', name: 'Shanghai Composite', country: 'China', region: 'asia', flag: '🇨🇳',
+      sectors: [ { name: 'Financials', pct: 28.4, color: '#fbbf24' }, { name: 'Industrials', pct: 18.6, color: '#f97316' }, { name: 'Consumer Staples', pct: 14.2, color: '#10b981' }, { name: 'Materials', pct: 12.8, color: '#a855f7' }, { name: 'Technology', pct: 10.4, color: '#22d3ee' }, { name: 'Others', pct: 15.6, color: '#64748b' } ],
+      topHoldings: [ { symbol: '601398.SS', name: 'ICBC' }, { symbol: '600519.SS', name: 'Kweichow Moutai' }, { symbol: '601857.SS', name: 'PetroChina' }, { symbol: '601288.SS', name: 'Agricultural Bank' }, { symbol: '600036.SS', name: 'China Merchants Bank' } ] },
+    { symbol: '^NSEI', name: 'NIFTY 50', country: 'India', region: 'asia', flag: '🇮🇳',
+      sectors: [ { name: 'Financials', pct: 34.8, color: '#fbbf24' }, { name: 'Technology', pct: 16.4, color: '#22d3ee' }, { name: 'Energy', pct: 12.6, color: '#ef4444' }, { name: 'Consumer Goods', pct: 11.2, color: '#10b981' }, { name: 'Auto', pct: 8.4, color: '#a855f7' }, { name: 'Others', pct: 16.6, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'RELIANCE.NS', name: 'Reliance Industries' }, { symbol: 'TCS.NS', name: 'Tata Consultancy' }, { symbol: 'HDFCBANK.NS', name: 'HDFC Bank' }, { symbol: 'INFY.NS', name: 'Infosys' }, { symbol: 'ICICIBANK.NS', name: 'ICICI Bank' } ] },
+    { symbol: '^AXJO', name: 'ASX 200', country: 'Australia', region: 'oceania', flag: '🇦🇺',
+      sectors: [ { name: 'Financials', pct: 30.2, color: '#fbbf24' }, { name: 'Materials', pct: 19.4, color: '#a855f7' }, { name: 'Healthcare', pct: 11.8, color: '#10b981' }, { name: 'Consumer Disc.', pct: 10.4, color: '#22d3ee' }, { name: 'Industrials', pct: 9.6, color: '#f97316' }, { name: 'Others', pct: 18.6, color: '#64748b' } ],
+      topHoldings: [ { symbol: 'BHP.AX', name: 'BHP Group' }, { symbol: 'CBA.AX', name: 'Commonwealth Bank' }, { symbol: 'CSL.AX', name: 'CSL Limited' }, { symbol: 'NAB.AX', name: 'National Australia Bank' }, { symbol: 'WBC.AX', name: 'Westpac Banking' } ] }
+];
+
 // ============ TAB NAV ============
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -280,6 +335,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'portfolio') { renderPortfolio(); analyzePortfolioRisk(); }
         if (tab.dataset.tab === 'heatmap') renderSectorHeatmap();
         if (tab.dataset.tab === 'compare') populateCompareDropdowns();
+        if (tab.dataset.tab === 'indeks') renderIndices();
     });
 });
 
@@ -494,6 +550,36 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
         } return [];
     } catch (error) { return []; }
 }
+async function fetchIndexData(symbol) {
+    try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-price`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type: 'stock' }) });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        if (data.chart && data.chart.result && data.chart.result[0]) {
+            const result = data.chart.result[0]; const meta = result.meta;
+            const quote = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
+            const volumes = quote.volume || [];
+            let lastVolume = 0;
+            for (let i = volumes.length - 1; i >= 0; i--) { if (volumes[i] != null && volumes[i] > 0) { lastVolume = volumes[i]; break; } }
+            return { price: meta.regularMarketPrice, change: meta.regularMarketChangePercent || 0, changeNominal: meta.regularMarketChange || 0, high: meta.regularMarketDayHigh, low: meta.regularMarketDayLow, prevClose: meta.chartPreviousClose || meta.previousClose, volume: meta.regularMarketVolume || lastVolume, currency: meta.currency, name: meta.longName || meta.shortName };
+        }
+        return null;
+    } catch (error) { return null; }
+}
+async function fetchIndexChartData(symbol, interval = '1d', range = '1y') {
+    try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type: 'stock', interval, range }) });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        if (data.data && Array.isArray(data.data)) return data.data.map(c => ({ time: c.time, open: parseFloat(c.open), high: parseFloat(c.high), low: parseFloat(c.low), close: parseFloat(c.close), volume: parseFloat(c.volume || 0) })).filter(c => !isNaN(c.open) && !isNaN(c.close));
+        if (data.chart && data.chart.result && data.chart.result[0]) {
+            const result = data.chart.result[0]; const timestamps = result.timestamp || []; const quote = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
+            const opens = quote.open || [], highs = quote.high || [], lows = quote.low || [], closes = quote.close || [], volumes = quote.volume || []; const candles = [];
+            for (let i = 0; i < timestamps.length; i++) { if (opens[i] == null || closes[i] == null) continue; candles.push({ time: timestamps[i], open: opens[i], high: highs[i], low: lows[i], close: closes[i], volume: volumes[i] || 0 }); } return candles;
+        }
+        return [];
+    } catch (error) { return []; }
+}
 
 // ============ MARKET MOVERS ============
 async function fetchMarketMovers() {
@@ -525,7 +611,7 @@ function renderAssetCard(asset, priceData, index) {
     const p = priceData; const isFav = isFavorite(asset.symbol); const hasAl = hasAlert(asset.symbol);
     if (!p) return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card"><div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
     const trend = p.change >= 0 ? 'up' : 'down'; const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%'; const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${p.name || asset.name}', ${p.price}, ${p.change}, '${asset.type}')"><div class="asset-info"><span class="asset-symbol">${asset.symbol}${hasAl ? ' <span class="alert-badge">🔔</span>' : ''}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
+    return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${(p.name || asset.name).replace(/'/g, "\\'")}', ${p.price}, ${p.change}, '${asset.type}')"><div class="asset-info"><span class="asset-symbol">${asset.symbol}${hasAl ? ' <span class="alert-badge">🔔</span>' : ''}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
 }
 async function renderWatchlist() {
     const container = document.getElementById('watchlist'); container.innerHTML = '<div class="empty-state">Memuat data...</div>';
@@ -736,9 +822,7 @@ async function fetchSectorData(sectorKey) {
 async function renderSectorHeatmap() {
     const grid = document.getElementById('heatmapGrid');
     if (!grid) return;
-    
     grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 30px 20px;"><div class="loading-spinner"></div><p class="loading-text">Memuat data sektor...</p></div>';
-    
     try {
         const sectorResults = [];
         for (const sector of SECTOR_CONFIG) {
@@ -749,99 +833,53 @@ async function renderSectorHeatmap() {
             const bearishCount = stocks.filter(s => s.change < 0).length;
             sectorResults.push({ ...sector, stocks, avgChange, bullishCount, bearishCount, totalStocks: stocks.length });
         }
-        
-        if (sectorResults.length === 0) {
-            grid.innerHTML = '<div class="empty-state">Gagal memuat data sektor</div>';
-            return;
-        }
-        
+        if (sectorResults.length === 0) { grid.innerHTML = '<div class="empty-state">Gagal memuat data sektor</div>'; return; }
         heatmapData = sectorResults.sort((a, b) => b.avgChange - a.avgChange);
-        
         let totalBullish = 0, totalBearish = 0;
         sectorResults.forEach(s => { totalBullish += s.bullishCount; totalBearish += s.bearishCount; });
         const totalStocks = totalBullish + totalBearish;
         const bullPct = totalStocks > 0 ? (totalBullish / totalStocks) * 100 : 50;
         const bearPct = 100 - bullPct;
-        
         document.getElementById('hmBullFill').style.width = bullPct + '%';
         document.getElementById('hmBearFill').style.width = bearPct + '%';
-        document.getElementById('heatmapSentimentStats').innerHTML = `
-            <span class="sentiment-stat bullish">🟢 ${bullPct.toFixed(1)}% Bullish (${totalBullish})</span>
-            <span class="sentiment-stat bearish">🔴 ${bearPct.toFixed(1)}% Bearish (${totalBearish})</span>
-        `;
-        
+        document.getElementById('heatmapSentimentStats').innerHTML = `<span class="sentiment-stat bullish">🟢 ${bullPct.toFixed(1)}% Bullish (${totalBullish})</span><span class="sentiment-stat bearish">🔴 ${bearPct.toFixed(1)}% Bearish (${totalBearish})</span>`;
         grid.innerHTML = heatmapData.map((sector, idx) => {
             const avgChange = sector.avgChange;
             const trendClass = avgChange > 0 ? 'up' : avgChange < 0 ? 'down' : 'flat';
             const trendSign = avgChange > 0 ? '+' : '';
             const heatColor = getHeatColor(avgChange);
             const dotsToShow = sector.stocks.slice(0, 10);
-            const dotsHtml = dotsToShow.map(s => {
-                const dotColor = getHeatColor(s.change);
-                return `<div class="sector-heat-dot" style="background:${dotColor}; box-shadow: 0 0 4px ${dotColor}80;"></div>`;
-            }).join('');
-            return `<div class="sector-card" style="border-left: 3px solid ${heatColor};" onclick="openSectorDetail(${idx})">
-                <div class="sector-card-header">
-                    <span class="sector-card-icon">${sector.icon}</span>
-                    <span class="sector-card-name">${sector.name}</span>
-                </div>
-                <div class="sector-card-avg ${trendClass}">${trendSign}${avgChange.toFixed(2)}%</div>
-                <div class="sector-card-count">${sector.totalStocks} stocks · 🟢 ${sector.bullishCount} · 🔴 ${sector.bearishCount}</div>
-                <div class="sector-card-heat-dots">${dotsHtml}</div>
-            </div>`;
+            const dotsHtml = dotsToShow.map(s => { const dotColor = getHeatColor(s.change); return `<div class="sector-heat-dot" style="background:${dotColor}; box-shadow: 0 0 4px ${dotColor}80;"></div>`; }).join('');
+            return `<div class="sector-card" style="border-left: 3px solid ${heatColor};" onclick="openSectorDetail(${idx})"><div class="sector-card-header"><span class="sector-card-icon">${sector.icon}</span><span class="sector-card-name">${sector.name}</span></div><div class="sector-card-avg ${trendClass}">${trendSign}${avgChange.toFixed(2)}%</div><div class="sector-card-count">${sector.totalStocks} stocks · 🟢 ${sector.bullishCount} · 🔴 ${sector.bearishCount}</div><div class="sector-card-heat-dots">${dotsHtml}</div></div>`;
         }).join('');
-    } catch (error) {
-        console.error('Heatmap error:', error);
-        grid.innerHTML = '<div class="empty-state">❌ Gagal memuat heatmap</div>';
-    }
+    } catch (error) { console.error('Heatmap error:', error); grid.innerHTML = '<div class="empty-state">❌ Gagal memuat heatmap</div>'; }
 }
 
 function openSectorDetail(index) {
     const sector = heatmapData[index];
     if (!sector) return;
-    
     const modal = document.getElementById('sectorDetailModal');
     modal.classList.add('active');
-    
     document.getElementById('sdIcon').textContent = sector.icon;
     document.getElementById('sdName').textContent = sector.name;
     document.getElementById('sdSubtitle').textContent = `${sector.totalStocks} stocks dalam sektor ini`;
-    
     const avgChange = sector.avgChange;
     const avgEl = document.getElementById('sdAvgChange');
     avgEl.textContent = (avgChange > 0 ? '+' : '') + avgChange.toFixed(2) + '%';
     avgEl.className = 'summary-value ' + (avgChange > 0 ? 'up' : avgChange < 0 ? 'down' : '');
-    
     document.getElementById('sdBullish').textContent = sector.bullishCount;
     document.getElementById('sdBearish').textContent = sector.bearishCount;
-    
     const sortedStocks = [...sector.stocks].sort((a, b) => b.change - a.change);
-    
     document.getElementById('sdStocksList').innerHTML = sortedStocks.map(s => {
         const trendClass = s.change > 0 ? 'up' : s.change < 0 ? 'down' : 'flat';
         const sign = s.change > 0 ? '+' : '';
         const barColor = getHeatColor(s.change);
         const barWidth = Math.min(Math.abs(s.change) * 20, 100);
-        
-        return `<div class="sector-stock-item" onclick="closeSectorDetail(); openAssetDetail('${s.symbol}', '${s.name.replace(/'/g, "\\'")}', ${s.price}, ${s.change}, '${s.type}')">
-            <div class="sector-stock-top">
-                <div class="sector-stock-info">
-                    <span class="sector-stock-symbol">${s.symbol}</span>
-                    <span class="sector-stock-name">${s.name}</span>
-                </div>
-                <div class="sector-stock-price-wrap">
-                    <div class="sector-stock-price">$${s.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
-                    <div class="sector-stock-change ${trendClass}">${sign}${s.change.toFixed(2)}%</div>
-                </div>
-            </div>
-            <div class="sector-stock-bar"><div class="sector-stock-bar-fill" style="width: ${barWidth}%; background: ${barColor};"></div></div>
-        </div>`;
+        return `<div class="sector-stock-item" onclick="closeSectorDetail(); openAssetDetail('${s.symbol}', '${s.name.replace(/'/g, "\\'")}', ${s.price}, ${s.change}, '${s.type}')"><div class="sector-stock-top"><div class="sector-stock-info"><span class="sector-stock-symbol">${s.symbol}</span><span class="sector-stock-name">${s.name}</span></div><div class="sector-stock-price-wrap"><div class="sector-stock-price">$${s.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div><div class="sector-stock-change ${trendClass}">${sign}${s.change.toFixed(2)}%</div></div></div><div class="sector-stock-bar"><div class="sector-stock-bar-fill" style="width: ${barWidth}%; background: ${barColor};"></div></div></div>`;
     }).join('');
 }
 
-function closeSectorDetail() {
-    document.getElementById('sectorDetailModal').classList.remove('active');
-}
+function closeSectorDetail() { document.getElementById('sectorDetailModal').classList.remove('active'); }
 
 // ============ NEWS SENTIMENT ============
 function getNewsSentiment(text) {
@@ -866,18 +904,10 @@ async function renderNews() {
         const news = data.news || []; newsCache = news;
         if (news.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada berita</div>'; return; }
         container.innerHTML = news.map((item, i) => {
-            const time = formatTime(item.timePublished); const category = (item.category || 'NEWS').toUpperCase();
+            const time = formatTime(item.timePublished);
             const fullText = (item.title || '') + ' ' + (item.summary || '');
             const sentiment = getNewsSentiment(fullText);
-            return `<div class="news-card" id="news-card-${i}" onclick="openNewsDetail(${i})">
-                <div class="news-title" id="news-title-${i}"><span class="trans-inline-spinner"></span>${item.title}</div>
-                <div class="news-summary" id="news-summary-${i}">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div>
-                <div class="news-meta">
-                    <span class="sentiment-tag ${sentiment.class}">${sentiment.icon} ${sentiment.label}</span>
-                    <span>${item.source || 'Unknown'}</span><span>${time}</span>
-                    <span class="trans-done-badge" id="trans-badge-${i}" style="display:none;">🌐 ID</span>
-                </div>
-            </div>`;
+            return `<div class="news-card" id="news-card-${i}" onclick="openNewsDetail(${i})"><div class="news-title" id="news-title-${i}"><span class="trans-inline-spinner"></span>${item.title}</div><div class="news-summary" id="news-summary-${i}">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div><div class="news-meta"><span class="sentiment-tag ${sentiment.class}">${sentiment.icon} ${sentiment.label}</span><span>${item.source || 'Unknown'}</span><span>${time}</span><span class="trans-done-badge" id="trans-badge-${i}" style="display:none;">🌐 ID</span></div></div>`;
         }).join('');
         translateNewsInBackground(news);
     } catch (error) { container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`; }
@@ -924,17 +954,12 @@ function populateCompareDropdowns() {
     const selB = document.getElementById('compareStockB');
     if (!selA || !selB) return;
     if (selA.options.length > 0) return;
-    
-    const options = STOCK_UNIVERSE.map(s => 
-        `<option value="${s.symbol}">${s.symbol} — ${s.name}</option>`
-    ).join('');
-    
+    const options = STOCK_UNIVERSE.map(s => `<option value="${s.symbol}">${s.symbol} — ${s.name}</option>`).join('');
     selA.innerHTML = options;
     selB.innerHTML = options;
     selA.value = 'AAPL';
     selB.value = 'MSFT';
 }
-
 function swapCompareStocks() {
     const selA = document.getElementById('compareStockA');
     const selB = document.getElementById('compareStockB');
@@ -942,86 +967,43 @@ function swapCompareStocks() {
     const temp = selA.value;
     selA.value = selB.value;
     selB.value = temp;
-    
     const btn = document.getElementById('compareVsBtn');
-    if (btn) {
-        btn.style.transform = 'rotate(180deg)';
-        setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 300);
-    }
-    
+    if (btn) { btn.style.transform = 'rotate(180deg)'; setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 300); }
     const result = document.getElementById('compareResult');
-    if (result && !result.querySelector('.empty-state')) {
-        runCompare();
-    }
+    if (result && !result.querySelector('.empty-state')) { runCompare(); }
 }
-
 async function runCompare() {
     const selA = document.getElementById('compareStockA');
     const selB = document.getElementById('compareStockB');
     const container = document.getElementById('compareResult');
     const btn = document.getElementById('runCompareBtn');
-    
     if (!selA || !selB || !container) return;
-    
     const symbolA = selA.value;
     const symbolB = selB.value;
-    
-    if (symbolA === symbolB) {
-        alert('Pilih 2 saham yang berbeda!');
-        return;
-    }
-    
+    if (symbolA === symbolB) { alert('Pilih 2 saham yang berbeda!'); return; }
     const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Loading...';
-    btn.disabled = true;
-    btn.style.opacity = '0.7';
-    
-    container.innerHTML = `
-        <div style="text-align:center;padding:40px 20px;">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">Membandingkan ${symbolA} vs ${symbolB}...</p>
-        </div>
-    `;
-    
+    btn.innerHTML = '⏳ Loading...'; btn.disabled = true; btn.style.opacity = '0.7';
+    container.innerHTML = `<div style="text-align:center;padding:40px 20px;"><div class="loading-spinner"></div><p class="loading-text">Membandingkan ${symbolA} vs ${symbolB}...</p></div>`;
     try {
         const stockA = STOCK_UNIVERSE.find(s => s.symbol === symbolA) || { type: 'stock' };
         const stockB = STOCK_UNIVERSE.find(s => s.symbol === symbolB) || { type: 'stock' };
-        
         const [priceA, priceB, fundA, fundB, chartA, chartB] = await Promise.all([
-            fetchPrice(symbolA, stockA.type),
-            fetchPrice(symbolB, stockB.type),
-            fetchFundamental(symbolA, stockA.type),
-            fetchFundamental(symbolB, stockB.type),
-            fetchChartData(symbolA, stockA.type, '1d', '1y'),
-            fetchChartData(symbolB, stockB.type, '1d', '1y')
+            fetchPrice(symbolA, stockA.type), fetchPrice(symbolB, stockB.type),
+            fetchFundamental(symbolA, stockA.type), fetchFundamental(symbolB, stockB.type),
+            fetchChartData(symbolA, stockA.type, '1d', '1y'), fetchChartData(symbolB, stockB.type, '1d', '1y')
         ]);
-        
-        if (!priceA || !priceB) {
-            container.innerHTML = '<div class="empty-state">❌ Gagal fetch data harga. Coba lagi.</div>';
-            return;
-        }
-        
+        if (!priceA || !priceB) { container.innerHTML = '<div class="empty-state">❌ Gagal fetch data harga. Coba lagi.</div>'; return; }
         renderCompareResult(symbolA, symbolB, priceA, priceB, fundA, fundB, chartA, chartB, container);
-        
-    } catch (error) {
-        console.error('Compare error:', error);
-        container.innerHTML = `<div class="empty-state">❌ Error: ${error.message}</div>`;
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        btn.style.opacity = '1';
-    }
+    } catch (error) { console.error('Compare error:', error); container.innerHTML = `<div class="empty-state">❌ Error: ${error.message}</div>`; }
+    finally { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = '1'; }
 }
-
 function renderCompareResult(symbolA, symbolB, priceA, priceB, fundA, fundB, chartA, chartB, container) {
     const nameA = priceA.name || symbolA;
     const nameB = priceB.name || symbolB;
     const changeA = priceA.change || 0;
     const changeB = priceB.change || 0;
-    
     const headCardA = buildCompareHead('a', symbolA, nameA, priceA.price, changeA);
     const headCardB = buildCompareHead('b', symbolB, nameB, priceB.price, changeB);
-    
     const metrics = [
         { label: 'Harga', valA: priceA.price, valB: priceB.price, format: 'money', higherBetter: false },
         { label: 'Change Hari Ini', valA: changeA, valB: changeB, format: 'pct', higherBetter: true },
@@ -1032,81 +1014,29 @@ function renderCompareResult(symbolA, symbolB, priceA, priceB, fundA, fundB, cha
         { label: 'Dividend Yield', valA: fundA.dividend_yield, valB: fundB.dividend_yield, format: 'pct-raw', higherBetter: true },
         { label: 'EPS Growth', valA: fundA.eps_growth, valB: fundB.eps_growth, format: 'pct-raw', higherBetter: true }
     ];
-    
     const rowsHtml = metrics.map(m => {
         const formattedA = formatCompareValue(m.valA, m.format);
         const formattedB = formatCompareValue(m.valB, m.format);
-        
         let classA = '', classB = '';
         if (m.valA != null && m.valB != null && !isNaN(m.valA) && !isNaN(m.valB) && m.valA !== 0 && m.valB !== 0) {
             if (m.higherBetter) {
-                if (m.valA > m.valB) { classA = 'winner'; classB = 'loser'; }
-                else if (m.valB > m.valA) { classB = 'winner'; classA = 'loser'; }
+                if (m.valA > m.valB) { classA = 'winner'; classB = 'loser'; } else if (m.valB > m.valA) { classB = 'winner'; classA = 'loser'; }
             } else {
-                if (m.valA < m.valB && m.valA > 0) { classA = 'winner'; classB = 'loser'; }
-                else if (m.valB < m.valA && m.valB > 0) { classB = 'winner'; classA = 'loser'; }
+                if (m.valA < m.valB && m.valA > 0) { classA = 'winner'; classB = 'loser'; } else if (m.valB < m.valA && m.valB > 0) { classB = 'winner'; classA = 'loser'; }
             }
         }
-        
-        return `<div class="compare-row">
-            <div class="compare-row-label">${m.label}</div>
-            <div class="compare-row-value ${classA}">${formattedA}</div>
-            <div class="compare-row-value ${classB}">${formattedB}</div>
-        </div>`;
+        return `<div class="compare-row"><div class="compare-row-label">${m.label}</div><div class="compare-row-value ${classA}">${formattedA}</div><div class="compare-row-value ${classB}">${formattedB}</div></div>`;
     }).join('');
-    
     const winner = calculateCompareWinner(symbolA, symbolB, fundA, fundB, chartA, chartB);
     const chartId = 'compareChart_' + Date.now();
-    
-    container.innerHTML = `
-        <div class="compare-heads">
-            ${headCardA}
-            ${headCardB}
-        </div>
-        
-        <div class="compare-table-section">
-            <div class="compare-table-title">📊 Fundamental Comparison</div>
-            <div class="compare-table">
-                <div class="compare-row header">
-                    <div class="compare-row-label">METRIC</div>
-                    <div class="compare-row-value">${symbolA}</div>
-                    <div class="compare-row-value">${symbolB}</div>
-                </div>
-                ${rowsHtml}
-            </div>
-        </div>
-        
-        <div class="compare-chart-section">
-            <div class="compare-table-title">📈 Chart Overlay (1 Tahun)</div>
-            <div id="${chartId}" class="compare-chart-container"></div>
-        </div>
-        
-        <div class="compare-winner">
-            <div class="compare-winner-icon">🏆</div>
-            <div class="compare-winner-title">WINNER</div>
-            <div class="compare-winner-symbol">${winner.symbol}</div>
-            <div class="compare-winner-reason">${winner.reason}</div>
-        </div>
-    `;
-    
-    requestAnimationFrame(() => {
-        renderCompareChart(chartId, symbolA, chartA, symbolB, chartB);
-    });
+    container.innerHTML = `<div class="compare-heads">${headCardA}${headCardB}</div><div class="compare-table-section"><div class="compare-table-title">📊 Fundamental Comparison</div><div class="compare-table"><div class="compare-row header"><div class="compare-row-label">METRIC</div><div class="compare-row-value">${symbolA}</div><div class="compare-row-value">${symbolB}</div></div>${rowsHtml}</div></div><div class="compare-chart-section"><div class="compare-table-title">📈 Chart Overlay (1 Tahun)</div><div id="${chartId}" class="compare-chart-container"></div></div><div class="compare-winner"><div class="compare-winner-icon">🏆</div><div class="compare-winner-title">WINNER</div><div class="compare-winner-symbol">${winner.symbol}</div><div class="compare-winner-reason">${winner.reason}</div></div>`;
+    requestAnimationFrame(() => { renderCompareChart(chartId, symbolA, chartA, symbolB, chartB); });
 }
-
 function buildCompareHead(side, symbol, name, price, change) {
     const trend = change >= 0 ? 'up' : 'down';
     const sign = change >= 0 ? '+' : '';
-    return `
-        <div class="compare-head-card ${side}">
-            <div class="compare-head-symbol">${symbol}</div>
-            <div class="compare-head-name">${name}</div>
-            <div class="compare-head-price">$${price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
-            <div class="compare-head-change ${trend}">${sign}${change.toFixed(2)}%</div>
-        </div>
-    `;
+    return `<div class="compare-head-card ${side}"><div class="compare-head-symbol">${symbol}</div><div class="compare-head-name">${name}</div><div class="compare-head-price">$${price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div><div class="compare-head-change ${trend}">${sign}${change.toFixed(2)}%</div></div>`;
 }
-
 function formatCompareValue(val, format) {
     if (val == null || isNaN(val) || val === 0) return '-';
     if (format === 'money') return '$' + val.toLocaleString('en-US', { maximumFractionDigits: 2 });
@@ -1115,142 +1045,31 @@ function formatCompareValue(val, format) {
     if (format === 'num') return val.toFixed(2);
     return val.toString();
 }
-
 function calculateCompareWinner(symbolA, symbolB, fundA, fundB, chartA, chartB) {
-    let scoreA = 0;
-    let scoreB = 0;
-    const reasonsA = [];
-    const reasonsB = [];
-    
-    if (fundA.roe && fundB.roe) {
-        if (fundA.roe > fundB.roe) { scoreA += 25; reasonsA.push(`ROE lebih tinggi (${(fundA.roe*100).toFixed(1)}%)`); }
-        else { scoreB += 25; reasonsB.push(`ROE lebih tinggi (${(fundB.roe*100).toFixed(1)}%)`); }
-    }
-    
+    let scoreA = 0; let scoreB = 0;
+    const reasonsA = []; const reasonsB = [];
+    if (fundA.roe && fundB.roe) { if (fundA.roe > fundB.roe) { scoreA += 25; reasonsA.push(`ROE lebih tinggi (${(fundA.roe*100).toFixed(1)}%)`); } else { scoreB += 25; reasonsB.push(`ROE lebih tinggi (${(fundB.roe*100).toFixed(1)}%)`); } }
     const peA = fundA.pe_ratio > 0 ? fundA.pe_ratio : 999;
     const peB = fundB.pe_ratio > 0 ? fundB.pe_ratio : 999;
-    if (peA < peB) { scoreA += 20; reasonsA.push(`P/E lebih murah (${peA.toFixed(1)})`); }
-    else if (peB < peA) { scoreB += 20; reasonsB.push(`P/E lebih murah (${peB.toFixed(1)})`); }
-    
-    if (fundA.debt_to_equity && fundB.debt_to_equity) {
-        if (fundA.debt_to_equity < fundB.debt_to_equity) { scoreA += 15; reasonsA.push('Utang lebih rendah'); }
-        else { scoreB += 15; reasonsB.push('Utang lebih rendah'); }
-    }
-    
-    if (fundA.dividend_yield && fundB.dividend_yield) {
-        if (fundA.dividend_yield > fundB.dividend_yield) { scoreA += 15; reasonsA.push('Dividen lebih besar'); }
-        else { scoreB += 15; reasonsB.push('Dividen lebih besar'); }
-    }
-    
+    if (peA < peB) { scoreA += 20; reasonsA.push(`P/E lebih murah (${peA.toFixed(1)})`); } else if (peB < peA) { scoreB += 20; reasonsB.push(`P/E lebih murah (${peB.toFixed(1)})`); }
+    if (fundA.debt_to_equity && fundB.debt_to_equity) { if (fundA.debt_to_equity < fundB.debt_to_equity) { scoreA += 15; reasonsA.push('Utang lebih rendah'); } else { scoreB += 15; reasonsB.push('Utang lebih rendah'); } }
+    if (fundA.dividend_yield && fundB.dividend_yield) { if (fundA.dividend_yield > fundB.dividend_yield) { scoreA += 15; reasonsA.push('Dividen lebih besar'); } else { scoreB += 15; reasonsB.push('Dividen lebih besar'); } }
     if (chartA && chartA.length > 0 && chartB && chartB.length > 0) {
         const perfA = ((chartA[chartA.length-1].close / chartA[0].close) - 1) * 100;
         const perfB = ((chartB[chartB.length-1].close / chartB[0].close) - 1) * 100;
-        if (perfA > perfB) { scoreA += 25; reasonsA.push(`Return 1 tahun lebih tinggi (${perfA.toFixed(1)}%)`); }
-        else { scoreB += 25; reasonsB.push(`Return 1 tahun lebih tinggi (${perfB.toFixed(1)}%)`); }
+        if (perfA > perfB) { scoreA += 25; reasonsA.push(`Return 1 tahun lebih tinggi (${perfA.toFixed(1)}%)`); } else { scoreB += 25; reasonsB.push(`Return 1 tahun lebih tinggi (${perfB.toFixed(1)}%)`); }
     }
-    
-    if (scoreA >= scoreB) {
-        return { symbol: symbolA, reason: `Skor: ${scoreA}/100. ${reasonsA.slice(0, 2).join(', ')}.` };
-    }
+    if (scoreA >= scoreB) return { symbol: symbolA, reason: `Skor: ${scoreA}/100. ${reasonsA.slice(0, 2).join(', ')}.` };
     return { symbol: symbolB, reason: `Skor: ${scoreB}/100. ${reasonsB.slice(0, 2).join(', ')}.` };
 }
-
 function renderCompareChart(containerId, symbolA, chartA, symbolB, chartB) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    
-    if (typeof LightweightCharts === 'undefined') {
-        container.innerHTML = '<div style="color:#f00;padding:20px;text-align:center;font-size:12px;">❌ Chart library tidak tersedia</div>';
-        return;
-    }
-    
-    if (!chartA || chartA.length === 0 || !chartB || chartB.length === 0) {
-        container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:20px;text-align:center;font-size:12px;">Data chart tidak tersedia</div>';
-        return;
-    }
-    
-    if (compareChart) {
-        try { compareChart.remove(); } catch(e) {}
-        compareChart = null;
-    }
-    
+    if (typeof LightweightCharts === 'undefined') { container.innerHTML = '<div style="color:#f00;padding:20px;text-align:center;font-size:12px;">❌ Chart library tidak tersedia</div>'; return; }
+    if (!chartA || chartA.length === 0 || !chartB || chartB.length === 0) { container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:20px;text-align:center;font-size:12px;">Data chart tidak tersedia</div>'; return; }
+    if (compareChart) { try { compareChart.remove(); } catch(e) {} compareChart = null; }
     compareChart = LightweightCharts.createChart(container, {
-        width: container.clientWidth,
-        height: 320,
-        layout: {
-            background: { color: 'transparent' },
-            textColor: 'rgba(255, 255, 255, 0.6)',
-            fontFamily: 'Inter, sans-serif'
-        },
-        grid: {
-            vertLines: { color: 'rgba(255, 255, 255, 0.04)' },
-            horzLines: { color: 'rgba(255, 255, 255, 0.04)' }
-        },
-        crosshair: {
-            mode: LightweightCharts.CrosshairMode.Normal,
-            vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' },
-            horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }
-        },
-        rightPriceScale: {
-            borderColor: 'rgba(255, 255, 255, 0.08)',
-            scaleMargins: { top: 0.1, bottom: 0.1 }
-        },
-        timeScale: {
-            borderColor: 'rgba(255, 255, 255, 0.08)',
-            timeVisible: false
-        },
-        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
-        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
-    });
-    
-    const baseA = chartA[0].close;
-    const baseB = chartB[0].close;
-    
-    const seriesA = compareChart.addLineSeries({ color: '#22d3ee', lineWidth: 2, title: symbolA });
-    const seriesB = compareChart.addLineSeries({ color: '#a855f7', lineWidth: 2, title: symbolB });
-    
-    const dataA = chartA.map(c => ({ time: c.time, value: ((c.close / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
-    const dataB = chartB.map(c => ({ time: c.time, value: ((c.close / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
-    
-    seriesA.setData(dataA);
-    seriesB.setData(dataB);
-    compareChart.timeScale().fitContent();
-    
-    const legend = document.createElement('div');
-    legend.style.cssText = 'position:absolute;top:8px;left:8px;display:flex;gap:12px;font-size:11px;font-weight:700;z-index:10;pointer-events:none;flex-wrap:wrap;';
-    legend.innerHTML = `<span style="color:#22d3ee;">● ${symbolA}</span><span style="color:#a855f7;">● ${symbolB}</span><span style="color:rgba(255,255,255,0.4);font-weight:500;">% dari harga awal</span>`;
-    container.style.position = 'relative';
-    container.appendChild(legend);
-}
-
-// ============ EVENT LISTENERS & INIT ============
-document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal); document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal); document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
-document.querySelectorAll('.cat-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentBrowseCategory = btn.dataset.cat; renderBrowseStocks(); }); });
-const assetModal = document.getElementById('assetModal'); document.getElementById('addAssetBtn').addEventListener('click', () => assetModal.classList.add('active')); document.getElementById('closeAssetModal').addEventListener('click', () => assetModal.classList.remove('active')); document.getElementById('cancelAsset').addEventListener('click', () => assetModal.classList.remove('active'));
-document.getElementById('saveAsset').addEventListener('click', () => { const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase(); const name = document.getElementById('assetName').value.trim(); const type = document.getElementById('assetType').value; if (!symbol || !name) { alert('Isi semua field!'); return; } if (watchlist.some(a => a.symbol === symbol)) { alert(`${symbol} udah ada!`); return; } watchlist.push({ symbol, name, type }); saveWatchlist(); assetModal.classList.remove('active'); document.getElementById('assetSymbol').value = ''; document.getElementById('assetName').value = ''; renderWatchlist(); });
-document.getElementById('setAlertBtn').addEventListener('click', () => openAlertModal(currentSymbol, currentName, currentPrice, currentType)); document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal); document.getElementById('cancelAlert').addEventListener('click', closeAlertModal); document.getElementById('saveAlert').addEventListener('click', saveAlert);
-document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview); document.getElementById('alertRsiValue').addEventListener('input', updateAlertPreview); document.getElementById('alertEmaPeriod').addEventListener('change', updateAlertPreview); document.getElementById('alertVolumeMultiplier').addEventListener('input', updateAlertPreview);
-document.getElementById('alertToastClose').addEventListener('click', closeAlertToast); document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail); document.getElementById('runScreener').addEventListener('click', runScreener);
-
-document.getElementById('sortAiBtn').addEventListener('click', sortWatchlistByAI);
-
-const holdingModal = document.getElementById('holdingModal'); document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active')); document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active')); document.getElementById('cancelHolding').addEventListener('click', () => holdingModal.classList.remove('active'));
-document.getElementById('saveHolding').addEventListener('click', () => { const symbol = document.getElementById('holdingSymbol').value.trim().toUpperCase(); const name = document.getElementById('holdingName').value.trim(); const type = document.getElementById('holdingType').value; const shares = parseFloat(document.getElementById('holdingShares').value); const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value); if (!symbol || !name || !shares || !avgPrice) { alert('Isi semua field!'); return; } portfolio.push({ id: 'holding-' + Date.now(), symbol, name, type, shares, avgPrice, addedAt: Date.now() }); savePortfolio(); holdingModal.classList.remove('active'); document.getElementById('holdingSymbol').value = ''; document.getElementById('holdingName').value = ''; document.getElementById('holdingShares').value = ''; document.getElementById('holdingAvgPrice').value = ''; renderPortfolio(); analyzePortfolioRisk(); });
-document.getElementById('closeNewsDetail').addEventListener('click', closeNewsDetail); document.getElementById('ndOpenOriginal').addEventListener('click', openNewsOriginal); document.getElementById('ndCopyLink').addEventListener('click', copyNewsLink);
-document.getElementById('currencyOpenBtn').addEventListener('click', openCurrencyModal); document.getElementById('closeCurrencyModal').addEventListener('click', closeCurrencyModal); document.getElementById('currencyFromAmount').addEventListener('input', convertCurrency); document.getElementById('currencyFromSelect').addEventListener('change', convertCurrency);
-document.getElementById('currencyToSelect').addEventListener('change', () => { const val = document.getElementById('currencyToSelect').value; document.querySelectorAll('.quick-target-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === val)); convertCurrency(); });
-document.getElementById('currencySwapBtn').addEventListener('click', () => { const btn = document.getElementById('currencySwapBtn'); btn.style.transform = 'rotate(180deg)'; setTimeout(() => btn.style.transform = 'rotate(0deg)', 300); swapCurrencies(); });
-document.getElementById('currencyRefreshBtn').addEventListener('click', async () => { const btn = document.getElementById('currencyRefreshBtn'); btn.querySelector('.refresh-icon').style.animation = 'spin 1s linear infinite'; await fetchCurrencyRates(true); await convertCurrency(); btn.querySelector('.refresh-icon').style.animation = ''; });
-document.querySelectorAll('.quick-amount-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('currencyFromAmount').value = btn.dataset.amount; convertCurrency(); }); });
-
-document.getElementById('closeSectorDetail').addEventListener('click', closeSectorDetail);
-
-// COMPARE STOCKS
-document.getElementById('runCompareBtn').addEventListener('click', runCompare);
-document.getElementById('compareVsBtn').addEventListener('click', swapCompareStocks);
-
-// INIT
-populateCurrencyDropdowns();
-populateCompareDropdowns();
-renderWatchlist(); renderPriceAlerts(); fetchMarketMovers();
-setTimeout(() => checkAlerts(), 5000); alertCheckInterval = setInterval(checkAlerts, 60000);
+        width: container.clientWidth, height: 320,
+        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }, horzLine:
