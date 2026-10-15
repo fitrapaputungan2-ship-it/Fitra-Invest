@@ -9,10 +9,11 @@ let candleSeries = null;
 let volumeSeries = null;
 let currentTimeframe = 'Y';
 let currentBrowseCategory = 'all';
+let currentAlertType = 'price'; // 'price', 'rsi', 'ema', 'volume', 'multi'
 let currentAlertDirection = 'above';
 let currentAlertSymbol = null;
 let currentAlertName = null;
-let currentAlertType = null;
+let currentAlertAssetType = null;
 let currentAlertPrice = 0;
 let currentNewsItem = null;
 let newsCache = [];
@@ -43,7 +44,7 @@ async function translateText(text) {
 // ============ 💱 CURRENCY CONVERTER ============
 let currencyRates = JSON.parse(localStorage.getItem('fitraCurrencyRates') || 'null');
 let currencyLastFetch = parseInt(localStorage.getItem('fitraCurrencyLastFetch') || '0');
-const CURRENCY_CACHE_TTL = 60 * 60 * 1000; // 1 jam
+const CURRENCY_CACHE_TTL = 60 * 60 * 1000;
 const QUICK_TARGETS = ['IDR', 'EUR', 'JPY', 'GBP', 'SGD', 'MYR', 'CNY', 'AUD', 'KRW', 'THB'];
 
 async function fetchCurrencyRates(forceRefresh = false) {
@@ -117,7 +118,6 @@ function swapCurrencies() {
     fromSel.value = toSel.value;
     toSel.value = temp;
     convertCurrency();
-    // Sync quick target active
     const val = toSel.value;
     document.querySelectorAll('.quick-target-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.cur === val);
@@ -127,7 +127,7 @@ function swapCurrencies() {
 function renderCurrencyQuickTargets() {
     const container = document.getElementById('currencyQuickTargets');
     if (!container) return;
-    const flags = { 'IDR': '🇮🇩', 'EUR': '🇪🇺', 'JPY': '🇯🇵', 'GBP': '🇬🇧', 'SGD': '🇸🇬', 'MYR': '🇲🇾', 'CNY': '🇨🇳', 'AUD': '🇦🇺', 'KRW': '🇰🇷', 'THB': '🇹🇭', 'USD': '🇺🇸', 'INR': '🇮🇳', 'SAR': '🇸🇦', 'AED': '🇦🇪' };
+    const flags = { 'IDR': '🇮', 'EUR': '🇪🇺', 'JPY': '🇯🇵', 'GBP': '🇬🇧', 'SGD': '🇸🇬', 'MYR': '🇲🇾', 'CNY': '🇨', 'AUD': '🇦🇺', 'KRW': '🇰', 'THB': '🇹', 'USD': '🇺🇸', 'INR': '🇮🇳', 'SAR': '🇸', 'AED': '🇦' };
     container.innerHTML = QUICK_TARGETS.map(cur => `<button class="quick-target-btn ${cur === 'IDR' ? 'active' : ''}" data-cur="${cur}">${flags[cur]} ${cur}</button>`).join('');
     container.querySelectorAll('.quick-target-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -276,7 +276,6 @@ const STOCK_UNIVERSE = [
     { symbol: '^GDAXI', name: 'DAX Index', type: 'stock', category: 'index' },
 ];
 
-// ============ MARKET MOVERS UNIVERSE ============
 const MOVERS_UNIVERSE = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'INTC', 'NFLX', 'AVGO', 'ADBE', 'JPM', 'BAC', 'V', 'MA', 'GS', 'WFC', 'WMT', 'DIS', 'MCD', 'NKE', 'SBUX', 'KO', 'PEP', 'JNJ', 'PFE', 'UNH', 'LLY', 'BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
 let marketMoversData = { gainers: [], losers: [] };
 
@@ -288,7 +287,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.add('active');
         document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
         if (tab.dataset.tab === 'news') renderNews();
-        if (tab.dataset.tab === 'portfolio') renderPortfolio();
+        if (tab.dataset.tab === 'portfolio') { renderPortfolio(); analyzePortfolioRisk(); }
     });
 });
 
@@ -317,6 +316,7 @@ function toggleFavorite(symbol, event) {
     renderWatchlist();
 }
 
+//  ALERTS STRUCTURE (Backward Compatible)
 let alerts = JSON.parse(localStorage.getItem('fitraAlerts')) || [];
 function saveAlerts() { localStorage.setItem('fitraAlerts', JSON.stringify(alerts)); }
 function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol && !a.triggered); }
@@ -324,55 +324,172 @@ function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol && !a.tr
 let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
 function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
 
-// ============ ALERT MODAL ============
+// ============ 🆕 SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
-    currentAlertSymbol = symbol; currentAlertName = name; currentAlertType = type;
-    currentAlertPrice = price; currentAlertDirection = 'above';
+    currentAlertSymbol = symbol;
+    currentAlertName = name;
+    currentAlertAssetType = type;
+    currentAlertPrice = price;
+    currentAlertType = 'price';
+    currentAlertDirection = 'above';
+
     document.getElementById('alertSymbol').textContent = symbol;
     document.getElementById('alertName').textContent = name;
     document.getElementById('alertCurrentPrice').textContent = 'Harga Sekarang: $' + price.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    
+    // Reset form
     document.getElementById('alertTargetPrice').value = '';
     document.getElementById('alertNote').value = '';
+    document.getElementById('alertRsiValue').value = '';
+    document.getElementById('alertEmaPeriod').value = '20';
+    document.getElementById('alertVolumeMultiplier').value = '2';
+    
+    // Reset alert type buttons
+    document.querySelectorAll('.alert-type-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.alert-type-btn[data-type="price"]').classList.add('active');
+    
+    // Reset direction buttons
     document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.direction-btn[data-dir="above"]').classList.add('active');
+    
+    // Show/hide relevant fields
+    updateAlertFormFields();
     updateAlertPreview();
+    
     document.getElementById('alertModal').classList.add('active');
     setTimeout(() => document.getElementById('alertTargetPrice').focus(), 300);
 }
+
 function closeAlertModal() { document.getElementById('alertModal').classList.remove('active'); }
 
-function updateAlertPreview() {
-    const targetInput = document.getElementById('alertTargetPrice').value;
-    const preview = document.getElementById('alertPreview');
-    if (!targetInput || isNaN(parseFloat(targetInput))) {
-        preview.innerHTML = '<span class="alert-preview-icon">🔔</span><span class="alert-preview-text">Alert bakal aktif kalau harga nyentuh target</span>';
-        return;
+function selectAlertType(type) {
+    currentAlertType = type;
+    document.querySelectorAll('.alert-type-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.alert-type-btn[data-type="${type}"]`).classList.add('active');
+    updateAlertFormFields();
+    updateAlertPreview();
+}
+
+function updateAlertFormFields() {
+    const priceField = document.getElementById('alertPriceField');
+    const rsiField = document.getElementById('alertRsiField');
+    const emaField = document.getElementById('alertEmaField');
+    const volumeField = document.getElementById('alertVolumeField');
+    const directionGroup = document.getElementById('alertDirectionGroup');
+    
+    // Hide all first
+    priceField.style.display = 'none';
+    rsiField.style.display = 'none';
+    emaField.style.display = 'none';
+    volumeField.style.display = 'none';
+    directionGroup.style.display = 'grid';
+    
+    // Show relevant fields
+    if (currentAlertType === 'price') {
+        priceField.style.display = 'block';
+    } else if (currentAlertType === 'rsi') {
+        rsiField.style.display = 'block';
+        directionGroup.style.display = 'none';
+    } else if (currentAlertType === 'ema') {
+        emaField.style.display = 'block';
+        directionGroup.style.display = 'none';
+    } else if (currentAlertType === 'volume') {
+        volumeField.style.display = 'block';
+        directionGroup.style.display = 'none';
+    } else if (currentAlertType === 'multi') {
+        priceField.style.display = 'block';
+        rsiField.style.display = 'block';
     }
-    const target = parseFloat(targetInput);
-    const dirText = currentAlertDirection === 'above' ? 'naik ke atas' : 'turun ke bawah';
-    const targetStr = '$' + target.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    preview.innerHTML = `<span class="alert-preview-icon">🔔</span><span class="alert-preview-text">Notif kalau <strong>${currentAlertSymbol}</strong> ${dirText} <strong>${targetStr}</strong></span>`;
+}
+
+function updateAlertPreview() {
+    const preview = document.getElementById('alertPreview');
+    const priceInput = document.getElementById('alertTargetPrice').value;
+    const rsiInput = document.getElementById('alertRsiValue').value;
+    
+    let previewText = '';
+    
+    if (currentAlertType === 'price') {
+        if (!priceInput || isNaN(parseFloat(priceInput))) {
+            previewText = '🔔 Alert bakal aktif kalau harga nyentuh target';
+        } else {
+            const target = parseFloat(priceInput);
+            const dirText = currentAlertDirection === 'above' ? 'naik ke atas' : 'turun ke bawah';
+            previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> ${dirText} <strong>$${target.toLocaleString('en-US', { maximumFractionDigits: 2 })}</strong>`;
+        }
+    } else if (currentAlertType === 'rsi') {
+        if (!rsiInput || isNaN(parseFloat(rsiInput))) {
+            previewText = '🔔 Alert bakal aktif kalau RSI nyentuh target';
+        } else {
+            const rsi = parseFloat(rsiInput);
+            const zone = rsi <= 30 ? 'oversold (beli)' : rsi >= 70 ? 'overbought (jual)' : 'netral';
+            previewText = ` Notif kalau <strong>${currentAlertSymbol}</strong> RSI ${rsi} (${zone})`;
+        }
+    } else if (currentAlertType === 'ema') {
+        const period = document.getElementById('alertEmaPeriod').value || '20';
+        previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> menyentuh EMA ${period}`;
+    } else if (currentAlertType === 'volume') {
+        const multiplier = document.getElementById('alertVolumeMultiplier').value || '2';
+        previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> volume ${multiplier}x dari rata-rata`;
+    } else if (currentAlertType === 'multi') {
+        previewText = `🔔 Alert multi-kondisi untuk <strong>${currentAlertSymbol}</strong>`;
+    }
+    
+    preview.innerHTML = `<span class="alert-preview-icon"></span><span class="alert-preview-text">${previewText}</span>`;
 }
 
 function saveAlert() {
-    const targetInput = document.getElementById('alertTargetPrice').value;
-    const note = document.getElementById('alertNote').value.trim();
-    if (!targetInput || isNaN(parseFloat(targetInput))) { alert('Isi target harga dulu!'); return; }
-    const target = parseFloat(targetInput);
-    if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('⚠️ Alert "Di Atas" harus LEBIH TINGGI!'); return; }
-    if (currentAlertDirection === 'below' && target >= currentAlertPrice) { alert('⚠️ Alert "Di Bawah" harus LEBIH RENDAH!'); return; }
-    const existing = alerts.find(a => a.symbol === currentAlertSymbol && a.direction === currentAlertDirection && !a.triggered);
+    let alertData = {
+        id: 'alert-' + Date.now(),
+        symbol: currentAlertSymbol,
+        name: currentAlertName,
+        type: currentAlertAssetType,
+        alertType: currentAlertType,
+        createdAt: Date.now(),
+        triggered: false,
+        note: document.getElementById('alertNote').value.trim()
+    };
+    
+    if (currentAlertType === 'price') {
+        const targetInput = document.getElementById('alertTargetPrice').value;
+        if (!targetInput || isNaN(parseFloat(targetInput))) { alert('Isi target harga dulu!'); return; }
+        const target = parseFloat(targetInput);
+        if (currentAlertDirection === 'above' && target <= currentAlertPrice) { alert('⚠️ Alert "Di Atas" harus LEBIH TINGGI!'); return; }
+        if (currentAlertDirection === 'below' && target >= currentAlertPrice) { alert('️ Alert "Di Bawah" harus LEBIH RENDAH!'); return; }
+        alertData.targetPrice = target;
+        alertData.direction = currentAlertDirection;
+    } else if (currentAlertType === 'rsi') {
+        const rsiInput = document.getElementById('alertRsiValue').value;
+        if (!rsiInput || isNaN(parseFloat(rsiInput))) { alert('Isi target RSI dulu!'); return; }
+        alertData.rsiValue = parseFloat(rsiInput);
+    } else if (currentAlertType === 'ema') {
+        const period = document.getElementById('alertEmaPeriod').value || '20';
+        alertData.emaPeriod = parseInt(period);
+    } else if (currentAlertType === 'volume') {
+        const multiplier = document.getElementById('alertVolumeMultiplier').value || '2';
+        alertData.volumeMultiplier = parseFloat(multiplier);
+    } else if (currentAlertType === 'multi') {
+        const targetInput = document.getElementById('alertTargetPrice').value;
+        const rsiInput = document.getElementById('alertRsiValue').value;
+        if (!targetInput || !rsiInput) { alert('Isi target harga DAN RSI!'); return; }
+        alertData.targetPrice = parseFloat(targetInput);
+        alertData.rsiValue = parseFloat(rsiInput);
+        alertData.direction = currentAlertDirection;
+    }
+    
+    // Check duplicate
+    const existing = alerts.find(a => a.symbol === alertData.symbol && a.alertType === alertData.alertType && !a.triggered);
     if (existing) {
-        if (!confirm(`Udah ada alert buat ${currentAlertSymbol}. Ganti?`)) return;
+        if (!confirm(`Udah ada alert ${alertData.alertType} buat ${alertData.symbol}. Ganti?`)) return;
         alerts = alerts.filter(a => a.id !== existing.id);
     }
-    const newAlert = { id: 'alert-' + Date.now(), symbol: currentAlertSymbol, name: currentAlertName, type: currentAlertType, targetPrice: target, direction: currentAlertDirection, note: note, createdAt: Date.now(), triggered: false };
-    alerts.push(newAlert);
+    
+    alerts.push(alertData);
     saveAlerts();
     closeAlertModal();
     renderPriceAlerts();
     renderWatchlist();
-    showAlertToast(newAlert, null, true);
+    showAlertToast(alertData, null, true);
 }
 
 function deleteAlert(id, event) {
@@ -384,42 +501,113 @@ function deleteAlert(id, event) {
     renderWatchlist();
 }
 
+// ============  SMART ALERT CHECKER ============
 async function checkAlerts() {
     if (alerts.length === 0) return;
     const activeAlerts = alerts.filter(a => !a.triggered);
     if (activeAlerts.length === 0) return;
-    const results = await Promise.all(activeAlerts.map(async (alert) => {
-        const price = await fetchPrice(alert.symbol, alert.type);
-        return { alert, currentPrice: price ? price.price : null };
-    }));
+    
     let hasNewTrigger = false;
-    results.forEach(({ alert, currentPrice }) => {
-        if (currentPrice == null) return;
-        let triggered = false;
-        if (alert.direction === 'above' && currentPrice >= alert.targetPrice) triggered = true;
-        if (alert.direction === 'below' && currentPrice <= alert.targetPrice) triggered = true;
-        if (triggered) {
-            alert.triggered = true; alert.triggeredAt = Date.now(); alert.triggeredPrice = currentPrice;
-            hasNewTrigger = true; showAlertToast(alert, currentPrice);
+    
+    for (const alert of activeAlerts) {
+        try {
+            const priceData = await fetchPrice(alert.symbol, alert.type);
+            if (!priceData) continue;
+            
+            let triggered = false;
+            let triggerReason = '';
+            
+            if (alert.alertType === 'price' || !alert.alertType) {
+                // Legacy price alert
+                const direction = alert.direction || 'above';
+                if (direction === 'above' && priceData.price >= alert.targetPrice) {
+                    triggered = true;
+                    triggerReason = `Harga naik ke $${priceData.price.toFixed(2)}`;
+                } else if (direction === 'below' && priceData.price <= alert.targetPrice) {
+                    triggered = true;
+                    triggerReason = `Harga turun ke $${priceData.price.toFixed(2)}`;
+                }
+            } else if (alert.alertType === 'rsi') {
+                const candles = await fetchChartData(alert.symbol, alert.type, '1d', '1mo');
+                if (candles.length >= 15) {
+                    const closes = candles.map(c => c.close);
+                    const rsi = calcRSI(closes, 14);
+                    const targetRsi = alert.rsiValue;
+                    if ((targetRsi <= 30 && rsi <= targetRsi) || (targetRsi >= 70 && rsi >= targetRsi)) {
+                        triggered = true;
+                        triggerReason = `RSI ${rsi.toFixed(1)} menyentuh ${targetRsi}`;
+                    }
+                }
+            } else if (alert.alertType === 'ema') {
+                const candles = await fetchChartData(alert.symbol, alert.type, '1d', '3mo');
+                if (candles.length >= alert.emaPeriod) {
+                    const closes = candles.map(c => c.close);
+                    const ema = calcEMA(closes, alert.emaPeriod);
+                    const currentPrice = closes[closes.length - 1];
+                    if (Math.abs(currentPrice - ema) / ema < 0.01) {
+                        triggered = true;
+                        triggerReason = `Harga menyentuh EMA ${alert.emaPeriod} ($${ema.toFixed(2)})`;
+                    }
+                }
+            } else if (alert.alertType === 'volume') {
+                const candles = await fetchChartData(alert.symbol, alert.type, '1d', '1mo');
+                if (candles.length >= 20) {
+                    const recentVolume = candles[candles.length - 1].volume || 0;
+                    const avgVolume = candles.slice(-20, -1).reduce((sum, c) => sum + (c.volume || 0), 0) / 19;
+                    if (recentVolume >= avgVolume * alert.volumeMultiplier) {
+                        triggered = true;
+                        triggerReason = `Volume spike ${alert.volumeMultiplier}x (${recentVolume.toLocaleString()})`;
+                    }
+                }
+            } else if (alert.alertType === 'multi') {
+                const candles = await fetchChartData(alert.symbol, alert.type, '1d', '1mo');
+                if (candles.length >= 15) {
+                    const closes = candles.map(c => c.close);
+                    const rsi = calcRSI(closes, 14);
+                    const currentPrice = priceData.price;
+                    const priceCondition = alert.direction === 'above' ? currentPrice >= alert.targetPrice : currentPrice <= alert.targetPrice;
+                    const rsiCondition = rsi <= alert.rsiValue;
+                    if (priceCondition && rsiCondition) {
+                        triggered = true;
+                        triggerReason = `Harga $${currentPrice.toFixed(2)} + RSI ${rsi.toFixed(1)}`;
+                    }
+                }
+            }
+            
+            if (triggered) {
+                alert.triggered = true;
+                alert.triggeredAt = Date.now();
+                alert.triggeredPrice = priceData.price;
+                alert.triggerReason = triggerReason;
+                hasNewTrigger = true;
+                showAlertToast(alert, priceData.price, false, triggerReason);
+            }
+        } catch (error) {
+            console.error(`Error checking alert ${alert.id}:`, error);
         }
-    });
-    if (hasNewTrigger) { saveAlerts(); renderPriceAlerts(); renderWatchlist(); }
+    }
+    
+    if (hasNewTrigger) {
+        saveAlerts();
+        renderPriceAlerts();
+        renderWatchlist();
+    }
 }
 
-function showAlertToast(alert, currentPrice, isNewSet = false) {
+function showAlertToast(alert, currentPrice, isNewSet = false, reason = '') {
     const toast = document.getElementById('alertToast');
     const title = document.getElementById('alertToastTitle');
     const message = document.getElementById('alertToastMessage');
+    
     if (isNewSet) {
         title.textContent = '🔔 Alert Aktif!';
-        const dir = alert.direction === 'above' ? '↑ naik ke' : '↓ turun ke';
-        message.textContent = `${alert.symbol} bakal notif kalau ${dir} $${alert.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+        const typeLabels = { price: 'Harga', rsi: 'RSI', ema: 'EMA', volume: 'Volume', multi: 'Multi-Kondisi' };
+        message.textContent = `${alert.symbol} - Alert ${typeLabels[alert.alertType] || 'Price'} berhasil dibuat`;
     } else {
-        title.textContent = '🔔 PRICE ALERT TRIGGERED!';
-        const dir = alert.direction === 'above' ? '↑ naik ke atas' : '↓ turun ke bawah';
-        const cpStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
-        message.textContent = `${alert.symbol} udah ${dir} $${alert.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}! Sekarang: ${cpStr}${alert.note ? ' — ' + alert.note : ''}`;
+        title.textContent = '🔔 SMART ALERT TRIGGERED!';
+        message.innerHTML = `<strong>${alert.symbol}</strong>: ${reason}<br/>Harga sekarang: $${currentPrice?.toFixed(2) || 'N/A'}${alert.note ? '<br/>Note: ' + alert.note : ''}`;
     }
+    
     toast.classList.add('active');
     setTimeout(() => toast.classList.remove('active'), 10000);
 }
@@ -430,16 +618,42 @@ function renderPriceAlerts() {
     const list = document.getElementById('priceAlertsList');
     const count = document.getElementById('alertsCount');
     if (!section || !list || !count) return;
+    
     const activeAlerts = alerts.filter(a => !a.triggered);
     if (activeAlerts.length === 0) { section.style.display = 'none'; return; }
+    
     section.style.display = 'block';
     count.textContent = activeAlerts.length;
+    
+    const typeIcons = { price: '💰', rsi: '📊', ema: '', volume: '📶', multi: '🧠' };
+    const typeLabels = { price: 'Price', rsi: 'RSI', ema: 'EMA', volume: 'Volume', multi: 'Multi' };
+    
     list.innerHTML = activeAlerts.map(a => {
-        const dirIcon = a.direction === 'above' ? '↑' : '↓';
-        const dirClass = a.direction === 'above' ? 'above' : 'below';
-        const dirLabel = a.direction === 'above' ? 'Di Atas' : 'Di Bawah';
-        const targetStr = '$' + a.targetPrice.toLocaleString('en-US', { maximumFractionDigits: 2 });
-        return `<div class="price-alert-item ${dirClass}" onclick="openAssetDetail('${a.symbol}', '${a.name.replace(/'/g, "\\'")}', 0, 0, '${a.type}')"><div class="price-alert-icon ${dirClass}">${dirIcon}</div><div class="price-alert-info"><div class="price-alert-symbol">${a.symbol} <span class="price-alert-dir">${dirLabel}</span></div><div class="price-alert-target">Target: ${targetStr}${a.note ? ' • ' + a.note : ''}</div></div><button class="price-alert-delete" onclick="deleteAlert('${a.id}', event)">×</button></div>`;
+        const icon = typeIcons[a.alertType] || '🔔';
+        const label = typeLabels[a.alertType] || 'Price';
+        let detail = '';
+        
+        if (a.alertType === 'price' || !a.alertType) {
+            const dir = a.direction === 'above' ? '↑' : '↓';
+            detail = `${dir} $${a.targetPrice?.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+        } else if (a.alertType === 'rsi') {
+            detail = `RSI ${a.rsiValue}`;
+        } else if (a.alertType === 'ema') {
+            detail = `EMA ${a.emaPeriod}`;
+        } else if (a.alertType === 'volume') {
+            detail = `${a.volumeMultiplier}x Volume`;
+        } else if (a.alertType === 'multi') {
+            detail = `Price + RSI ${a.rsiValue}`;
+        }
+        
+        return `<div class="price-alert-item" onclick="openAssetDetail('${a.symbol}', '${a.name.replace(/'/g, "\\'")}', 0, 0, '${a.type}')">
+            <div class="price-alert-icon">${icon}</div>
+            <div class="price-alert-info">
+                <div class="price-alert-symbol">${a.symbol} <span class="price-alert-dir">${label}</span></div>
+                <div class="price-alert-target">${detail}${a.note ? ' • ' + a.note : ''}</div>
+            </div>
+            <button class="price-alert-delete" onclick="deleteAlert('${a.id}', event)">×</button>
+        </div>`;
     }).join('');
 }
 
@@ -782,8 +996,6 @@ function resizeChart() {
 
 async function loadAnalysis(symbol, name, price, type) {
     const container = document.getElementById('analysisBody');
-    
-    // Tampilkan loading state yang keren
     container.innerHTML = `
         <div style="text-align:center; padding: 30px 0;">
             <div class="loading-spinner"></div>
@@ -792,10 +1004,7 @@ async function loadAnalysis(symbol, name, price, type) {
     `;
     
     try {
-        // 1. Ambil data fundamental dari backend
         const fundamental = await fetchFundamental(symbol, type);
-        
-        // 2. Panggil Edge Function AI
         const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, {
             method: 'POST',
             headers: { 
@@ -809,11 +1018,9 @@ async function loadAnalysis(symbol, name, price, type) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         
-        // 3. Cek apakah backend mengembalikan format AI JSON baru
         if (data.ai_signal && data.confidence !== undefined) {
             renderAISignalUI(data, container);
         } else {
-            // Fallback ke format teks lama (jaga-jaga kalau ada error di backend)
             container.innerHTML = `<div class="ai-analysis-text">${formatAnalysis(data.analysis || 'Gagal memuat analisis.')}</div>`;
         }
     } catch (error) {
@@ -826,13 +1033,11 @@ async function loadAnalysis(symbol, name, price, type) {
     }
 }
 
-// Fungsi baru untuk merender UI AI yang keren
 function renderAISignalUI(data, container) {
     const signal = data.ai_signal.toUpperCase(); 
     const confidence = data.confidence; 
     const reasons = data.reasons || [];
     
-    // Tentukan class dan warna berdasarkan sinyal
     let signalClass = 'hold';
     let signalIcon = '⏸️';
     let barColor = 'var(--gold)';
@@ -847,20 +1052,18 @@ function renderAISignalUI(data, container) {
         barColor = 'var(--red)';
     }
 
-    // Generate HTML untuk daftar alasan
     const reasonsHtml = reasons.length > 0 ? `
         <div class="ai-reasons-title">🧠 Alasan Fundamental:</div>
         <div class="ai-reasons-list">
             ${reasons.map(reason => `
                 <div class="ai-reason-item">
-                    <span class="ai-reason-icon">✦</span>
+                    <span class="ai-reason-icon"></span>
                     <span>${reason}</span>
                 </div>
             `).join('')}
         </div>
     ` : '';
 
-    // Render ke container
     container.innerHTML = `
         <div class="ai-signal-container">
             <div class="ai-signal-badge ${signalClass}">
@@ -882,21 +1085,19 @@ function renderAISignalUI(data, container) {
             
             ${data.analysis ? `
                 <div class="ai-analysis-text">
-                    <strong>📝 Kesimpulan AI:</strong><br>
+                    <strong> Kesimpulan AI:</strong><br>
                     ${formatAnalysis(data.analysis)}
                 </div>
             ` : ''}
         </div>
     `;
 
-    // Animasi bar confidence setelah DOM di-render (biar ada efek transisi mulus)
     setTimeout(() => {
         const fillBar = container.querySelector('.ai-confidence-fill');
         if (fillBar) fillBar.style.width = confidence + '%';
     }, 100);
 }
 
-// Fungsi helper untuk merapikan teks (ganti **text** jadi <strong>text</strong>)
 function formatAnalysis(text) { 
     if (!text) return '';
     return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); 
@@ -1018,6 +1219,94 @@ function deleteHolding(id) {
     renderPortfolio();
 }
 
+// ============ 🆕 AI PORTFOLIO RISK ANALYZER ============
+async function analyzePortfolioRisk() {
+    const container = document.getElementById('portfolioRiskAnalysis');
+    if (!container || portfolio.length === 0) {
+        if (container) container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">🧠 AI sedang menganalisis risiko portofolio...</p>';
+    
+    try {
+        // Analisis sederhana di frontend
+        const sectorMap = {
+            'us-tech': 'Technology',
+            'us-finance': 'Finance',
+            'us-healthcare': 'Healthcare',
+            'us-consumer': 'Consumer',
+            'us-industrial': 'Industrial',
+            'us-energy': 'Energy',
+            'international': 'International',
+            'crypto': 'Crypto',
+            'commodity': 'Commodity',
+            'index': 'Index'
+        };
+        
+        const sectorAllocation = {};
+        let totalValue = 0;
+        
+        const holdingsWithPrice = await Promise.all(portfolio.map(async (h) => {
+            const priceData = await fetchPrice(h.symbol, h.type);
+            const value = (priceData?.price || 0) * h.shares;
+            totalValue += value;
+            const stockInfo = STOCK_UNIVERSE.find(s => s.symbol === h.symbol);
+            const sector = stockInfo ? sectorMap[stockInfo.category] || 'Other' : 'Other';
+            if (!sectorAllocation[sector]) sectorAllocation[sector] = 0;
+            sectorAllocation[sector] += value;
+            return { ...h, value, sector };
+        }));
+        
+        const sectorPercentages = Object.entries(sectorAllocation).map(([sector, value]) => ({
+            sector,
+            percentage: (value / totalValue) * 100
+        })).sort((a, b) => b.percentage - a.percentage);
+        
+        // Risk assessment
+        let riskLevel = 'LOW';
+        let riskColor = 'var(--green)';
+        let riskMessage = 'Portofolio terdiversifikasi dengan baik.';
+        
+        const topSector = sectorPercentages[0];
+        if (topSector && topSector.percentage > 60) {
+            riskLevel = 'HIGH';
+            riskColor = 'var(--red)';
+            riskMessage = `⚠️ Terlalu terkonsentrasi di ${topSector.sector} (${topSector.percentage.toFixed(1)}%). Pertimbangkan diversifikasi!`;
+        } else if (topSector && topSector.percentage > 40) {
+            riskLevel = 'MEDIUM';
+            riskColor = 'var(--gold)';
+            riskMessage = `️ ${topSector.sector} mendominasi (${topSector.percentage.toFixed(1)}%). Monitor closely.`;
+        }
+        
+        const sectorHtml = sectorPercentages.map(s => `
+            <div class="risk-sector-item">
+                <span class="risk-sector-name">${s.sector}</span>
+                <span class="risk-sector-pct" style="color: ${s.percentage > 40 ? 'var(--red)' : 'var(--green)'}">${s.percentage.toFixed(1)}%</span>
+            </div>
+        `).join('');
+        
+        container.innerHTML = `
+            <div class="risk-analysis-container">
+                <div class="risk-header">
+                    <span class="risk-level-badge" style="background: ${riskColor}20; color: ${riskColor}; border-color: ${riskColor}">
+                        ${riskLevel} RISK
+                    </span>
+                </div>
+                <p class="risk-message">${riskMessage}</p>
+                <div class="risk-sectors">
+                    <div class="risk-section-title">📊 Alokasi Sektor:</div>
+                    ${sectorHtml}
+                </div>
+            </div>
+        `;
+        
+    } catch (error) {
+        container.innerHTML = `<div class="analysis-error"><p>❌ Gagal menganalisis risiko</p></div>`;
+    }
+}
+
 // ============ NEWS ============
 async function renderNews() {
     const container = document.getElementById('newsList');
@@ -1036,7 +1325,7 @@ async function renderNews() {
         container.innerHTML = news.map((item, i) => {
             const time = formatTime(item.timePublished);
             const category = (item.category || 'NEWS').toUpperCase();
-            return `<div class="news-card" id="news-card-${i}" onclick="openNewsDetail(${i})"><div class="news-title" id="news-title-${i}"><span class="trans-inline-spinner"></span>${item.title}</div><div class="news-summary" id="news-summary-${i}">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div><div class="news-meta"><span class="sentiment-tag neutral">${category}</span><span>${item.source || 'Unknown'}</span><span>${time}</span><span class="trans-done-badge" id="trans-badge-${i}" style="display:none;">🌐 ID</span></div></div>`;
+            return `<div class="news-card" id="news-card-${i}" onclick="openNewsDetail(${i})"><div class="news-title" id="news-title-${i}"><span class="trans-inline-spinner"></span>${item.title}</div><div class="news-summary" id="news-summary-${i}">${item.summary ? item.summary.substring(0, 150) + '...' : ''}</div><div class="news-meta"><span class="sentiment-tag neutral">${category}</span><span>${item.source || 'Unknown'}</span><span>${time}</span><span class="trans-done-badge" id="trans-badge-${i}" style="display:none;"> ID</span></div></div>`;
         }).join('');
         translateNewsInBackground(news);
     } catch (error) { container.innerHTML = `<div class="empty-state">❌ ${error.message}</div>`; }
@@ -1163,6 +1452,9 @@ document.getElementById('closeAlertModal').addEventListener('click', closeAlertM
 document.getElementById('cancelAlert').addEventListener('click', closeAlertModal);
 document.getElementById('saveAlert').addEventListener('click', saveAlert);
 document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview);
+document.getElementById('alertRsiValue').addEventListener('input', updateAlertPreview);
+document.getElementById('alertEmaPeriod').addEventListener('change', updateAlertPreview);
+document.getElementById('alertVolumeMultiplier').addEventListener('input', updateAlertPreview);
 document.querySelectorAll('.direction-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
@@ -1194,13 +1486,13 @@ document.getElementById('saveHolding').addEventListener('click', () => {
     document.getElementById('holdingShares').value = '';
     document.getElementById('holdingAvgPrice').value = '';
     renderPortfolio();
+    analyzePortfolioRisk();
 });
 
 document.getElementById('closeNewsDetail').addEventListener('click', closeNewsDetail);
 document.getElementById('ndOpenOriginal').addEventListener('click', openNewsOriginal);
 document.getElementById('ndCopyLink').addEventListener('click', copyNewsLink);
 
-// CURRENCY EVENT LISTENERS
 document.getElementById('currencyOpenBtn').addEventListener('click', openCurrencyModal);
 document.getElementById('closeCurrencyModal').addEventListener('click', closeCurrencyModal);
 document.getElementById('currencyFromAmount').addEventListener('input', convertCurrency);
@@ -1238,4 +1530,4 @@ renderPriceAlerts();
 fetchMarketMovers();
 
 setTimeout(() => checkAlerts(), 5000);
-alertCheckInterval = setInterval(checkAlerts(), 60000);
+alertCheckInterval = setInterval(checkAlerts, 60000);
