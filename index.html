@@ -34,11 +34,12 @@
             <button class="tab" data-tab="screener">Screener</button>
             <button class="tab" data-tab="portfolio">Portfolio</button>
             <button class="tab" data-tab="news">News</button>
+            <button class="tab" data-tab="heatmap">🔥 Heatmap</button>
         </div>
 
         <!-- CONTENT -->
         <main class="content">
-            
+
             <!-- TAB 1: WATCHLIST -->
             <div class="tab-content active" id="tab-watchlist">
                 <div class="section-header">
@@ -77,7 +78,7 @@
                     <h2>Value Screener</h2>
                 </div>
                 <p class="description">Cari saham undervalued dengan fundamental kuat ala Warren Buffett.</p>
-                
+
                 <div class="screener-filters">
                     <div class="filter-group">
                         <label>Max P/E Ratio</label>
@@ -101,7 +102,7 @@
                     </div>
                 </div>
                 <button class="primary-btn" id="runScreener">🔍 Scan Market</button>
-                
+
                 <div id="screenerResults"></div>
             </div>
 
@@ -160,13 +161,38 @@
                 </div>
             </div>
 
+            <!-- TAB 5: SECTOR HEATMAP -->
+            <div class="tab-content" id="tab-heatmap">
+                <div class="section-header">
+                    <h2>🔥 Sector Heatmap</h2>
+                </div>
+                <p class="description">Visualisasi performa tiap sektor pasar saham hari ini. Warna menunjukkan rata-rata perubahan harga.</p>
+
+                <div class="heatmap-sentiment" id="heatmapSentiment">
+                    <div class="heatmap-sentiment-title">📊 Market Breadth</div>
+                    <div class="heatmap-sentiment-bar">
+                        <div class="heatmap-sentiment-fill bullish" id="hmBullFill" style="width:50%"></div>
+                        <div class="heatmap-sentiment-fill bearish" id="hmBearFill" style="width:50%"></div>
+                    </div>
+                    <div class="heatmap-sentiment-stats" id="heatmapSentimentStats">
+                        <span class="sentiment-stat bullish">🟢 - Bullish</span>
+                        <span class="sentiment-stat bearish">🔴 - Bearish</span>
+                    </div>
+                </div>
+
+                <div class="heatmap-grid" id="heatmapGrid">
+                    <div style="grid-column: 1 / -1; text-align:center; padding: 30px 20px;">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text">Memuat data sektor...</p>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
     <!-- ================= MODALS ================= -->
-    <!-- (Semua modal sama seperti sebelumnya: assetModal, browseModal, holdingModal, chartModal, alertModal, newsDetailModal, currencyModal, alertToast) -->
-    <!-- Untuk menghemat ruang, pastikan struktur modal di file index.html lu yang sebelumnya tetap ada. Jika butuh full modal code, copy dari file index.html sebelumnya yang sudah berhasil. -->
-    
+
     <!-- 1. ADD ASSET MODAL -->
     <div class="modal-overlay" id="assetModal">
         <div class="modal-content">
@@ -199,7 +225,7 @@
         </div>
     </div>
 
-    <!-- 2. BROWSE STOCK MODAL -->
+    <!-- 2. BROWSE STOCK MODAL (11 KATEGORI) -->
     <div class="modal-overlay" id="browseModal">
         <div class="modal-content browse-content">
             <div class="modal-header">
@@ -207,7 +233,7 @@
                 <button class="modal-close" id="closeBrowseModal">×</button>
             </div>
             <div class="browse-search-bar">
-                <input type="text" id="browseSearch" placeholder=" Cari symbol atau nama...">
+                <input type="text" id="browseSearch" placeholder="🔍 Cari symbol atau nama...">
             </div>
             <div class="browse-categories">
                 <button class="cat-btn active" data-cat="all">Semua</button>
@@ -215,7 +241,12 @@
                 <button class="cat-btn" data-cat="us-finance">Finance</button>
                 <button class="cat-btn" data-cat="us-healthcare">Healthcare</button>
                 <button class="cat-btn" data-cat="us-consumer">Consumer</button>
+                <button class="cat-btn" data-cat="us-industrial">Industrial</button>
+                <button class="cat-btn" data-cat="us-energy">Energy</button>
+                <button class="cat-btn" data-cat="international">International</button>
                 <button class="cat-btn" data-cat="crypto">Crypto</button>
+                <button class="cat-btn" data-cat="commodity">Commodity</button>
+                <button class="cat-btn" data-cat="index">Index</button>
             </div>
             <div class="browse-body" id="browseBody"></div>
         </div>
@@ -307,7 +338,7 @@
             </div>
             <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
             <div class="analysis-section">
-                <div class="analysis-title"> Analisis AI Value Investing</div>
+                <div class="analysis-title">🧠 Analisis AI Value Investing</div>
                 <div class="analysis-body-inline" id="analysisBody">
                     <div class="loading-spinner"></div>
                     <p class="loading-text">Mengambil data...</p>
@@ -332,7 +363,7 @@
                 <div>
                     <label style="font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; display: block;">Jenis Alert:</label>
                     <div class="alert-type-selector">
-                        <button class="alert-type-btn active" data-type="price" onclick="selectAlertType('price')"><span class="type-icon"></span><span>Harga</span></button>
+                        <button class="alert-type-btn active" data-type="price" onclick="selectAlertType('price')"><span class="type-icon">💰</span><span>Harga</span></button>
                         <button class="alert-type-btn" data-type="rsi" onclick="selectAlertType('rsi')"><span class="type-icon">📊</span><span>RSI</span></button>
                         <button class="alert-type-btn" data-type="ema" onclick="selectAlertType('ema')"><span class="type-icon">📈</span><span>EMA</span></button>
                         <button class="alert-type-btn" data-type="volume" onclick="selectAlertType('volume')"><span class="type-icon">📶</span><span>Volume</span></button>
@@ -397,7 +428,7 @@
             <h2 class="news-detail-title" id="ndTitle">Judul Berita</h2>
             <div class="news-detail-summary" id="ndSummary">Ringkasan berita...</div>
             <div class="news-detail-actions">
-                <button class="news-action-btn primary" id="ndOpenOriginal"> Baca Asli</button>
+                <button class="news-action-btn primary" id="ndOpenOriginal">🌐 Baca Asli</button>
                 <button class="news-action-btn" id="ndCopyLink">🔗 Copy Link</button>
             </div>
         </div>
@@ -415,14 +446,14 @@
                     <span class="currency-field-label">Dari</span>
                     <div class="currency-input-row">
                         <input type="number" id="currencyFromAmount" value="1" min="0" step="any">
-                        <select id="currencyFromSelect"><option value="USD" selected>🇸 USD</option></select>
+                        <select id="currencyFromSelect"></select>
                     </div>
                 </div>
                 <button class="currency-swap-btn" id="currencySwapBtn">⇅</button>
                 <div class="currency-field">
                     <span class="currency-field-label">Ke</span>
                     <div class="currency-input-row">
-                        <select class="currency-to-select" id="currencyToSelect"><option value="IDR" selected>🇮🇩 IDR</option></select>
+                        <select class="currency-to-select" id="currencyToSelect"></select>
                     </div>
                 </div>
                 <div class="currency-result-box" id="currencyToResult">Rp 0</div>
@@ -452,7 +483,38 @@
         </div>
     </div>
 
-    <!-- 8. ALERT TOAST -->
+    <!-- 8. 🔥 SECTOR DETAIL MODAL -->
+    <div class="sector-detail-modal" id="sectorDetailModal">
+        <div class="sector-detail-content">
+            <div class="sector-detail-header">
+                <div class="sector-detail-title-wrap">
+                    <span class="sector-detail-icon" id="sdIcon">🏭</span>
+                    <div>
+                        <h3 id="sdName">Technology</h3>
+                        <p class="sector-detail-subtitle" id="sdSubtitle">- stocks</p>
+                    </div>
+                </div>
+                <button class="analysis-close" id="closeSectorDetail">×</button>
+            </div>
+            <div class="sector-detail-summary">
+                <div class="sector-summary-item">
+                    <span class="summary-label">AVG CHANGE</span>
+                    <span class="summary-value" id="sdAvgChange">-</span>
+                </div>
+                <div class="sector-summary-item">
+                    <span class="summary-label">BULLISH</span>
+                    <span class="summary-value up" id="sdBullish">-</span>
+                </div>
+                <div class="sector-summary-item">
+                    <span class="summary-label">BEARISH</span>
+                    <span class="summary-value down" id="sdBearish">-</span>
+                </div>
+            </div>
+            <div class="sector-stocks-list" id="sdStocksList"></div>
+        </div>
+    </div>
+
+    <!-- 9. ALERT TOAST -->
     <div class="alert-toast" id="alertToast">
         <div class="alert-toast-icon">🔔</div>
         <div class="alert-toast-content">
@@ -463,6 +525,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=14000"></script>
 </body>
 </html>
