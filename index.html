@@ -22,6 +22,7 @@
                 </div>
             </div>
             <div class="header-right-actions">
+                <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle theme">🌙</button>
                 <button class="currency-open-btn" id="currencyOpenBtn" aria-label="Currency">💱</button>
                 <button class="browse-btn" id="browseStockBtn">+ Browse</button>
             </div>
@@ -61,13 +62,21 @@
                     <div class="price-alerts-list" id="priceAlertsList"></div>
                 </div>
 
+                <!-- WATCHLIST GROUPS -->
                 <div class="section-header" style="margin-top: 24px;">
                     <h2>My Watchlist</h2>
                     <div style="display:flex; gap:8px;">
                         <button class="sort-ai-btn" id="sortAiBtn">🤖 Sort AI</button>
+                        <button class="add-group-btn" id="addGroupBtn" title="Tambah Group">📁</button>
                         <button class="add-btn" id="addAssetBtn">+</button>
                     </div>
                 </div>
+
+                <div class="watchlist-groups-bar" id="watchlistGroupsBar">
+                    <button class="group-chip active" data-group="all">📊 Semua</button>
+                    <button class="group-chip" data-group="favorites">⭐ Favorites</button>
+                </div>
+
                 <div class="watchlist" id="watchlist">
                     <div class="empty-state">Memuat watchlist...</div>
                 </div>
@@ -143,6 +152,13 @@
                         </div>
                     </div>
                     <div class="portfolio-legend" id="portfolioLegend"></div>
+                </div>
+
+                <!-- PORTFOLIO PERFORMANCE CHART -->
+                <div class="portfolio-perf-section" id="portfolioPerfSection" style="display:none;">
+                    <div class="portfolio-chart-title">📈 Portfolio Performance (30 Hari)</div>
+                    <div id="portfolioPerfChart" class="portfolio-perf-chart"></div>
+                    <div class="portfolio-perf-stats" id="portfolioPerfStats"></div>
                 </div>
 
                 <div id="portfolioRiskAnalysis" style="display: none; margin-top: 20px;"></div>
@@ -277,10 +293,40 @@
                         <option value="commodity">Commodity</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Group (Opsional)</label>
+                    <select id="assetGroup">
+                        <option value="">— Tanpa Group —</option>
+                    </select>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel" id="cancelAsset">Batal</button>
                 <button class="btn-save" id="saveAsset">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1b. ADD GROUP MODAL -->
+    <div class="modal-overlay" id="groupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Buat Group Baru</h3>
+                <button class="modal-close" id="closeGroupModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nama Group</label>
+                    <input type="text" id="groupName" placeholder="Contoh: Tech Stocks, Crypto, Dividend">
+                </div>
+                <div class="form-group">
+                    <label>Icon (Emoji)</label>
+                    <input type="text" id="groupIcon" placeholder="📁" maxlength="2" value="📁">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancelGroup">Batal</button>
+                <button class="btn-save" id="saveGroup">Buat Group</button>
             </div>
         </div>
     </div>
@@ -372,7 +418,18 @@
                     <button class="tf-btn" data-tf="Y">Y</button>
                 </div>
             </div>
+
+            <!-- INDICATOR TOGGLES -->
+            <div class="indicator-toggles">
+                <button class="ind-toggle-btn" data-ind="ma50">MA 50</button>
+                <button class="ind-toggle-btn" data-ind="ma200">MA 200</button>
+                <button class="ind-toggle-btn" data-ind="bollinger">Bollinger</button>
+                <button class="ind-toggle-btn" data-ind="macd">MACD</button>
+            </div>
+
             <div class="tradingview-container" id="tradingviewContainer"></div>
+            <div class="macd-container" id="macdContainer" style="display:none;"></div>
+
             <div class="indicators-panel">
                 <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
                 <div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div>
@@ -587,12 +644,10 @@
                 </div>
                 <button class="analysis-close" id="closeDetailModal">×</button>
             </div>
-
             <div class="indeks-detail-price-box">
                 <div class="indeks-detail-price" id="detailPrice">-</div>
                 <div class="indeks-detail-change" id="detailChange">-</div>
             </div>
-
             <div class="indeks-detail-stats">
                 <div class="indeks-stat-item">
                     <span class="indeks-stat-label">DAY HIGH</span>
@@ -602,44 +657,4 @@
                     <span class="indeks-stat-label">DAY LOW</span>
                     <span class="indeks-stat-value down" id="detailLow">-</span>
                 </div>
-                <div class="indeks-stat-item">
-                    <span class="indeks-stat-label">PREV CLOSE</span>
-                    <span class="indeks-stat-value" id="detailPrevClose">-</span>
-                </div>
-                <div class="indeks-stat-item">
-                    <span class="indeks-stat-label">VOLUME</span>
-                    <span class="indeks-stat-value" id="detailVolume">-</span>
-                </div>
-            </div>
-
-            <div class="indeks-detail-sectors-section">
-                <h4 class="indeks-section-title">🏭 Sektor Breakdown</h4>
-                <div class="indeks-sectors-list" id="detailSectors"></div>
-            </div>
-
-            <div class="indeks-detail-chart-section">
-                <h4 class="indeks-section-title">📈 Chart 1 Tahun</h4>
-                <div id="indeksChartContainer" class="indeks-chart-container"></div>
-            </div>
-
-            <div class="indeks-detail-constituents-section">
-                <h4 class="indeks-section-title">🏆 Top Holdings</h4>
-                <div class="indeks-constituents-list" id="detailConstituents"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 10. ALERT TOAST -->
-    <div class="alert-toast" id="alertToast">
-        <div class="alert-toast-icon">🔔</div>
-        <div class="alert-toast-content">
-            <div class="alert-toast-title" id="alertToastTitle">Alert!</div>
-            <div class="alert-toast-message" id="alertToastMessage">Pesan alert...</div>
-        </div>
-        <button class="alert-toast-close" id="alertToastClose">×</button>
-    </div>
-
-    <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=16000"></script>
-</body>
-                        </html>
+                <div class="indeks-stat-item
