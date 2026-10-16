@@ -440,7 +440,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     let totalScore = 0;
     let maxPossible = 0;
 
-    // 1. ROE (Return on Equity) — max 15
     const roe = fundamental.roe || 0;
     let roeScore = 0; let roeStatus = 'fail'; let roeDesc = '';
     if (roe >= 0.20) { roeScore = 15; roeStatus = 'pass'; roeDesc = `ROE sangat baik (${(roe*100).toFixed(1)}%) — bisnis sangat efisien`; }
@@ -451,7 +450,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'ROE (Return on Equity)', icon: '💰', score: roeScore, max: 15, value: roe > 0 ? `${(roe*100).toFixed(2)}%` : 'N/A', status: roeStatus, desc: roeDesc });
     totalScore += roeScore; maxPossible += 15;
 
-    // 2. DER (Debt to Equity) — max 15
     const der = fundamental.debt_to_equity != null ? fundamental.debt_to_equity : -1;
     let derScore = 0; let derStatus = 'fail'; let derDesc = '';
     if (der < 0) { derScore = 5; derStatus = 'partial'; derDesc = 'Data DER tidak tersedia'; }
@@ -462,7 +460,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'DER (Debt to Equity)', icon: '⚖️', score: derScore, max: 15, value: der >= 0 ? der.toFixed(2) : 'N/A', status: derStatus, desc: derDesc });
     totalScore += derScore; maxPossible += 15;
 
-    // 3. P/E Ratio — max 10
     const pe = fundamental.pe_ratio || 0;
     let peScore = 0; let peStatus = 'fail'; let peDesc = '';
     if (pe <= 0) { peScore = 0; peStatus = 'fail'; peDesc = 'P/E negatif — perusahaan merugi'; }
@@ -473,7 +470,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'P/E Ratio', icon: '📊', score: peScore, max: 10, value: pe > 0 ? pe.toFixed(2) : 'N/A', status: peStatus, desc: peDesc });
     totalScore += peScore; maxPossible += 10;
 
-    // 4. Profit Margin — max 10
     const margin = fundamental.profit_margin || fundamental.net_margin || 0;
     let mScore = 0; let mStatus = 'fail'; let mDesc = '';
     if (margin >= 0.20) { mScore = 10; mStatus = 'pass'; mDesc = `Margin sangat baik (${(margin*100).toFixed(1)}%)`; }
@@ -484,7 +480,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'Profit Margin', icon: '💵', score: mScore, max: 10, value: margin > 0 ? `${(margin*100).toFixed(2)}%` : 'N/A', status: mStatus, desc: mDesc });
     totalScore += mScore; maxPossible += 10;
 
-    // 5. EPS Growth — max 10
     const epsGrowth = fundamental.eps_growth || 0;
     let eScore = 0; let eStatus = 'fail'; let eDesc = '';
     if (epsGrowth >= 0.15) { eScore = 10; eStatus = 'pass'; eDesc = `EPS growth kuat (${(epsGrowth*100).toFixed(1)}%)`; }
@@ -494,7 +489,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'EPS Growth', icon: '📈', score: eScore, max: 10, value: epsGrowth !== 0 ? `${(epsGrowth*100).toFixed(2)}%` : 'N/A', status: eStatus, desc: eDesc });
     totalScore += eScore; maxPossible += 10;
 
-    // 6. Dividend Yield — max 10
     const divYield = fundamental.dividend_yield || 0;
     let dScore = 0; let dStatus = 'partial'; let dDesc = '';
     if (divYield >= 0.04) { dScore = 10; dStatus = 'pass'; dDesc = `Dividen tinggi (${(divYield*100).toFixed(2)}%) — income bagus`; }
@@ -504,7 +498,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'Dividend Yield', icon: '💸', score: dScore, max: 10, value: divYield > 0 ? `${(divYield*100).toFixed(2)}%` : 'N/A', status: dStatus, desc: dDesc });
     totalScore += dScore; maxPossible += 10;
 
-    // 7. Current Ratio — max 10
     const currRatio = fundamental.current_ratio || 0;
     let crScore = 0; let crStatus = 'fail'; let crDesc = '';
     if (currRatio >= 2.0) { crScore = 10; crStatus = 'pass'; crDesc = `Likuiditas sangat kuat (${currRatio.toFixed(2)})`; }
@@ -515,7 +508,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'Current Ratio', icon: '💧', score: crScore, max: 10, value: currRatio > 0 ? currRatio.toFixed(2) : 'N/A', status: crStatus, desc: crDesc });
     totalScore += crScore; maxPossible += 10;
 
-    // 8. P/B Ratio — max 10
     const pb = fundamental.pb_ratio || 0;
     let pbScore = 0; let pbStatus = 'fail'; let pbDesc = '';
     if (pb <= 0) { pbScore = 0; pbStatus = 'fail'; pbDesc = 'P/B negatif atau tidak tersedia'; }
@@ -526,7 +518,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'P/B Ratio', icon: '📉', score: pbScore, max: 10, value: pb > 0 ? pb.toFixed(2) : 'N/A', status: pbStatus, desc: pbDesc });
     totalScore += pbScore; maxPossible += 10;
 
-    // 9. Revenue Growth — max 5
     const revGrowth = fundamental.revenue_growth || 0;
     let rScore = 0; let rStatus = 'fail'; let rDesc = '';
     if (revGrowth >= 0.15) { rScore = 5; rStatus = 'pass'; rDesc = `Revenue growth kuat (${(revGrowth*100).toFixed(1)}%)`; }
@@ -536,7 +527,6 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'Revenue Growth', icon: '🚀', score: rScore, max: 5, value: revGrowth !== 0 ? `${(revGrowth*100).toFixed(2)}%` : 'N/A', status: rStatus, desc: rDesc });
     totalScore += rScore; maxPossible += 5;
 
-    // 10. Price Momentum (1Y) — max 5
     let momentum = 0; let momScore = 0; let momStatus = 'partial'; let momDesc = '';
     if (chartData && chartData.length > 20) {
         const firstClose = chartData[0].close;
@@ -550,9 +540,7 @@ function calculateValueScore(fundamental, priceData, chartData) {
     criteria.push({ label: 'Price Momentum (1Y)', icon: '🎯', score: momScore, max: 5, value: `${momentum >= 0 ? '+' : ''}${momentum.toFixed(1)}%`, status: momStatus, desc: momDesc });
     totalScore += momScore; maxPossible += 5;
 
-    // Normalize ke skala 100
     const normalizedScore = maxPossible > 0 ? Math.round((totalScore / maxPossible) * 100) : 0;
-
     return { score: normalizedScore, rawScore: totalScore, maxScore: maxPossible, criteria };
 }
 
@@ -662,6 +650,248 @@ function renderScorecardVerdict(result, verdict, fundamental) {
 
 function closeScorecard() {
     document.getElementById('scorecardModal').classList.remove('active');
+}
+
+// ============ 💰 DCF VALUATION CALCULATOR ============
+let dcfState = { eps: 0, growth1: 10, growth2: 5, terminal: 2.5, discount: 10, currentPrice: 0, symbol: '', name: '' };
+
+async function openDcf() {
+    if (!currentSymbol) return;
+    const modal = document.getElementById('dcfModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.getElementById('dcfTitle').textContent = currentSymbol + ' — ' + currentName;
+    const heroEl = document.getElementById('dcfHero');
+    heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Mengambil data fundamental untuk DCF...</p></div>';
+    document.getElementById('dcfResult').style.display = 'none';
+    document.getElementById('dcfSensitivity').style.display = 'none';
+    document.getElementById('dcfMethods').style.display = 'none';
+    document.getElementById('dcfInputsSection').style.display = 'block';
+
+    try {
+        const fundamental = await fetchFundamental(currentSymbol, currentType);
+        // Auto-fill EPS dari data fundamental
+        let eps = fundamental.eps || fundamental.eps_forward || 0;
+        // Kalau EPS tidak ada, coba dari PE & price
+        if (!eps && fundamental.pe_ratio > 0 && currentPrice > 0) {
+            eps = currentPrice / fundamental.pe_ratio;
+        }
+        document.getElementById('dcfEps').value = eps > 0 ? eps.toFixed(2) : '';
+        // Auto-fill growth dari EPS growth
+        if (fundamental.eps_growth && fundamental.eps_growth > 0) {
+            const g = Math.min(fundamental.eps_growth * 100, 30); // Cap 30%
+            document.getElementById('dcfGrowth1').value = g.toFixed(1);
+        }
+        dcfState.eps = eps;
+        dcfState.currentPrice = currentPrice;
+        dcfState.symbol = currentSymbol;
+        dcfState.name = currentName;
+        // Render hero dengan info
+        heroEl.innerHTML = `
+            <div class="dcf-intrinsic-label">Harga Saham Sekarang</div>
+            <div class="dcf-intrinsic-value fair">$${currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
+            <div class="dcf-current-price">EPS (auto-fill): <strong>$${eps > 0 ? eps.toFixed(2) : 'N/A'}</strong> | P/E: <strong>${fundamental.pe_ratio ? fundamental.pe_ratio.toFixed(1) : 'N/A'}</strong></div>
+            <div class="dcf-hero-desc">Sesuaikan asumsi di bawah, lalu tap "Hitung Valuasi" untuk melihat intrinsic value saham ini.</div>
+        `;
+        // Kalau EPS tersedia, langsung hitung
+        if (eps > 0) {
+            calculateDCF();
+        }
+    } catch (error) {
+        console.error('DCF error:', error);
+        heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal mengambil data</p><p class="error-detail">${error.message}</p></div>`;
+    }
+}
+
+function calculateDCF() {
+    const eps = parseFloat(document.getElementById('dcfEps').value) || 0;
+    const growth1 = (parseFloat(document.getElementById('dcfGrowth1').value) || 10) / 100;
+    const growth2 = (parseFloat(document.getElementById('dcfGrowth2').value) || 5) / 100;
+    const terminal = (parseFloat(document.getElementById('dcfTerminal').value) || 2.5) / 100;
+    const discount = (parseFloat(document.getElementById('dcfDiscount').value) || 10) / 100;
+
+    if (eps <= 0) { alert('EPS harus lebih dari 0!'); return; }
+    if (discount <= terminal) { alert('Discount rate harus lebih besar dari terminal growth!'); return; }
+
+    dcfState.eps = eps;
+    dcfState.growth1 = growth1 * 100;
+    dcfState.growth2 = growth2 * 100;
+    dcfState.terminal = terminal * 100;
+    dcfState.discount = discount * 100;
+
+    // Hitung DCF 10 tahun
+    let pv = 0;
+    let currentEps = eps;
+    const yearlyData = [];
+    // Tahun 1-5: growth1
+    for (let year = 1; year <= 5; year++) {
+        currentEps = currentEps * (1 + growth1);
+        const discountFactor = Math.pow(1 + discount, year);
+        const pvYear = currentEps / discountFactor;
+        pv += pvYear;
+        yearlyData.push({ year, eps: currentEps, pv: pvYear });
+    }
+    // Tahun 6-10: growth2
+    for (let year = 6; year <= 10; year++) {
+        currentEps = currentEps * (1 + growth2);
+        const discountFactor = Math.pow(1 + discount, year);
+        const pvYear = currentEps / discountFactor;
+        pv += pvYear;
+        yearlyData.push({ year, eps: currentEps, pv: pvYear });
+    }
+    // Terminal value
+    const terminalEps = currentEps * (1 + terminal);
+    const terminalValue = terminalEps / (discount - terminal);
+    const pvTerminal = terminalValue / Math.pow(1 + discount, 10);
+    const intrinsicValue = pv + pvTerminal;
+
+    renderDCFResult(intrinsicValue, pv, pvTerminal, terminalValue);
+    renderDCFSensitivity(eps, growth1, growth2, terminal, discount);
+    renderDCFMethods(eps, intrinsicValue);
+    document.getElementById('dcfResult').style.display = 'block';
+    document.getElementById('dcfSensitivity').style.display = 'block';
+    document.getElementById('dcfMethods').style.display = 'block';
+}
+
+function renderDCFResult(intrinsicValue, pv, pvTerminal, terminalValue) {
+    const currentPrice = dcfState.currentPrice;
+    const mos = currentPrice > 0 ? ((intrinsicValue - currentPrice) / currentPrice) * 100 : 0;
+    const updown = currentPrice > 0 ? ((intrinsicValue / currentPrice) - 1) * 100 : 0;
+
+    let verdict, verdictClass, verdictIcon, verdictDesc;
+    if (updown > 20) {
+        verdict = 'UNDERVALUED'; verdictClass = 'undervalued'; verdictIcon = '💎';
+        verdictDesc = `Harga saham sekarang <strong>${Math.abs(updown).toFixed(1)}%</strong> di bawah intrinsic value. Ini peluang bagus untuk value investing!`;
+    } else if (updown < -20) {
+        verdict = 'OVERVALUED'; verdictClass = 'overvalued'; verdictIcon = '⚠️';
+        verdictDesc = `Harga saham sekarang <strong>${Math.abs(updown).toFixed(1)}%</strong> di atas intrinsic value. Berhati-hati, mungkin overpriced.`;
+    } else {
+        verdict = 'FAIRLY VALUED'; verdictClass = 'fair'; verdictIcon = '⚖️';
+        verdictDesc = `Harga saham sekarang <strong>mendekati</strong> intrinsic value. Valuasi wajar.`;
+    }
+
+    const heroEl = document.getElementById('dcfHero');
+    heroEl.className = 'dcf-hero ' + verdictClass;
+    heroEl.innerHTML = `
+        <div class="dcf-intrinsic-label">Intrinsic Value (DCF)</div>
+        <div class="dcf-intrinsic-value ${verdictClass}">$${intrinsicValue.toFixed(2)}</div>
+        <div class="dcf-verdict-badge ${verdictClass}">${verdictIcon} ${verdict}</div>
+        <div class="dcf-current-price">Harga sekarang: <strong>$${currentPrice.toFixed(2)}</strong> | Potensi: <strong>${updown >= 0 ? '+' : ''}${updown.toFixed(1)}%</strong></div>
+        <div class="dcf-margin-of-safety">
+            <div class="dcf-mos-item">
+                <span class="dcf-mos-label">Margin of Safety</span>
+                <span class="dcf-mos-value ${mos >= 0 ? 'positive' : 'negative'}">${mos >= 0 ? '+' : ''}${mos.toFixed(1)}%</span>
+            </div>
+            <div class="dcf-mos-item">
+                <span class="dcf-mos-label">Terminal Value</span>
+                <span class="dcf-mos-value">$${terminalValue.toFixed(2)}</span>
+            </div>
+        </div>
+        <div class="dcf-hero-desc">${verdictDesc}</div>
+    `;
+
+    const resultEl = document.getElementById('dcfResult');
+    resultEl.innerHTML = `
+        <div class="dcf-result-title">📊 Breakdown Perhitungan DCF</div>
+        <div class="dcf-result-row"><span class="dcf-result-label">EPS Saat Ini</span><span class="dcf-result-value">$${dcfState.eps.toFixed(2)}</span></div>
+        <div class="dcf-result-row"><span class="dcf-result-label">Growth 5 Tahun Pertama</span><span class="dcf-result-value positive">${dcfState.growth1.toFixed(1)}%</span></div>
+        <div class="dcf-result-row"><span class="dcf-result-label">Growth 5 Tahun Kedua</span><span class="dcf-result-value positive">${dcfState.growth2.toFixed(1)}%</span></div>
+        <div class="dcf-result-row"><span class="dcf-result-label">Terminal Growth</span><span class="dcf-result-value">${dcfState.terminal.toFixed(1)}%</span></div>
+        <div class="dcf-result-row"><span class="dcf-result-label">Discount Rate (WACC)</span><span class="dcf-result-value negative">${dcfState.discount.toFixed(1)}%</span></div>
+        <div class="dcf-result-row"><span class="dcf-result-label">PV Cash Flows 10 Tahun</span><span class="dcf-result-value">$${pv.toFixed(2)}</span></div>
+        <div class="dcf-result-row"><span class="dcf-result-label">PV Terminal Value</span><span class="dcf-result-value">$${pvTerminal.toFixed(2)}</span></div>
+        <div class="dcf-result-row" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);"><span class="dcf-result-label"><strong>INTRINSIC VALUE</strong></span><span class="dcf-result-value positive" style="font-size: 16px;">$${intrinsicValue.toFixed(2)}</span></div>
+    `;
+}
+
+function renderDCFSensitivity(eps, growth1, growth2, terminal, discount) {
+    // Matrix: discount rate (rows) × growth rate (cols)
+    const discountRates = [discount - 0.02, discount, discount + 0.02];
+    const growthRates = [growth1 - 0.05, growth1, growth1 + 0.05];
+
+    const el = document.getElementById('dcfSensitivity');
+    let tableHtml = `<div class="dcf-sens-table">`;
+    // Header row
+    tableHtml += `<div class="dcf-sens-cell dcf-sens-header">Disc\\Grow</div>`;
+    growthRates.forEach(g => {
+        tableHtml += `<div class="dcf-sens-cell dcf-sens-header">${(g*100).toFixed(1)}%</div>`;
+    });
+    // Data rows
+    discountRates.forEach(d => {
+        tableHtml += `<div class="dcf-sens-cell dcf-sens-row-label">${(d*100).toFixed(1)}%</div>`;
+        growthRates.forEach(g => {
+            const val = calcDCFValue(eps, g, growth2, terminal, d);
+            const diff = dcfState.currentPrice > 0 ? ((val / dcfState.currentPrice) - 1) * 100 : 0;
+            let cls = 'neutral';
+            if (diff > 15) cls = 'cheap';
+            else if (diff < -15) cls = 'expensive';
+            tableHtml += `<div class="dcf-sens-cell dcf-sens-value ${cls}">$${val.toFixed(0)}</div>`;
+        });
+    });
+    tableHtml += `</div>`;
+
+    el.innerHTML = `
+        <div class="dcf-sens-title">🎛️ Sensitivity Analysis</div>
+        <div class="dcf-sens-desc">Matriks valuasi berdasarkan kombinasi discount rate & growth rate. Hijau = undervalued, merah = overvalued.</div>
+        ${tableHtml}
+    `;
+}
+
+function calcDCFValue(eps, growth1, growth2, terminal, discount) {
+    let pv = 0;
+    let currentEps = eps;
+    for (let year = 1; year <= 5; year++) {
+        currentEps = currentEps * (1 + growth1);
+        pv += currentEps / Math.pow(1 + discount, year);
+    }
+    for (let year = 6; year <= 10; year++) {
+        currentEps = currentEps * (1 + growth2);
+        pv += currentEps / Math.pow(1 + discount, year);
+    }
+    const terminalEps = currentEps * (1 + terminal);
+    const terminalValue = terminalEps / (discount - terminal);
+    const pvTerminal = terminalValue / Math.pow(1 + discount, 10);
+    return pv + pvTerminal;
+}
+
+function renderDCFMethods(eps, dcfValue) {
+    const currentPrice = dcfState.currentPrice;
+
+    // Method 2: Graham Number = sqrt(22.5 × EPS × BVPS)
+    // Kita tidak punya BVPS, jadi pakai estimasi: BVPS = price / pb_ratio (kalau ada)
+    // Fallback: BVPS ≈ EPS × 15
+    const grahamValue = Math.sqrt(22.5 * eps * (eps * 15));
+
+    // Method 3: PE Multiple — pakai P/E rata-rata industri 15-20
+    const pe15Value = eps * 15;
+    const pe20Value = eps * 20;
+    const peAvgValue = eps * 17.5;
+
+    let methodsHtml = `<div class="dcf-methods-title">📐 Metode Valuasi Alternatif</div>`;
+
+    // DCF
+    const dcfVerdict = currentPrice > 0 ? ((dcfValue / currentPrice) - 1) * 100 : 0;
+    const dcfCls = dcfVerdict > 15 ? 'cheap' : dcfVerdict < -15 ? 'expensive' : 'fair';
+    const dcfLabel = dcfVerdict > 15 ? 'MURAH' : dcfVerdict < -15 ? 'MAHAL' : 'WAJAR';
+    methodsHtml += `<div class="dcf-method-item"><div class="dcf-method-name">💰 DCF (Discounted Cash Flow)</div><div class="dcf-method-desc">Metode utama — proyeksi cash flow 10 tahun + terminal value</div><div class="dcf-method-value">$${dcfValue.toFixed(2)}</div><span class="dcf-method-verdict ${dcfCls}">${dcfLabel} (${dcfVerdict >= 0 ? '+' : ''}${dcfVerdict.toFixed(1)}%)</span></div>`;
+
+    // Graham
+    const grahamVerdict = currentPrice > 0 ? ((grahamValue / currentPrice) - 1) * 100 : 0;
+    const grahamCls = grahamVerdict > 15 ? 'cheap' : grahamVerdict < -15 ? 'expensive' : 'fair';
+    const grahamLabel = grahamVerdict > 15 ? 'MURAH' : grahamVerdict < -15 ? 'MAHAL' : 'WAJAR';
+    methodsHtml += `<div class="dcf-method-item"><div class="dcf-method-name">📐 Graham Number</div><div class="dcf-method-desc">Formula Benjamin Graham: √(22.5 × EPS × BVPS) — estimasi BVPS = EPS × 15</div><div class="dcf-method-value">$${grahamValue.toFixed(2)}</div><span class="dcf-method-verdict ${grahamCls}">${grahamLabel} (${grahamVerdict >= 0 ? '+' : ''}${grahamVerdict.toFixed(1)}%)</span></div>`;
+
+    // PE Multiple
+    const peVerdict = currentPrice > 0 ? ((peAvgValue / currentPrice) - 1) * 100 : 0;
+    const peCls = peVerdict > 15 ? 'cheap' : peVerdict < -15 ? 'expensive' : 'fair';
+    const peLabel = peVerdict > 15 ? 'MURAH' : peVerdict < -15 ? 'MAHAL' : 'WAJAR';
+    methodsHtml += `<div class="dcf-method-item"><div class="dcf-method-name">📊 P/E Multiple</div><div class="dcf-method-desc">Estimasi berdasarkan P/E rata-rata industri (15x - 20x). Rata-rata: 17.5x EPS</div><div class="dcf-method-value">$${peAvgValue.toFixed(2)} <span style="font-size: 11px; color: var(--text-secondary);">($15x - $${pe20Value.toFixed(0)})</span></div><span class="dcf-method-verdict ${peCls}">${peLabel} (${peVerdict >= 0 ? '+' : ''}${peVerdict.toFixed(1)}%)</span></div>`;
+
+    document.getElementById('dcfMethods').innerHTML = methodsHtml;
+}
+
+function closeDcf() {
+    document.getElementById('dcfModal').classList.remove('active');
 }
 
 // ============ SMART ALERT MODAL ============
@@ -911,7 +1141,7 @@ function renderMarketMovers() {
     container.innerHTML = html;
 }
 
-// ============ RENDER WATCHLIST (with GROUPS) ============
+// ============ RENDER WATCHLIST ============
 function renderAssetCard(asset, priceData, index) {
     const p = priceData; const isFav = isFavorite(asset.symbol); const hasAl = hasAlert(asset.symbol);
     if (!p) return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card"><div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
@@ -925,7 +1155,6 @@ async function renderWatchlist() {
     let filteredWatchlist = watchlist;
     if (activeGroup === 'favorites') filteredWatchlist = watchlist.filter(w => isFavorite(w.symbol));
     else if (activeGroup !== 'all') filteredWatchlist = watchlist.filter(w => w.group === activeGroup);
-
     if (filteredWatchlist.length === 0) {
         const msg = activeGroup === 'favorites' ? 'Belum ada saham favorit.' : activeGroup === 'all' ? 'Watchlist kosong.' : 'Group ini masih kosong.';
         container.innerHTML = `<div class="empty-state">${msg}</div>`;
@@ -1790,6 +2019,11 @@ document.getElementById('sortAiBtn').addEventListener('click', sortWatchlistByAI
 // SCORECARD
 document.getElementById('openScorecardBtn').addEventListener('click', openScorecard);
 document.getElementById('closeScorecardModal').addEventListener('click', closeScorecard);
+
+// DCF
+document.getElementById('openDcfBtn').addEventListener('click', openDcf);
+document.getElementById('closeDcfModal').addEventListener('click', closeDcf);
+document.getElementById('dcfCalcBtn').addEventListener('click', calculateDCF);
 
 const holdingModal = document.getElementById('holdingModal');
 document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
