@@ -19,7 +19,6 @@ let currentNewsItem = null;
 let newsCache = [];
 let heatmapData = [];
 let compareChart = null;
-// Indeks globals
 let indeksFilter = 'all';
 let indeksSearch = '';
 let indeksDetailChart = null;
@@ -435,6 +434,236 @@ function saveGroup() {
     saveGroups(); closeGroupModal(); renderGroupsBar();
 }
 
+// ============ 🎯 VALUE INVESTING SCORECARD ============
+function calculateValueScore(fundamental, priceData, chartData) {
+    const criteria = [];
+    let totalScore = 0;
+    let maxPossible = 0;
+
+    // 1. ROE (Return on Equity) — max 15
+    const roe = fundamental.roe || 0;
+    let roeScore = 0; let roeStatus = 'fail'; let roeDesc = '';
+    if (roe >= 0.20) { roeScore = 15; roeStatus = 'pass'; roeDesc = `ROE sangat baik (${(roe*100).toFixed(1)}%) — bisnis sangat efisien`; }
+    else if (roe >= 0.15) { roeScore = 12; roeStatus = 'pass'; roeDesc = `ROE baik (${(roe*100).toFixed(1)}%) — di atas standar Buffett`; }
+    else if (roe >= 0.10) { roeScore = 7; roeStatus = 'partial'; roeDesc = `ROE cukup (${(roe*100).toFixed(1)}%) — masih bisa diterima`; }
+    else if (roe > 0) { roeScore = 3; roeStatus = 'fail'; roeDesc = `ROE rendah (${(roe*100).toFixed(1)}%) — kurang efisien`; }
+    else { roeScore = 0; roeStatus = 'fail'; roeDesc = roe < 0 ? `ROE negatif (${(roe*100).toFixed(1)}%) — perusahaan merugi` : 'ROE tidak tersedia'; }
+    criteria.push({ label: 'ROE (Return on Equity)', icon: '💰', score: roeScore, max: 15, value: roe > 0 ? `${(roe*100).toFixed(2)}%` : 'N/A', status: roeStatus, desc: roeDesc });
+    totalScore += roeScore; maxPossible += 15;
+
+    // 2. DER (Debt to Equity) — max 15
+    const der = fundamental.debt_to_equity != null ? fundamental.debt_to_equity : -1;
+    let derScore = 0; let derStatus = 'fail'; let derDesc = '';
+    if (der < 0) { derScore = 5; derStatus = 'partial'; derDesc = 'Data DER tidak tersedia'; }
+    else if (der < 0.3) { derScore = 15; derStatus = 'pass'; derDesc = `Utang sangat rendah (${der.toFixed(2)}) — keuangan solid`; }
+    else if (der < 0.6) { derScore = 12; derStatus = 'pass'; derDesc = `Utang rendah (${der.toFixed(2)}) — sehat`; }
+    else if (der < 1.0) { derScore = 7; derStatus = 'partial'; derDesc = `Utang moderat (${der.toFixed(2)}) — monitor`; }
+    else { derScore = 0; derStatus = 'fail'; derDesc = `Utang tinggi (${der.toFixed(2)}) — berisiko`; }
+    criteria.push({ label: 'DER (Debt to Equity)', icon: '⚖️', score: derScore, max: 15, value: der >= 0 ? der.toFixed(2) : 'N/A', status: derStatus, desc: derDesc });
+    totalScore += derScore; maxPossible += 15;
+
+    // 3. P/E Ratio — max 10
+    const pe = fundamental.pe_ratio || 0;
+    let peScore = 0; let peStatus = 'fail'; let peDesc = '';
+    if (pe <= 0) { peScore = 0; peStatus = 'fail'; peDesc = 'P/E negatif — perusahaan merugi'; }
+    else if (pe < 15) { peScore = 10; peStatus = 'pass'; peDesc = `P/E murah (${pe.toFixed(1)}) — potensi undervalued`; }
+    else if (pe < 25) { peScore = 6; peStatus = 'partial'; peDesc = `P/E wajar (${pe.toFixed(1)})`; }
+    else if (pe < 40) { peScore = 3; peStatus = 'fail'; peDesc = `P/E mahal (${pe.toFixed(1)}) — valuasi premium`; }
+    else { peScore = 0; peStatus = 'fail'; peDesc = `P/E sangat mahal (${pe.toFixed(1)}) — risiko overvalue`; }
+    criteria.push({ label: 'P/E Ratio', icon: '📊', score: peScore, max: 10, value: pe > 0 ? pe.toFixed(2) : 'N/A', status: peStatus, desc: peDesc });
+    totalScore += peScore; maxPossible += 10;
+
+    // 4. Profit Margin — max 10
+    const margin = fundamental.profit_margin || fundamental.net_margin || 0;
+    let mScore = 0; let mStatus = 'fail'; let mDesc = '';
+    if (margin >= 0.20) { mScore = 10; mStatus = 'pass'; mDesc = `Margin sangat baik (${(margin*100).toFixed(1)}%)`; }
+    else if (margin >= 0.10) { mScore = 7; mStatus = 'pass'; mDesc = `Margin baik (${(margin*100).toFixed(1)}%)`; }
+    else if (margin >= 0.05) { mScore = 4; mStatus = 'partial'; mDesc = `Margin tipis (${(margin*100).toFixed(1)}%)`; }
+    else if (margin > 0) { mScore = 2; mStatus = 'fail'; mDesc = `Margin sangat tipis (${(margin*100).toFixed(1)}%)`; }
+    else { mScore = 0; mStatus = 'fail'; mDesc = 'Data margin tidak tersedia'; }
+    criteria.push({ label: 'Profit Margin', icon: '💵', score: mScore, max: 10, value: margin > 0 ? `${(margin*100).toFixed(2)}%` : 'N/A', status: mStatus, desc: mDesc });
+    totalScore += mScore; maxPossible += 10;
+
+    // 5. EPS Growth — max 10
+    const epsGrowth = fundamental.eps_growth || 0;
+    let eScore = 0; let eStatus = 'fail'; let eDesc = '';
+    if (epsGrowth >= 0.15) { eScore = 10; eStatus = 'pass'; eDesc = `EPS growth kuat (${(epsGrowth*100).toFixed(1)}%)`; }
+    else if (epsGrowth >= 0.08) { eScore = 7; eStatus = 'pass'; eDesc = `EPS growth baik (${(epsGrowth*100).toFixed(1)}%)`; }
+    else if (epsGrowth >= 0) { eScore = 4; eStatus = 'partial'; eDesc = `EPS growth positif (${(epsGrowth*100).toFixed(1)}%)`; }
+    else { eScore = 0; eStatus = 'fail'; eDesc = `EPS menurun (${(epsGrowth*100).toFixed(1)}%)`; }
+    criteria.push({ label: 'EPS Growth', icon: '📈', score: eScore, max: 10, value: epsGrowth !== 0 ? `${(epsGrowth*100).toFixed(2)}%` : 'N/A', status: eStatus, desc: eDesc });
+    totalScore += eScore; maxPossible += 10;
+
+    // 6. Dividend Yield — max 10
+    const divYield = fundamental.dividend_yield || 0;
+    let dScore = 0; let dStatus = 'partial'; let dDesc = '';
+    if (divYield >= 0.04) { dScore = 10; dStatus = 'pass'; dDesc = `Dividen tinggi (${(divYield*100).toFixed(2)}%) — income bagus`; }
+    else if (divYield >= 0.02) { dScore = 7; dStatus = 'pass'; dDesc = `Dividen cukup (${(divYield*100).toFixed(2)}%)`; }
+    else if (divYield > 0) { dScore = 4; dStatus = 'partial'; dDesc = `Dividen kecil (${(divYield*100).toFixed(2)}%)`; }
+    else { dScore = 2; dStatus = 'partial'; dDesc = 'Tidak bayar dividen (bukan masalah untuk growth stock)'; }
+    criteria.push({ label: 'Dividend Yield', icon: '💸', score: dScore, max: 10, value: divYield > 0 ? `${(divYield*100).toFixed(2)}%` : 'N/A', status: dStatus, desc: dDesc });
+    totalScore += dScore; maxPossible += 10;
+
+    // 7. Current Ratio — max 10
+    const currRatio = fundamental.current_ratio || 0;
+    let crScore = 0; let crStatus = 'fail'; let crDesc = '';
+    if (currRatio >= 2.0) { crScore = 10; crStatus = 'pass'; crDesc = `Likuiditas sangat kuat (${currRatio.toFixed(2)})`; }
+    else if (currRatio >= 1.5) { crScore = 8; crStatus = 'pass'; crDesc = `Likuiditas baik (${currRatio.toFixed(2)})`; }
+    else if (currRatio >= 1.0) { crScore = 5; crStatus = 'partial'; crDesc = `Likuiditas cukup (${currRatio.toFixed(2)})`; }
+    else if (currRatio > 0) { crScore = 2; crStatus = 'fail'; crDesc = `Likuiditas rendah (${currRatio.toFixed(2)}) — risiko`; }
+    else { crScore = 3; crStatus = 'partial'; crDesc = 'Data current ratio tidak tersedia'; }
+    criteria.push({ label: 'Current Ratio', icon: '💧', score: crScore, max: 10, value: currRatio > 0 ? currRatio.toFixed(2) : 'N/A', status: crStatus, desc: crDesc });
+    totalScore += crScore; maxPossible += 10;
+
+    // 8. P/B Ratio — max 10
+    const pb = fundamental.pb_ratio || 0;
+    let pbScore = 0; let pbStatus = 'fail'; let pbDesc = '';
+    if (pb <= 0) { pbScore = 0; pbStatus = 'fail'; pbDesc = 'P/B negatif atau tidak tersedia'; }
+    else if (pb < 1.5) { pbScore = 10; pbStatus = 'pass'; pbDesc = `P/B rendah (${pb.toFixed(2)}) — potensi undervalued`; }
+    else if (pb < 3.0) { pbScore = 7; pbStatus = 'pass'; pbDesc = `P/B wajar (${pb.toFixed(2)})`; }
+    else if (pb < 5.0) { pbScore = 3; pbStatus = 'fail'; pbDesc = `P/B tinggi (${pb.toFixed(2)}) — premium`; }
+    else { pbScore = 0; pbStatus = 'fail'; pbDesc = `P/B sangat tinggi (${pb.toFixed(2)}) — risiko overvalue`; }
+    criteria.push({ label: 'P/B Ratio', icon: '📉', score: pbScore, max: 10, value: pb > 0 ? pb.toFixed(2) : 'N/A', status: pbStatus, desc: pbDesc });
+    totalScore += pbScore; maxPossible += 10;
+
+    // 9. Revenue Growth — max 5
+    const revGrowth = fundamental.revenue_growth || 0;
+    let rScore = 0; let rStatus = 'fail'; let rDesc = '';
+    if (revGrowth >= 0.15) { rScore = 5; rStatus = 'pass'; rDesc = `Revenue growth kuat (${(revGrowth*100).toFixed(1)}%)`; }
+    else if (revGrowth >= 0.05) { rScore = 3; rStatus = 'pass'; rDesc = `Revenue growth positif (${(revGrowth*100).toFixed(1)}%)`; }
+    else if (revGrowth >= 0) { rScore = 1; rStatus = 'partial'; rDesc = `Revenue growth minimal (${(revGrowth*100).toFixed(1)}%)`; }
+    else { rScore = 0; rStatus = 'fail'; rDesc = `Revenue menurun (${(revGrowth*100).toFixed(1)}%)`; }
+    criteria.push({ label: 'Revenue Growth', icon: '🚀', score: rScore, max: 5, value: revGrowth !== 0 ? `${(revGrowth*100).toFixed(2)}%` : 'N/A', status: rStatus, desc: rDesc });
+    totalScore += rScore; maxPossible += 5;
+
+    // 10. Price Momentum (1Y) — max 5
+    let momentum = 0; let momScore = 0; let momStatus = 'partial'; let momDesc = '';
+    if (chartData && chartData.length > 20) {
+        const firstClose = chartData[0].close;
+        const lastClose = chartData[chartData.length - 1].close;
+        if (firstClose > 0) momentum = ((lastClose / firstClose) - 1) * 100;
+    }
+    if (momentum > 20) { momScore = 5; momStatus = 'pass'; momDesc = `Momentum bullish (+${momentum.toFixed(1)}%)`; }
+    else if (momentum > 0) { momScore = 3; momStatus = 'pass'; momDesc = `Momentum positif (+${momentum.toFixed(1)}%)`; }
+    else if (momentum > -10) { momScore = 2; momStatus = 'partial'; momDesc = `Momentum lemah (${momentum.toFixed(1)}%)`; }
+    else { momScore = 0; momStatus = 'fail'; momDesc = `Momentum bearish (${momentum.toFixed(1)}%)`; }
+    criteria.push({ label: 'Price Momentum (1Y)', icon: '🎯', score: momScore, max: 5, value: `${momentum >= 0 ? '+' : ''}${momentum.toFixed(1)}%`, status: momStatus, desc: momDesc });
+    totalScore += momScore; maxPossible += 5;
+
+    // Normalize ke skala 100
+    const normalizedScore = maxPossible > 0 ? Math.round((totalScore / maxPossible) * 100) : 0;
+
+    return { score: normalizedScore, rawScore: totalScore, maxScore: maxPossible, criteria };
+}
+
+function getScoreVerdict(score) {
+    if (score >= 80) return { label: 'EXCELLENT', class: 'excellent', icon: '🏆', desc: 'Saham berkualitas tinggi dengan fundamental kuat. Cocok untuk value investor ala Warren Buffett.' };
+    if (score >= 60) return { label: 'GOOD', class: 'good', icon: '👍', desc: 'Saham dengan fundamental baik. Ada beberapa area yang bisa diperbaiki.' };
+    if (score >= 40) return { label: 'FAIR', class: 'fair', icon: '⚠️', desc: 'Fundamental cukup tapi ada beberapa red flag. Perlu analisis lebih dalam.' };
+    return { label: 'POOR', class: 'poor', icon: '🚨', desc: 'Fundamental lemah. Banyak kriteria value investing tidak terpenuhi. Hati-hati!' };
+}
+
+async function openScorecard() {
+    if (!currentSymbol) return;
+    const modal = document.getElementById('scorecardModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.getElementById('scorecardTitle').textContent = currentSymbol + ' — ' + currentName;
+    const heroEl = document.getElementById('scorecardHero');
+    const breakdownEl = document.getElementById('scorecardBreakdown');
+    const verdictEl = document.getElementById('scorecardVerdict');
+    heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Menghitung skor value investing...</p></div>';
+    breakdownEl.innerHTML = '';
+    verdictEl.style.display = 'none';
+
+    try {
+        const [fundamental, chartData] = await Promise.all([
+            fetchFundamental(currentSymbol, currentType),
+            fetchChartData(currentSymbol, currentType, '1mo', '1y')
+        ]);
+        const result = calculateValueScore(fundamental, { price: currentPrice }, chartData);
+        const verdict = getScoreVerdict(result.score);
+        renderScorecardHero(result.score, verdict);
+        renderScorecardBreakdown(result.criteria);
+        renderScorecardVerdict(result, verdict, fundamental);
+    } catch (error) {
+        console.error('Scorecard error:', error);
+        heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung skor</p><p class="error-detail">${error.message}</p></div>`;
+    }
+}
+
+function renderScorecardHero(score, verdict) {
+    const heroEl = document.getElementById('scorecardHero');
+    heroEl.innerHTML = `
+        <div class="scorecard-score-big">${score}</div>
+        <div class="scorecard-score-label">Value Score / 100</div>
+        <div class="scorecard-verdict-badge ${verdict.class}">${verdict.icon} ${verdict.label}</div>
+        <div class="scorecard-hero-desc">${verdict.desc}</div>
+    `;
+}
+
+function renderScorecardBreakdown(criteria) {
+    const breakdownEl = document.getElementById('scorecardBreakdown');
+    let html = `<div class="scorecard-breakdown-title">📋 Detail Penilaian (10 Kriteria)</div>`;
+    criteria.forEach(c => {
+        const pct = c.max > 0 ? (c.score / c.max) * 100 : 0;
+        let barColor = '#ef4444';
+        if (pct >= 70) barColor = '#10b981';
+        else if (pct >= 40) barColor = '#fbbf24';
+        html += `
+            <div class="scorecard-criteria-item">
+                <div class="criteria-top">
+                    <div class="criteria-label"><span class="criteria-label-icon">${c.icon}</span>${c.label}</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="criteria-score-badge ${c.status}">${c.score}/${c.max}</span>
+                        <span class="criteria-value">${c.value}</span>
+                    </div>
+                </div>
+                <div class="criteria-bar-bg"><div class="criteria-bar-fill" style="width:${pct}%; background:${barColor};"></div></div>
+                <div class="criteria-desc">${c.desc}</div>
+            </div>
+        `;
+    });
+    breakdownEl.innerHTML = html;
+}
+
+function renderScorecardVerdict(result, verdict, fundamental) {
+    const verdictEl = document.getElementById('scorecardVerdict');
+    const passCount = result.criteria.filter(c => c.status === 'pass').length;
+    const partialCount = result.criteria.filter(c => c.status === 'partial').length;
+    const failCount = result.criteria.filter(c => c.status === 'fail').length;
+    let summaryText = '';
+    if (result.score >= 80) summaryText = `<strong>${currentSymbol}</strong> menunjukkan kualitas fundamental yang <strong>sangat baik</strong>. Dari 10 kriteria value investing, <strong>${passCount} lolos</strong>, ${partialCount} cukup, dan ${failCount} gagal. Ini adalah tipe saham yang dicari Warren Buffett.`;
+    else if (result.score >= 60) summaryText = `<strong>${currentSymbol}</strong> punya fundamental <strong>baik</strong>. ${passCount} kriteria lolos, ${partialCount} cukup, ${failCount} gagal. Layak dipertimbangkan dengan catatan.`;
+    else if (result.score >= 40) summaryText = `<strong>${currentSymbol}</strong> fundamentalnya <strong>cukup</strong> tapi ada red flag. ${passCount} kriteria lolos, ${partialCount} cukup, ${failCount} gagal. Perlu riset lebih dalam sebelum investasi.`;
+    else summaryText = `<strong>${currentSymbol}</strong> fundamentalnya <strong>lemah</strong>. Hanya ${passCount} kriteria lolos, ${partialCount} cukup, ${failCount} gagal. Hati-hati dan pertimbangkan saham lain.`;
+
+    const pe = fundamental.pe_ratio; const roe = fundamental.roe;
+    verdictEl.innerHTML = `
+        <div class="scorecard-verdict-title">🧠 Kesimpulan Value Investing</div>
+        <div class="scorecard-verdict-text">${summaryText}</div>
+        <div class="scorecard-stats-row">
+            <div class="scorecard-stat-box">
+                <span class="scorecard-stat-label">Lolos</span>
+                <span class="scorecard-stat-value excellent">${passCount}/10</span>
+            </div>
+            <div class="scorecard-stat-box">
+                <span class="scorecard-stat-label">Skor</span>
+                <span class="scorecard-stat-value ${verdict.class}">${result.score}</span>
+            </div>
+            <div class="scorecard-stat-box">
+                <span class="scorecard-stat-label">P/E</span>
+                <span class="scorecard-stat-value">${pe > 0 ? pe.toFixed(1) : 'N/A'}</span>
+            </div>
+        </div>
+    `;
+    verdictEl.style.display = 'block';
+}
+
+function closeScorecard() {
+    document.getElementById('scorecardModal').classList.remove('active');
+}
+
 // ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol; currentAlertName = name; currentAlertAssetType = type; currentAlertPrice = price;
@@ -693,24 +922,16 @@ async function renderWatchlist() {
     const container = document.getElementById('watchlist');
     if (!container) return;
     container.innerHTML = '<div class="empty-state">Memuat data...</div>';
-
-    // Filter by active group
     let filteredWatchlist = watchlist;
-    if (activeGroup === 'favorites') {
-        filteredWatchlist = watchlist.filter(w => isFavorite(w.symbol));
-    } else if (activeGroup !== 'all') {
-        filteredWatchlist = watchlist.filter(w => w.group === activeGroup);
-    }
+    if (activeGroup === 'favorites') filteredWatchlist = watchlist.filter(w => isFavorite(w.symbol));
+    else if (activeGroup !== 'all') filteredWatchlist = watchlist.filter(w => w.group === activeGroup);
 
     if (filteredWatchlist.length === 0) {
         const msg = activeGroup === 'favorites' ? 'Belum ada saham favorit.' : activeGroup === 'all' ? 'Watchlist kosong.' : 'Group ini masih kosong.';
         container.innerHTML = `<div class="empty-state">${msg}</div>`;
         return;
     }
-
     const results = await Promise.all(filteredWatchlist.map(async (asset) => { const priceData = await fetchPrice(asset.symbol, asset.type); return { ...asset, priceData }; }));
-
-    // Kalau filter all, bagi jadi favorites + others
     if (activeGroup === 'all') {
         const favAssets = results.filter(a => isFavorite(a.symbol)); const otherAssets = results.filter(a => !isFavorite(a.symbol));
         let html = '';
@@ -926,7 +1147,6 @@ function loadChart(symbol, type) {
     volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' }); volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
     const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered && (a.alertType === 'price' || !a.alertType)); if (activeAlert && candleSeries) candleSeries.createPriceLine({ price: activeAlert.targetPrice, color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert' });
     loadChartData(symbol, type, currentTimeframe); setupTimeframeButtons(); window.addEventListener('resize', resizeChart);
-    // Kalau ada indikator aktif, refresh setelah chart siap
     if (Object.values(activeIndicators).some(v => v)) {
         setTimeout(() => { if (currentSymbol === symbol) refreshChartIndicators(); }, 700);
     }
@@ -1566,6 +1786,10 @@ document.getElementById('alertToastClose').addEventListener('click', closeAlertT
 document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
 document.getElementById('runScreener').addEventListener('click', runScreener);
 document.getElementById('sortAiBtn').addEventListener('click', sortWatchlistByAI);
+
+// SCORECARD
+document.getElementById('openScorecardBtn').addEventListener('click', openScorecard);
+document.getElementById('closeScorecardModal').addEventListener('click', closeScorecard);
 
 const holdingModal = document.getElementById('holdingModal');
 document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
