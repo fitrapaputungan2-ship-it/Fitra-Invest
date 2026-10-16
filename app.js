@@ -131,7 +131,7 @@ function closeCurrencyModal() { document.getElementById('currencyModal').classLi
 // ============ CHART COLORS ============
 const CHART_COLORS = ['#fbbf24', '#22d3ee', '#10b981', '#a855f7', '#ef4444', '#ec4899', '#f97316', '#3b82f6', '#84cc16', '#06b6d4', '#8b5cf6', '#eab308', '#14b8a6', '#f43f5e', '#facc15', '#fb7185', '#4ade80', '#60a5fa'];
 
-// ============ STOCK UNIVERSE (130+ ASET) ============
+// ============ STOCK UNIVERSE ============
 const STOCK_UNIVERSE = [
     { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', category: 'us-tech' },
     { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', category: 'us-tech' },
@@ -360,6 +360,81 @@ function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol && !a.tr
 let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
 function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
 
+// ============ 🌙 DARK / LIGHT MODE ============
+let currentTheme = localStorage.getItem('fitraTheme') || 'dark';
+function applyTheme(theme) {
+    if (theme === 'light') {
+        document.body.classList.add('light-mode');
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) { btn.textContent = '☀️'; btn.classList.add('light'); }
+    } else {
+        document.body.classList.remove('light-mode');
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) { btn.textContent = '🌙'; btn.classList.remove('light'); }
+    }
+    currentTheme = theme;
+    localStorage.setItem('fitraTheme', theme);
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', theme === 'light' ? '#f5f5f7' : '#0a0a0f');
+}
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+});
+
+// ============ 📁 WATCHLIST GROUPS ============
+let groups = JSON.parse(localStorage.getItem('fitraGroups')) || [];
+let activeGroup = 'all';
+function saveGroups() { localStorage.setItem('fitraGroups', JSON.stringify(groups)); }
+
+function renderGroupsBar() {
+    const bar = document.getElementById('watchlistGroupsBar');
+    if (!bar) return;
+    let html = `<button class="group-chip ${activeGroup === 'all' ? 'active' : ''}" data-group="all">📊 Semua</button>`;
+    html += `<button class="group-chip ${activeGroup === 'favorites' ? 'active' : ''}" data-group="favorites">⭐ Favorites</button>`;
+    groups.forEach(g => {
+        const count = watchlist.filter(w => w.group === g.id).length;
+        const isActive = activeGroup === g.id ? 'active' : '';
+        html += `<button class="group-chip ${isActive}" data-group="${g.id}">${g.icon} ${g.name} (${count})<span class="group-del-badge" onclick="event.stopPropagation(); deleteGroup('${g.id}')">×</span></button>`;
+    });
+    bar.innerHTML = html;
+    bar.querySelectorAll('.group-chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            if (e.target.classList.contains('group-del-badge')) return;
+            activeGroup = chip.dataset.group;
+            renderGroupsBar();
+            renderWatchlist();
+        });
+    });
+    const assetGroupSel = document.getElementById('assetGroup');
+    if (assetGroupSel) {
+        const currentVal = assetGroupSel.value;
+        assetGroupSel.innerHTML = '<option value="">— Tanpa Group —</option>' + groups.map(g => `<option value="${g.id}">${g.icon} ${g.name}</option>`).join('');
+        assetGroupSel.value = currentVal;
+    }
+}
+function deleteGroup(groupId) {
+    if (!confirm('Hapus group ini? Saham di dalamnya akan dipindah ke "Tanpa Group".')) return;
+    groups = groups.filter(g => g.id !== groupId);
+    watchlist = watchlist.map(w => w.group === groupId ? { ...w, group: '' } : w);
+    saveGroups(); saveWatchlist();
+    if (activeGroup === groupId) activeGroup = 'all';
+    renderGroupsBar(); renderWatchlist();
+}
+function openGroupModal() {
+    document.getElementById('groupName').value = '';
+    document.getElementById('groupIcon').value = '📁';
+    document.getElementById('groupModal').classList.add('active');
+}
+function closeGroupModal() { document.getElementById('groupModal').classList.remove('active'); }
+function saveGroup() {
+    const name = document.getElementById('groupName').value.trim();
+    const icon = document.getElementById('groupIcon').value.trim() || '📁';
+    if (!name) { alert('Isi nama group dulu!'); return; }
+    const id = 'group-' + Date.now();
+    groups.push({ id, name, icon });
+    saveGroups(); closeGroupModal(); renderGroupsBar();
+}
+
 // ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol; currentAlertName = name; currentAlertAssetType = type; currentAlertPrice = price;
@@ -499,7 +574,8 @@ function renderPriceAlerts() {
         else if (a.alertType === 'ema') detail = `EMA ${a.emaPeriod}`;
         else if (a.alertType === 'volume') detail = `${a.volumeMultiplier}x Volume`;
         else if (a.alertType === 'multi') detail = `Price + RSI ${a.rsiValue}`;
-        return `<div class="price-alert-item" onclick="openAssetDetail('${a.symbol}', '${a.name.replace(/'/g, "\\'")}', 0, 0, '${a.type}')">
+        const dirClass = (a.alertType === 'price' || !a.alertType) ? (a.direction || 'above') : '';
+        return `<div class="price-alert-item ${dirClass}" onclick="openAssetDetail('${a.symbol}', '${a.name.replace(/'/g, "\\'")}', 0, 0, '${a.type}')">
             <div class="price-alert-icon">${icon}</div>
             <div class="price-alert-info"><div class="price-alert-symbol">${a.symbol} <span class="price-alert-dir">${label}</span></div><div class="price-alert-target">${detail}${a.note ? ' • ' + a.note : ''}</div></div>
             <button class="price-alert-delete" onclick="deleteAlert('${a.id}', event)">×</button>
@@ -606,7 +682,7 @@ function renderMarketMovers() {
     container.innerHTML = html;
 }
 
-// ============ RENDER WATCHLIST ============
+// ============ RENDER WATCHLIST (with GROUPS) ============
 function renderAssetCard(asset, priceData, index) {
     const p = priceData; const isFav = isFavorite(asset.symbol); const hasAl = hasAlert(asset.symbol);
     if (!p) return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card"><div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
@@ -614,19 +690,41 @@ function renderAssetCard(asset, priceData, index) {
     return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card" onclick="openAssetDetail('${asset.symbol}', '${(p.name || asset.name).replace(/'/g, "\\'")}', ${p.price}, ${p.change}, '${asset.type}')"><div class="asset-info"><span class="asset-symbol">${asset.symbol}${hasAl ? ' <span class="alert-badge">🔔</span>' : ''}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">${priceStr}</div><div class="change ${trend}">${changeStr}</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
 }
 async function renderWatchlist() {
-    const container = document.getElementById('watchlist'); container.innerHTML = '<div class="empty-state">Memuat data...</div>';
-    if (watchlist.length === 0) { container.innerHTML = '<div class="empty-state">Watchlist kosong.</div>'; return; }
-    const results = await Promise.all(watchlist.map(async (asset) => { const priceData = await fetchPrice(asset.symbol, asset.type); return { ...asset, priceData }; }));
-    const favAssets = results.filter(a => isFavorite(a.symbol)); const otherAssets = results.filter(a => !isFavorite(a.symbol));
-    let html = '';
-    if (favAssets.length > 0) html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">⭐ Favorites</span><span class="watchlist-section-count">${favAssets.length}</span></div>${favAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('')}</div>`;
-    html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">📊 ${favAssets.length > 0 ? 'Semua Aset' : 'Watchlist'}</span><span class="watchlist-section-count">${otherAssets.length}</span></div>${otherAssets.length > 0 ? otherAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('') : '<div class="empty-state" style="padding:20px;font-size:12px;">Semua saham udah favorite ⭐</div>'}</div>`;
-    container.innerHTML = html;
+    const container = document.getElementById('watchlist');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-state">Memuat data...</div>';
+
+    // Filter by active group
+    let filteredWatchlist = watchlist;
+    if (activeGroup === 'favorites') {
+        filteredWatchlist = watchlist.filter(w => isFavorite(w.symbol));
+    } else if (activeGroup !== 'all') {
+        filteredWatchlist = watchlist.filter(w => w.group === activeGroup);
+    }
+
+    if (filteredWatchlist.length === 0) {
+        const msg = activeGroup === 'favorites' ? 'Belum ada saham favorit.' : activeGroup === 'all' ? 'Watchlist kosong.' : 'Group ini masih kosong.';
+        container.innerHTML = `<div class="empty-state">${msg}</div>`;
+        return;
+    }
+
+    const results = await Promise.all(filteredWatchlist.map(async (asset) => { const priceData = await fetchPrice(asset.symbol, asset.type); return { ...asset, priceData }; }));
+
+    // Kalau filter all, bagi jadi favorites + others
+    if (activeGroup === 'all') {
+        const favAssets = results.filter(a => isFavorite(a.symbol)); const otherAssets = results.filter(a => !isFavorite(a.symbol));
+        let html = '';
+        if (favAssets.length > 0) html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">⭐ Favorites</span><span class="watchlist-section-count">${favAssets.length}</span></div>${favAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('')}</div>`;
+        html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">📊 ${favAssets.length > 0 ? 'Semua Aset' : 'Watchlist'}</span><span class="watchlist-section-count">${otherAssets.length}</span></div>${otherAssets.length > 0 ? otherAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('') : '<div class="empty-state" style="padding:20px;font-size:12px;">Semua saham udah favorite ⭐</div>'}</div>`;
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = `<div class="watchlist-section">${results.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('')}</div>`;
+    }
 }
 function deleteFromWatchlist(index, event) {
     if (event) event.stopPropagation(); const asset = watchlist[index]; if (!confirm(`Hapus ${asset.symbol}?`)) return;
     const favIdx = favorites.indexOf(asset.symbol); if (favIdx >= 0) { favorites.splice(favIdx, 1); saveFavorites(); }
-    alerts = alerts.filter(a => a.symbol !== asset.symbol); saveAlerts(); renderPriceAlerts(); watchlist.splice(index, 1); saveWatchlist(); renderWatchlist();
+    alerts = alerts.filter(a => a.symbol !== asset.symbol); saveAlerts(); renderPriceAlerts(); watchlist.splice(index, 1); saveWatchlist(); renderWatchlist(); renderGroupsBar();
 }
 
 // ============ 🤖 AI SORT WATCHLIST ============
@@ -657,6 +755,44 @@ async function sortWatchlistByAI() {
 // ============ INDIKATOR ============
 function calcEMA(closes, period) { if (closes.length < period) return closes[closes.length - 1] || 0; const k = 2 / (period + 1); let ema = closes[0]; for (let i = 1; i < closes.length; i++) ema = closes[i] * k + ema * (1 - k); return ema; }
 function calcRSI(closes, period = 14) { if (closes.length < period + 1) return 50; let gains = 0, losses = 0; for (let i = 1; i <= period; i++) { const diff = closes[i] - closes[i - 1]; if (diff >= 0) gains += diff; else losses -= diff; } let avgGain = gains / period, avgLoss = losses / period; for (let i = period + 1; i < closes.length; i++) { const diff = closes[i] - closes[i - 1]; avgGain = (avgGain * (period - 1) + (diff > 0 ? diff : 0)) / period; avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period; } if (avgLoss === 0) return 100; const rs = avgGain / avgLoss; return 100 - 100 / (1 + rs); }
+function calcSMA(closes, period) {
+    const result = [];
+    for (let i = 0; i < closes.length; i++) {
+        if (i < period - 1) { result.push(null); continue; }
+        let sum = 0;
+        for (let j = i - period + 1; j <= i; j++) sum += closes[j];
+        result.push(sum / period);
+    }
+    return result;
+}
+function calcBollinger(closes, period = 20, mult = 2) {
+    const sma = calcSMA(closes, period);
+    const upper = [], lower = [];
+    for (let i = 0; i < closes.length; i++) {
+        if (sma[i] == null) { upper.push(null); lower.push(null); continue; }
+        let sumSq = 0;
+        for (let j = i - period + 1; j <= i; j++) sumSq += Math.pow(closes[j] - sma[i], 2);
+        const stdDev = Math.sqrt(sumSq / period);
+        upper.push(sma[i] + mult * stdDev);
+        lower.push(sma[i] - mult * stdDev);
+    }
+    return { middle: sma, upper, lower };
+}
+function calcMACD(closes, fast = 12, slow = 26, signal = 9) {
+    const emaFast = [], emaSlow = [];
+    const kFast = 2 / (fast + 1), kSlow = 2 / (slow + 1);
+    emaFast[0] = closes[0]; emaSlow[0] = closes[0];
+    for (let i = 1; i < closes.length; i++) {
+        emaFast[i] = closes[i] * kFast + emaFast[i-1] * (1 - kFast);
+        emaSlow[i] = closes[i] * kSlow + emaSlow[i-1] * (1 - kSlow);
+    }
+    const macdLine = emaFast.map((v, i) => v - emaSlow[i]);
+    const signalLine = [macdLine[0]];
+    const kSig = 2 / (signal + 1);
+    for (let i = 1; i < macdLine.length; i++) signalLine[i] = macdLine[i] * kSig + signalLine[i-1] * (1 - kSig);
+    const histogram = macdLine.map((v, i) => v - signalLine[i]);
+    return { macdLine, signalLine, histogram };
+}
 function calcSentiment(candles) { const recent = candles.slice(-20); let buyVol = 0, sellVol = 0; recent.forEach(c => { if (c.close >= c.open) buyVol += c.volume || 0; else sellVol += c.volume || 0; }); const total = buyVol + sellVol; if (total === 0) return { buyPct: 50, sellPct: 50 }; const buyPct = (buyVol / total) * 100; return { buyPct, sellPct: 100 - buyPct }; }
 async function updateIndicators(symbol, type) {
     const candles = await fetchChartData(symbol, type, '1d', '3mo'); if (candles.length < 20) return;
@@ -675,6 +811,98 @@ async function updateIndicators(symbol, type) {
     document.getElementById('buyerBar').style.width = sentiment.buyPct + '%'; document.getElementById('sellerBar').style.width = sentiment.sellPct + '%';
 }
 
+// ============ 📊 TECHNICAL INDICATORS v2 ============
+let activeIndicators = { ma50: false, ma200: false, bollinger: false, macd: false };
+let ma50Series = null, ma200Series = null, bollingerUpper = null, bollingerLower = null, bollingerMiddle = null, macdChart = null, macdLineSeries = null, macdSignalSeries = null, macdHistSeries = null;
+
+function toggleIndicator(ind) {
+    activeIndicators[ind] = !activeIndicators[ind];
+    const btn = document.querySelector(`.ind-toggle-btn[data-ind="${ind}"]`);
+    if (btn) btn.classList.toggle('active', activeIndicators[ind]);
+    if (currentSymbol && currentType && candleSeries) refreshChartIndicators();
+}
+document.querySelectorAll('.ind-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => toggleIndicator(btn.dataset.ind));
+});
+
+async function refreshChartIndicators() {
+    if (!candleSeries || !currentChart || !currentSymbol) return;
+    const candles = await fetchChartData(currentSymbol, currentType, '1d', '2y');
+    if (!candles || candles.length < 50) return;
+    const validCandles = candles.filter(c => c.time != null && !isNaN(c.close));
+    const closes = validCandles.map(c => c.close);
+    const times = validCandles.map(c => c.time);
+
+    if (ma50Series && currentChart) { try { currentChart.removeSeries(ma50Series); } catch(e) {} ma50Series = null; }
+    if (ma200Series && currentChart) { try { currentChart.removeSeries(ma200Series); } catch(e) {} ma200Series = null; }
+    if (bollingerUpper && currentChart) { try { currentChart.removeSeries(bollingerUpper); } catch(e) {} bollingerUpper = null; }
+    if (bollingerLower && currentChart) { try { currentChart.removeSeries(bollingerLower); } catch(e) {} bollingerLower = null; }
+    if (bollingerMiddle && currentChart) { try { currentChart.removeSeries(bollingerMiddle); } catch(e) {} bollingerMiddle = null; }
+
+    if (activeIndicators.ma50 && closes.length >= 50) {
+        const ma50 = calcSMA(closes, 50);
+        ma50Series = currentChart.addLineSeries({ color: '#fbbf24', lineWidth: 1, title: 'MA50', priceLineVisible: false, lastValueVisible: false });
+        ma50Series.setData(ma50.map((v, i) => v != null ? { time: times[i], value: v } : null).filter(Boolean));
+    }
+    if (activeIndicators.ma200 && closes.length >= 200) {
+        const ma200 = calcSMA(closes, 200);
+        ma200Series = currentChart.addLineSeries({ color: '#ef4444', lineWidth: 1, title: 'MA200', priceLineVisible: false, lastValueVisible: false });
+        ma200Series.setData(ma200.map((v, i) => v != null ? { time: times[i], value: v } : null).filter(Boolean));
+    }
+    if (activeIndicators.bollinger && closes.length >= 20) {
+        const bb = calcBollinger(closes, 20, 2);
+        bollingerUpper = currentChart.addLineSeries({ color: 'rgba(34, 211, 238, 0.6)', lineWidth: 1, title: 'BB Upper', priceLineVisible: false, lastValueVisible: false });
+        bollingerLower = currentChart.addLineSeries({ color: 'rgba(34, 211, 238, 0.6)', lineWidth: 1, title: 'BB Lower', priceLineVisible: false, lastValueVisible: false });
+        bollingerMiddle = currentChart.addLineSeries({ color: 'rgba(168, 85, 247, 0.5)', lineWidth: 1, title: 'BB Middle', priceLineVisible: false, lastValueVisible: false });
+        bollingerUpper.setData(bb.upper.map((v, i) => v != null ? { time: times[i], value: v } : null).filter(Boolean));
+        bollingerLower.setData(bb.lower.map((v, i) => v != null ? { time: times[i], value: v } : null).filter(Boolean));
+        bollingerMiddle.setData(bb.middle.map((v, i) => v != null ? { time: times[i], value: v } : null).filter(Boolean));
+    }
+    renderMACD(closes, times);
+}
+
+function renderMACD(closes, times) {
+    const container = document.getElementById('macdContainer');
+    if (!container) return;
+    if (!activeIndicators.macd || closes.length < 26) {
+        container.style.display = 'none';
+        if (macdChart) { try { macdChart.remove(); } catch(e) {} macdChart = null; }
+        return;
+    }
+    container.style.display = 'block';
+    container.innerHTML = '';
+    if (macdChart) { try { macdChart.remove(); } catch(e) {} macdChart = null; }
+    macdChart = LightweightCharts.createChart(container, {
+        width: container.clientWidth, height: 140,
+        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
+        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+    });
+    const macd = calcMACD(closes, 12, 26, 9);
+    macdLineSeries = macdChart.addLineSeries({ color: '#22d3ee', lineWidth: 2, title: 'MACD', priceLineVisible: false, lastValueVisible: false });
+    macdSignalSeries = macdChart.addLineSeries({ color: '#fbbf24', lineWidth: 1, title: 'Signal', priceLineVisible: false, lastValueVisible: false });
+    macdHistSeries = macdChart.addHistogramSeries({ title: 'Hist', priceLineVisible: false, lastValueVisible: false });
+    const startIdx = 26;
+    macdLineSeries.setData(macd.macdLine.slice(startIdx).map((v, i) => ({ time: times[startIdx + i], value: v })).filter(d => d.time != null));
+    macdSignalSeries.setData(macd.signalLine.slice(startIdx).map((v, i) => ({ time: times[startIdx + i], value: v })).filter(d => d.time != null));
+    macdHistSeries.setData(macd.histogram.slice(startIdx).map((v, i) => ({ time: times[startIdx + i], value: v, color: v >= 0 ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)' })).filter(d => d.time != null));
+    macdChart.timeScale().fitContent();
+}
+
+function clearIndicatorSeries() {
+    if (ma50Series && currentChart) { try { currentChart.removeSeries(ma50Series); } catch(e) {} ma50Series = null; }
+    if (ma200Series && currentChart) { try { currentChart.removeSeries(ma200Series); } catch(e) {} ma200Series = null; }
+    if (bollingerUpper && currentChart) { try { currentChart.removeSeries(bollingerUpper); } catch(e) {} bollingerUpper = null; }
+    if (bollingerLower && currentChart) { try { currentChart.removeSeries(bollingerLower); } catch(e) {} bollingerLower = null; }
+    if (bollingerMiddle && currentChart) { try { currentChart.removeSeries(bollingerMiddle); } catch(e) {} bollingerMiddle = null; }
+    if (macdChart) { try { macdChart.remove(); } catch(e) {} macdChart = null; }
+    const macdContainer = document.getElementById('macdContainer');
+    if (macdContainer) macdContainer.style.display = 'none';
+}
+
 // ============ ASSET DETAIL & CHART ============
 let currentSymbol = null, currentType = null, currentName = null, currentPrice = 0, currentChange = 0;
 async function openAssetDetail(symbol, name, price, change, type) {
@@ -688,7 +916,9 @@ async function openAssetDetail(symbol, name, price, change, type) {
 function updateChartPrice() { const changeStr = (currentChange >= 0 ? '+' : '') + currentChange.toFixed(2) + '%'; const priceStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 }); const priceEl = document.getElementById('chartPrice'); priceEl.textContent = priceStr + '  ' + changeStr; priceEl.style.color = currentChange >= 0 ? '#10b981' : '#ef4444'; }
 
 function loadChart(symbol, type) {
-    const container = document.getElementById('tradingviewContainer'); container.innerHTML = ''; if (currentChart) { currentChart.remove(); currentChart = null; }
+    const container = document.getElementById('tradingviewContainer'); container.innerHTML = '';
+    clearIndicatorSeries();
+    if (currentChart) { currentChart.remove(); currentChart = null; }
     const isMobile = window.innerWidth < 400; const chartHeight = isMobile ? 450 : 520;
     if (typeof LightweightCharts === 'undefined') { container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library gagal dimuat.</div>'; return; }
     currentChart = LightweightCharts.createChart(container, { width: container.clientWidth, height: chartHeight, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' }, horzLine: { color: 'rgba(251, 191, 36, 0.5)', labelBackgroundColor: '#fbbf24' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.25 } }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: true, secondsVisible: false, rightOffset: 10, barSpacing: 12 }, handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true } });
@@ -696,6 +926,10 @@ function loadChart(symbol, type) {
     volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' }); volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
     const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered && (a.alertType === 'price' || !a.alertType)); if (activeAlert && candleSeries) candleSeries.createPriceLine({ price: activeAlert.targetPrice, color: activeAlert.direction === 'above' ? '#10b981' : '#ef4444', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert' });
     loadChartData(symbol, type, currentTimeframe); setupTimeframeButtons(); window.addEventListener('resize', resizeChart);
+    // Kalau ada indikator aktif, refresh setelah chart siap
+    if (Object.values(activeIndicators).some(v => v)) {
+        setTimeout(() => { if (currentSymbol === symbol) refreshChartIndicators(); }, 700);
+    }
 }
 async function loadChartData(symbol, type, timeframe) {
     const intervalMap = { '5M': '5m', '30M': '30m', '1H': '1h', 'D': '1d', 'W': '1wk', 'M': '1mo', 'Y': '1mo' }; const rangeMap = { '5M': '5d', '30M': '1mo', '1H': '3mo', 'D': '1y', 'W': '5y', 'M': '20y', 'Y': 'max' };
@@ -736,7 +970,7 @@ function renderAISignalUI(data, container) {
     setTimeout(() => { const fillBar = container.querySelector('.ai-confidence-fill'); if (fillBar) fillBar.style.width = confidence + '%'; }, 100);
 }
 function formatAnalysis(text) { if (!text) return ''; return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
-function closeAssetDetail() { document.getElementById('chartModal').classList.remove('active'); document.getElementById('tradingviewContainer').innerHTML = ''; if (currentChart) { currentChart.remove(); currentChart = null; candleSeries = null; volumeSeries = null; } if (indicatorInterval) { clearInterval(indicatorInterval); indicatorInterval = null; } window.removeEventListener('resize', resizeChart); }
+function closeAssetDetail() { document.getElementById('chartModal').classList.remove('active'); document.getElementById('tradingviewContainer').innerHTML = ''; clearIndicatorSeries(); if (currentChart) { currentChart.remove(); currentChart = null; candleSeries = null; volumeSeries = null; } if (indicatorInterval) { clearInterval(indicatorInterval); indicatorInterval = null; } window.removeEventListener('resize', resizeChart); }
 
 // ============ SCREENER ============
 async function runScreener() {
@@ -752,10 +986,11 @@ async function runScreener() {
 }
 
 // ============ PORTFOLIO ============
+let portfolioPerfChart = null;
 async function renderPortfolio() {
     const container = document.getElementById('holdings'); const totalValueEl = document.getElementById('totalValue'); const unrealizedPLEl = document.getElementById('unrealizedPL');
     const totalCostEl = document.getElementById('totalCost'); const totalHoldingsEl = document.getElementById('totalHoldings'); const chartSection = document.getElementById('portfolioChartSection');
-    if (portfolio.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada holding.</div>'; totalValueEl.textContent = '$ 0'; unrealizedPLEl.textContent = '$ 0'; totalCostEl.textContent = '$ 0'; totalHoldingsEl.textContent = '0'; if (chartSection) chartSection.style.display = 'none'; return; }
+    if (portfolio.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada holding.</div>'; totalValueEl.textContent = '$ 0'; unrealizedPLEl.textContent = '$ 0'; totalCostEl.textContent = '$ 0'; totalHoldingsEl.textContent = '0'; if (chartSection) chartSection.style.display = 'none'; const perfSec = document.getElementById('portfolioPerfSection'); if (perfSec) perfSec.style.display = 'none'; return; }
     container.innerHTML = '<div class="empty-state">Memuat harga...</div>';
     const holdingsWithPrice = await Promise.all(portfolio.map(async (h) => { const priceData = await fetchPrice(h.symbol, h.type); return { ...h, currentPrice: priceData?.price || 0 }; }));
     const holdingsWithValues = holdingsWithPrice.map(h => ({ ...h, currentValue: h.currentPrice * h.shares, costBasis: h.avgPrice * h.shares, pl: (h.currentPrice * h.shares) - (h.avgPrice * h.shares) }));
@@ -763,7 +998,9 @@ async function renderPortfolio() {
     container.innerHTML = holdingsWithValues.map(h => { const plPercent = h.costBasis > 0 ? (h.pl / h.costBasis) * 100 : 0; const plClass = h.pl >= 0 ? 'up' : 'down'; const plSign = h.pl >= 0 ? '+' : ''; return `<div class="holding-card"><div class="holding-info"><span class="holding-symbol">${h.symbol}</span><span class="holding-detail">${h.shares} × $${h.avgPrice.toFixed(2)} = $${h.costBasis.toFixed(2)}</span><span class="holding-detail">Current: $${h.currentPrice.toFixed(2)}</span></div><div class="holding-pl"><span class="holding-value">$${h.currentValue.toFixed(2)}</span><span class="holding-pl-amount ${plClass}">${plSign}$${h.pl.toFixed(2)} (${plSign}${plPercent.toFixed(2)}%)</span></div><button class="holding-delete" onclick="deleteHolding('${h.id}')">×</button></div>`; }).join('');
     const totalPL = totalValue - totalCost; const totalPLSign = totalPL >= 0 ? '+' : '';
     totalValueEl.textContent = '$ ' + totalValue.toFixed(2); unrealizedPLEl.textContent = `${totalPLSign}$${totalPL.toFixed(2)}`; unrealizedPLEl.style.color = totalPL >= 0 ? '#10b981' : '#ef4444';
-    totalCostEl.textContent = '$ ' + totalCost.toFixed(2); totalHoldingsEl.textContent = portfolio.length; renderPortfolioPieChart(holdingsWithValues, totalValue);
+    totalCostEl.textContent = '$ ' + totalCost.toFixed(2); totalHoldingsEl.textContent = portfolio.length;
+    renderPortfolioPieChart(holdingsWithValues, totalValue);
+    renderPortfolioPerformance();
 }
 function renderPortfolioPieChart(holdings, totalValue) {
     const chartSection = document.getElementById('portfolioChartSection'); const canvas = document.getElementById('portfolioPieChart'); const centerValue = document.getElementById('chartCenterValue'); const legend = document.getElementById('portfolioLegend');
@@ -775,6 +1012,57 @@ function renderPortfolioPieChart(holdings, totalValue) {
     sorted.forEach((h, i) => { const pct = h.currentValue / totalValue; const angle = pct * Math.PI * 2; const endAngle = startAngle + angle; const color = CHART_COLORS[i % CHART_COLORS.length]; ctx.beginPath(); ctx.arc(cx, cy, outerRadius, startAngle, endAngle); ctx.arc(cx, cy, innerRadius, endAngle, startAngle, true); ctx.closePath(); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = 'rgba(10, 10, 15, 0.9)'; ctx.lineWidth = 2; ctx.stroke(); startAngle = endAngle; });
     centerValue.textContent = '$' + totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
     legend.innerHTML = sorted.map((h, i) => { const pct = (h.currentValue / totalValue) * 100; const color = CHART_COLORS[i % CHART_COLORS.length]; return `<div class="portfolio-legend-item"><span class="legend-dot" style="background: ${color}; box-shadow: 0 0 8px ${color}80;"></span><span class="legend-symbol">${h.symbol}</span><span class="legend-pct">${pct.toFixed(1)}%</span><span class="legend-value">$${h.currentValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></div>`; }).join('');
+}
+async function renderPortfolioPerformance() {
+    const section = document.getElementById('portfolioPerfSection');
+    const container = document.getElementById('portfolioPerfChart');
+    const statsEl = document.getElementById('portfolioPerfStats');
+    if (!section || !container || !statsEl) return;
+    if (portfolio.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    container.innerHTML = '<div class="loading-spinner" style="margin-top:80px;"></div>';
+    if (portfolioPerfChart) { try { portfolioPerfChart.remove(); } catch(e) {} portfolioPerfChart = null; }
+    try {
+        const allCharts = await Promise.all(portfolio.map(async (h) => {
+            const candles = await fetchChartData(h.symbol, h.type, '1d', '1mo');
+            return { holding: h, candles };
+        }));
+        const dateMap = {};
+        allCharts.forEach(({ holding, candles }) => {
+            if (!candles || candles.length === 0) return;
+            candles.forEach(c => {
+                const key = c.time;
+                if (!dateMap[key]) dateMap[key] = { time: key, value: 0 };
+                dateMap[key].value += c.close * holding.shares;
+            });
+        });
+        const sortedPoints = Object.values(dateMap).sort((a, b) => a.time - b.time);
+        if (sortedPoints.length === 0) { section.style.display = 'none'; return; }
+        portfolioPerfChart = LightweightCharts.createChart(container, {
+            width: container.clientWidth, height: 220,
+            layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+            grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+            rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
+            timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+            handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+            handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+        });
+        const series = portfolioPerfChart.addAreaSeries({ lineColor: '#10b981', topColor: 'rgba(16, 185, 129, 0.4)', bottomColor: 'rgba(16, 185, 129, 0.02)', lineWidth: 2 });
+        series.setData(sortedPoints.map(p => ({ time: p.time, value: p.value })));
+        portfolioPerfChart.timeScale().fitContent();
+        const first = sortedPoints[0].value;
+        const last = sortedPoints[sortedPoints.length - 1].value;
+        const diff = last - first;
+        const diffPct = (diff / first) * 100;
+        const trend = diff >= 0 ? 'up' : 'down';
+        const sign = diff >= 0 ? '+' : '';
+        statsEl.innerHTML = `
+            <div class="perf-stat-box"><span class="perf-stat-label">30 Hari Lalu</span><span class="perf-stat-value">$${first.toLocaleString('en-US', {maximumFractionDigits: 0})}</span></div>
+            <div class="perf-stat-box"><span class="perf-stat-label">Sekarang</span><span class="perf-stat-value">$${last.toLocaleString('en-US', {maximumFractionDigits: 0})}</span></div>
+            <div class="perf-stat-box"><span class="perf-stat-label">Perubahan</span><span class="perf-stat-value ${trend}">${sign}$${diff.toFixed(0)} (${sign}${diffPct.toFixed(2)}%)</span></div>
+        `;
+    } catch (e) { console.error('Portfolio performance error:', e); container.innerHTML = '<div class="empty-state">Gagal memuat performance</div>'; }
 }
 function deleteHolding(id) { if (!confirm('Hapus holding ini?')) return; portfolio = portfolio.filter(h => h.id !== id); savePortfolio(); renderPortfolio(); analyzePortfolioRisk(); }
 
@@ -808,7 +1096,6 @@ function getHeatColor(change) {
     if (change > -3) return '#ef4444';
     return '#dc2626';
 }
-
 async function fetchSectorData(sectorKey) {
     const stocks = STOCK_UNIVERSE.filter(s => s.category === sectorKey);
     const results = await Promise.all(stocks.map(async (stock) => {
@@ -818,7 +1105,6 @@ async function fetchSectorData(sectorKey) {
     }));
     return results.filter(Boolean);
 }
-
 async function renderSectorHeatmap() {
     const grid = document.getElementById('heatmapGrid');
     if (!grid) return;
@@ -854,10 +1140,8 @@ async function renderSectorHeatmap() {
         }).join('');
     } catch (error) { console.error('Heatmap error:', error); grid.innerHTML = '<div class="empty-state">❌ Gagal memuat heatmap</div>'; }
 }
-
 function openSectorDetail(index) {
-    const sector = heatmapData[index];
-    if (!sector) return;
+    const sector = heatmapData[index]; if (!sector) return;
     const modal = document.getElementById('sectorDetailModal');
     modal.classList.add('active');
     document.getElementById('sdIcon').textContent = sector.icon;
@@ -878,7 +1162,6 @@ function openSectorDetail(index) {
         return `<div class="sector-stock-item" onclick="closeSectorDetail(); openAssetDetail('${s.symbol}', '${s.name.replace(/'/g, "\\'")}', ${s.price}, ${s.change}, '${s.type}')"><div class="sector-stock-top"><div class="sector-stock-info"><span class="sector-stock-symbol">${s.symbol}</span><span class="sector-stock-name">${s.name}</span></div><div class="sector-stock-price-wrap"><div class="sector-stock-price">$${s.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div><div class="sector-stock-change ${trendClass}">${sign}${s.change.toFixed(2)}%</div></div></div><div class="sector-stock-bar"><div class="sector-stock-bar-fill" style="width: ${barWidth}%; background: ${barColor};"></div></div></div>`;
     }).join('');
 }
-
 function closeSectorDetail() { document.getElementById('sectorDetailModal').classList.remove('active'); }
 
 // ============ NEWS SENTIMENT ============
@@ -1128,7 +1411,7 @@ async function renderIndices() {
         filtered = filtered.filter(i => i.name.toLowerCase().includes(q) || i.symbol.toLowerCase().includes(q) || i.country.toLowerCase().includes(q));
     }
     if (filtered.length === 0) { list.innerHTML = '<div class="empty-state">Gak ada indeks yang match. Coba kata kunci lain.</div>'; return; }
-    list.innerHTML = filtered.map((idx, i) => {
+    list.innerHTML = filtered.map((idx) => {
         const safeId = idx.symbol.replace(/\W/g, '_');
         return `<div class="indeks-card" id="indeks-card-${safeId}" style="opacity:0.6;"><div class="indeks-card-header"><div class="indeks-card-title"><span class="indeks-card-flag">${idx.flag}</span><div class="indeks-card-name-wrap"><span class="indeks-card-name">${idx.name}</span><span class="indeks-card-country">${idx.country}</span></div></div><div class="indeks-card-price-wrap"><div class="indeks-card-price" style="color:rgba(255,255,255,0.3);">⏳</div><div class="indeks-card-change" style="color:rgba(255,255,255,0.3);">Loading...</div></div></div><div class="indeks-card-sectors">${idx.sectors.slice(0, 5).map(s => `<div class="indeks-sector-mini-bar" style="flex:${s.pct}; background:${s.color}; opacity:0.4;"></div>`).join('')}</div></div>`;
     }).join('');
@@ -1248,33 +1531,99 @@ function closeIndeksDetail() {
     indeksDetailSymbol = null;
 }
 
-// ============ EVENT LISTENERS & INIT ============
-document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal); document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal); document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
+// ============ EVENT LISTENERS ============
+document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
+document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
+document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
 document.querySelectorAll('.cat-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentBrowseCategory = btn.dataset.cat; renderBrowseStocks(); }); });
-const assetModal = document.getElementById('assetModal'); document.getElementById('addAssetBtn').addEventListener('click', () => assetModal.classList.add('active')); document.getElementById('closeAssetModal').addEventListener('click', () => assetModal.classList.remove('active')); document.getElementById('cancelAsset').addEventListener('click', () => assetModal.classList.remove('active'));
-document.getElementById('saveAsset').addEventListener('click', () => { const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase(); const name = document.getElementById('assetName').value.trim(); const type = document.getElementById('assetType').value; if (!symbol || !name) { alert('Isi semua field!'); return; } if (watchlist.some(a => a.symbol === symbol)) { alert(`${symbol} udah ada!`); return; } watchlist.push({ symbol, name, type }); saveWatchlist(); assetModal.classList.remove('active'); document.getElementById('assetSymbol').value = ''; document.getElementById('assetName').value = ''; renderWatchlist(); });
-document.getElementById('setAlertBtn').addEventListener('click', () => openAlertModal(currentSymbol, currentName, currentPrice, currentType)); document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal); document.getElementById('cancelAlert').addEventListener('click', closeAlertModal); document.getElementById('saveAlert').addEventListener('click', saveAlert);
-document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview); document.getElementById('alertRsiValue').addEventListener('input', updateAlertPreview); document.getElementById('alertEmaPeriod').addEventListener('change', updateAlertPreview); document.getElementById('alertVolumeMultiplier').addEventListener('input', updateAlertPreview);
-document.getElementById('alertToastClose').addEventListener('click', closeAlertToast); document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail); document.getElementById('runScreener').addEventListener('click', runScreener);
 
+const assetModal = document.getElementById('assetModal');
+document.getElementById('addAssetBtn').addEventListener('click', () => assetModal.classList.add('active'));
+document.getElementById('closeAssetModal').addEventListener('click', () => assetModal.classList.remove('active'));
+document.getElementById('cancelAsset').addEventListener('click', () => assetModal.classList.remove('active'));
+document.getElementById('saveAsset').addEventListener('click', () => {
+    const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase();
+    const name = document.getElementById('assetName').value.trim();
+    const type = document.getElementById('assetType').value;
+    const group = document.getElementById('assetGroup').value;
+    if (!symbol || !name) { alert('Isi semua field!'); return; }
+    if (watchlist.some(a => a.symbol === symbol)) { alert(`${symbol} udah ada!`); return; }
+    watchlist.push({ symbol, name, type, group });
+    saveWatchlist(); assetModal.classList.remove('active');
+    document.getElementById('assetSymbol').value = ''; document.getElementById('assetName').value = '';
+    renderWatchlist(); renderGroupsBar();
+});
+
+document.getElementById('setAlertBtn').addEventListener('click', () => openAlertModal(currentSymbol, currentName, currentPrice, currentType));
+document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal);
+document.getElementById('cancelAlert').addEventListener('click', closeAlertModal);
+document.getElementById('saveAlert').addEventListener('click', saveAlert);
+document.getElementById('alertTargetPrice').addEventListener('input', updateAlertPreview);
+document.getElementById('alertRsiValue').addEventListener('input', updateAlertPreview);
+document.getElementById('alertEmaPeriod').addEventListener('change', updateAlertPreview);
+document.getElementById('alertVolumeMultiplier').addEventListener('input', updateAlertPreview);
+document.getElementById('alertToastClose').addEventListener('click', closeAlertToast);
+document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
+document.getElementById('runScreener').addEventListener('click', runScreener);
 document.getElementById('sortAiBtn').addEventListener('click', sortWatchlistByAI);
 
-const holdingModal = document.getElementById('holdingModal'); document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active')); document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active')); document.getElementById('cancelHolding').addEventListener('click', () => holdingModal.classList.remove('active'));
-document.getElementById('saveHolding').addEventListener('click', () => { const symbol = document.getElementById('holdingSymbol').value.trim().toUpperCase(); const name = document.getElementById('holdingName').value.trim(); const type = document.getElementById('holdingType').value; const shares = parseFloat(document.getElementById('holdingShares').value); const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value); if (!symbol || !name || !shares || !avgPrice) { alert('Isi semua field!'); return; } portfolio.push({ id: 'holding-' + Date.now(), symbol, name, type, shares, avgPrice, addedAt: Date.now() }); savePortfolio(); holdingModal.classList.remove('active'); document.getElementById('holdingSymbol').value = ''; document.getElementById('holdingName').value = ''; document.getElementById('holdingShares').value = ''; document.getElementById('holdingAvgPrice').value = ''; renderPortfolio(); analyzePortfolioRisk(); });
-document.getElementById('closeNewsDetail').addEventListener('click', closeNewsDetail); document.getElementById('ndOpenOriginal').addEventListener('click', openNewsOriginal); document.getElementById('ndCopyLink').addEventListener('click', copyNewsLink);
-document.getElementById('currencyOpenBtn').addEventListener('click', openCurrencyModal); document.getElementById('closeCurrencyModal').addEventListener('click', closeCurrencyModal); document.getElementById('currencyFromAmount').addEventListener('input', convertCurrency); document.getElementById('currencyFromSelect').addEventListener('change', convertCurrency);
-document.getElementById('currencyToSelect').addEventListener('change', () => { const val = document.getElementById('currencyToSelect').value; document.querySelectorAll('.quick-target-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === val)); convertCurrency(); });
-document.getElementById('currencySwapBtn').addEventListener('click', () => { const btn = document.getElementById('currencySwapBtn'); btn.style.transform = 'rotate(180deg)'; setTimeout(() => btn.style.transform = 'rotate(0deg)', 300); swapCurrencies(); });
-document.getElementById('currencyRefreshBtn').addEventListener('click', async () => { const btn = document.getElementById('currencyRefreshBtn'); btn.querySelector('.refresh-icon').style.animation = 'spin 1s linear infinite'; await fetchCurrencyRates(true); await convertCurrency(); btn.querySelector('.refresh-icon').style.animation = ''; });
-document.querySelectorAll('.quick-amount-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('currencyFromAmount').value = btn.dataset.amount; convertCurrency(); }); });
+const holdingModal = document.getElementById('holdingModal');
+document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
+document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active'));
+document.getElementById('cancelHolding').addEventListener('click', () => holdingModal.classList.remove('active'));
+document.getElementById('saveHolding').addEventListener('click', () => {
+    const symbol = document.getElementById('holdingSymbol').value.trim().toUpperCase();
+    const name = document.getElementById('holdingName').value.trim();
+    const type = document.getElementById('holdingType').value;
+    const shares = parseFloat(document.getElementById('holdingShares').value);
+    const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value);
+    if (!symbol || !name || !shares || !avgPrice) { alert('Isi semua field!'); return; }
+    portfolio.push({ id: 'holding-' + Date.now(), symbol, name, type, shares, avgPrice, addedAt: Date.now() });
+    savePortfolio(); holdingModal.classList.remove('active');
+    document.getElementById('holdingSymbol').value = ''; document.getElementById('holdingName').value = '';
+    document.getElementById('holdingShares').value = ''; document.getElementById('holdingAvgPrice').value = '';
+    renderPortfolio(); analyzePortfolioRisk();
+});
+
+document.getElementById('closeNewsDetail').addEventListener('click', closeNewsDetail);
+document.getElementById('ndOpenOriginal').addEventListener('click', openNewsOriginal);
+document.getElementById('ndCopyLink').addEventListener('click', copyNewsLink);
+
+document.getElementById('currencyOpenBtn').addEventListener('click', openCurrencyModal);
+document.getElementById('closeCurrencyModal').addEventListener('click', closeCurrencyModal);
+document.getElementById('currencyFromAmount').addEventListener('input', convertCurrency);
+document.getElementById('currencyFromSelect').addEventListener('change', convertCurrency);
+document.getElementById('currencyToSelect').addEventListener('change', () => {
+    const val = document.getElementById('currencyToSelect').value;
+    document.querySelectorAll('.quick-target-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === val));
+    convertCurrency();
+});
+document.getElementById('currencySwapBtn').addEventListener('click', () => {
+    const btn = document.getElementById('currencySwapBtn');
+    btn.style.transform = 'rotate(180deg)';
+    setTimeout(() => btn.style.transform = 'rotate(0deg)', 300);
+    swapCurrencies();
+});
+document.getElementById('currencyRefreshBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('currencyRefreshBtn');
+    btn.querySelector('.refresh-icon').style.animation = 'spin 1s linear infinite';
+    await fetchCurrencyRates(true); await convertCurrency();
+    btn.querySelector('.refresh-icon').style.animation = '';
+});
+document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('currencyFromAmount').value = btn.dataset.amount;
+        convertCurrency();
+    });
+});
 
 document.getElementById('closeSectorDetail').addEventListener('click', closeSectorDetail);
-
-// COMPARE STOCKS
 document.getElementById('runCompareBtn').addEventListener('click', runCompare);
 document.getElementById('compareVsBtn').addEventListener('click', swapCompareStocks);
 
-// INDEKS PAGE
+// INDEKS
 document.getElementById('closeDetailModal').addEventListener('click', closeIndeksDetail);
 let indeksSearchDebounce;
 document.getElementById('indeksSearch').addEventListener('input', (e) => {
@@ -1293,8 +1642,19 @@ document.querySelectorAll('.indeks-filter-btn').forEach(btn => {
     });
 });
 
-// INIT
+// GROUPS
+document.getElementById('addGroupBtn').addEventListener('click', openGroupModal);
+document.getElementById('closeGroupModal').addEventListener('click', closeGroupModal);
+document.getElementById('cancelGroup').addEventListener('click', closeGroupModal);
+document.getElementById('saveGroup').addEventListener('click', saveGroup);
+
+// ============ INIT ============
+applyTheme(currentTheme);
 populateCurrencyDropdowns();
 populateCompareDropdowns();
-renderWatchlist(); renderPriceAlerts(); fetchMarketMovers();
-setTimeout(() => checkAlerts(), 5000); alertCheckInterval = setInterval(checkAlerts, 60000);
+renderGroupsBar();
+renderWatchlist();
+renderPriceAlerts();
+fetchMarketMovers();
+setTimeout(() => checkAlerts(), 5000);
+alertCheckInterval = setInterval(checkAlerts, 60000);
