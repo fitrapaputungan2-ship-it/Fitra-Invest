@@ -154,7 +154,6 @@
                     <div class="portfolio-legend" id="portfolioLegend"></div>
                 </div>
 
-                <!-- PORTFOLIO PERFORMANCE CHART -->
                 <div class="portfolio-perf-section" id="portfolioPerfSection" style="display:none;">
                     <div class="portfolio-chart-title">📈 Portfolio Performance (30 Hari)</div>
                     <div id="portfolioPerfChart" class="portfolio-perf-chart"></div>
@@ -454,6 +453,7 @@
                 </div>
             </div>
             <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
+            <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
             <div class="analysis-section">
                 <div class="analysis-title">🧠 Analisis AI Value Investing</div>
                 <div class="analysis-body-inline" id="analysisBody">
@@ -691,7 +691,31 @@
         <button class="alert-toast-close" id="alertToastClose">×</button>
     </div>
 
+    <!-- 11. VALUE INVESTING SCORECARD MODAL -->
+    <div class="scorecard-modal" id="scorecardModal">
+        <div class="scorecard-content">
+            <div class="scorecard-header">
+                <div>
+                    <h3 id="scorecardTitle">AAPL — Apple Inc.</h3>
+                    <div class="scorecard-subtitle">Value Investing Scorecard ala Warren Buffett</div>
+                </div>
+                <button class="analysis-close" id="closeScorecardModal">×</button>
+            </div>
+
+            <div class="scorecard-hero" id="scorecardHero">
+                <div class="scorecard-loading">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">🤖 Menghitung skor value investing...</p>
+                </div>
+            </div>
+
+            <div class="scorecard-breakdown" id="scorecardBreakdown"></div>
+
+            <div class="scorecard-verdict" id="scorecardVerdict" style="display:none;"></div>
+        </div>
+    </div>
+
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=17000"></script>
+    <script src="app.js?v=18000"></script>
 </body>
     </html>
