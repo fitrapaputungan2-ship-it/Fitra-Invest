@@ -62,7 +62,6 @@
                     <div class="price-alerts-list" id="priceAlertsList"></div>
                 </div>
 
-                <!-- WATCHLIST GROUPS -->
                 <div class="section-header" style="margin-top: 24px;">
                     <h2>My Watchlist</h2>
                     <div style="display:flex; gap:8px;">
@@ -418,7 +417,6 @@
                 </div>
             </div>
 
-            <!-- INDICATOR TOGGLES -->
             <div class="indicator-toggles">
                 <button class="ind-toggle-btn" data-ind="ma50">MA 50</button>
                 <button class="ind-toggle-btn" data-ind="ma200">MA 200</button>
@@ -454,6 +452,7 @@
             </div>
             <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
             <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
+            <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
             <div class="analysis-section">
                 <div class="analysis-title">🧠 Analisis AI Value Investing</div>
                 <div class="analysis-body-inline" id="analysisBody">
@@ -715,7 +714,69 @@
         </div>
     </div>
 
+    <!-- 12. DCF VALUATION MODAL -->
+    <div class="dcf-modal" id="dcfModal">
+        <div class="dcf-content">
+            <div class="dcf-header">
+                <div>
+                    <h3 id="dcfTitle">AAPL — Apple Inc.</h3>
+                    <div class="dcf-subtitle">DCF Valuation Calculator (Discounted Cash Flow)</div>
+                </div>
+                <button class="analysis-close" id="closeDcfModal">×</button>
+            </div>
+
+            <div class="dcf-hero" id="dcfHero">
+                <div class="scorecard-loading">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">🤖 Mengambil data fundamental untuk DCF...</p>
+                </div>
+            </div>
+
+            <div class="dcf-inputs-section" id="dcfInputsSection">
+                <div class="dcf-section-title">⚙️ Asumsi DCF</div>
+
+                <div class="dcf-input-group">
+                    <label>EPS Sekarang ($)</label>
+                    <input type="number" id="dcfEps" step="0.01" placeholder="0.00">
+                    <span class="dcf-input-hint">Auto-fill dari data fundamental</span>
+                </div>
+
+                <div class="dcf-input-group">
+                    <label>Growth Rate 5 Tahun Pertama (%)</label>
+                    <input type="number" id="dcfGrowth1" step="0.5" value="10" min="-50" max="100">
+                    <span class="dcf-input-hint">Estimasi pertumbuhan laba tahun 1-5</span>
+                </div>
+
+                <div class="dcf-input-group">
+                    <label>Growth Rate 5 Tahun Kedua (%)</label>
+                    <input type="number" id="dcfGrowth2" step="0.5" value="5" min="-50" max="100">
+                    <span class="dcf-input-hint">Estimasi pertumbuhan tahun 6-10</span>
+                </div>
+
+                <div class="dcf-input-group">
+                    <label>Terminal Growth Rate (%)</label>
+                    <input type="number" id="dcfTerminal" step="0.1" value="2.5" min="0" max="5">
+                    <span class="dcf-input-hint">Pertumbuhan selamanya (biasanya 2-3%)</span>
+                </div>
+
+                <div class="dcf-input-group">
+                    <label>Discount Rate / WACC (%)</label>
+                    <input type="number" id="dcfDiscount" step="0.5" value="10" min="1" max="50">
+                    <span class="dcf-input-hint">Tingkat diskonto (min 8-12% untuk saham)</span>
+                </div>
+
+                <button class="dcf-calc-btn" id="dcfCalcBtn">📊 Hitung Valuasi</button>
+            </div>
+
+            <div class="dcf-result" id="dcfResult" style="display:none;"></div>
+
+            <div class="dcf-sensitivity" id="dcfSensitivity" style="display:none;"></div>
+
+            <div class="dcf-methods" id="dcfMethods" style="display:none;"></div>
+        </div>
+    </div>
+
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=18000"></script>
+    <script src="app.js?v=19000"></script>
 </body>
-    </html>
+                        </html>
