@@ -657,4 +657,41 @@
                     <span class="indeks-stat-label">DAY LOW</span>
                     <span class="indeks-stat-value down" id="detailLow">-</span>
                 </div>
-                <div class="indeks-stat-item
+                <div class="indeks-stat-item">
+                    <span class="indeks-stat-label">PREV CLOSE</span>
+                    <span class="indeks-stat-value" id="detailPrevClose">-</span>
+                </div>
+                <div class="indeks-stat-item">
+                    <span class="indeks-stat-label">VOLUME</span>
+                    <span class="indeks-stat-value" id="detailVolume">-</span>
+                </div>
+            </div>
+            <div class="indeks-detail-sectors-section">
+                <h4 class="indeks-section-title">🏭 Sektor Breakdown</h4>
+                <div class="indeks-sectors-list" id="detailSectors"></div>
+            </div>
+            <div class="indeks-detail-chart-section">
+                <h4 class="indeks-section-title">📈 Chart 1 Tahun</h4>
+                <div id="indeksChartContainer" class="indeks-chart-container"></div>
+            </div>
+            <div class="indeks-detail-constituents-section">
+                <h4 class="indeks-section-title">🏆 Top Holdings</h4>
+                <div class="indeks-constituents-list" id="detailConstituents"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10. ALERT TOAST -->
+    <div class="alert-toast" id="alertToast">
+        <div class="alert-toast-icon">🔔</div>
+        <div class="alert-toast-content">
+            <div class="alert-toast-title" id="alertToastTitle">Alert!</div>
+            <div class="alert-toast-message" id="alertToastMessage">Pesan alert...</div>
+        </div>
+        <button class="alert-toast-close" id="alertToastClose">×</button>
+    </div>
+
+    <script src="./lightweight-charts.js"></script>
+    <script src="app.js?v=17000"></script>
+</body>
+    </html>
