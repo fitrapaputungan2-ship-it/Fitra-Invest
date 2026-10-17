@@ -30,6 +30,8 @@ let cryptoView = 'marketcap';
 let cryptoRates = {};
 let cryptoLastFetch = 0;
 let currentCryptoData = null;
+// Staking globals
+let stakingChartInstance = null;
 
 // ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
@@ -643,6 +645,176 @@ async function loadCryptoTrending() {
     el.dataset.loaded = '1';
 }
 document.querySelectorAll('.crypto-top-tab').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.crypto-top-tab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); cryptoView = btn.dataset.view; renderCryptoList(); }); });
+
+// ============ 🥩 STAKING CALCULATOR ============
+function initStakingCalculator() {
+    const coinSelect = document.getElementById('stakingCoin');
+    if (!coinSelect) return;
+    // Set APY saat coin berubah
+    coinSelect.addEventListener('change', () => {
+        const selected = coinSelect.options[coinSelect.selectedIndex];
+        const apy = selected.dataset.apy || '3.5';
+        document.getElementById('stakingApy').value = apy;
+    });
+}
+
+function calculateStakingRewards() {
+    const amount = parseFloat(document.getElementById('stakingAmount').value) || 0;
+    const apy = (parseFloat(document.getElementById('stakingApy').value) || 0) / 100;
+    const durationDays = parseInt(document.getElementById('stakingDuration').value) || 365;
+    const mode = document.getElementById('stakingMode').value;
+    const freq = parseInt(document.getElementById('stakingFrequency').value) || 12;
+    const coin = document.getElementById('stakingCoin').value;
+
+    if (amount <= 0) { alert('Jumlah staking harus > 0!'); return; }
+    if (apy <= 0) { alert('APY harus > 0!'); return; }
+
+    const years = durationDays / 365;
+    let finalValue = 0;
+    let simpleValue = 0;
+
+    // Simple
+    simpleValue = amount * (1 + apy * years);
+
+    // Compound
+    if (mode === 'compound') {
+        finalValue = amount * Math.pow(1 + apy / freq, freq * years);
+    } else {
+        finalValue = simpleValue;
+    }
+
+    const totalReward = finalValue - amount;
+    const effectiveApy = amount > 0 ? ((Math.pow(finalValue / amount, 1 / years) - 1) * 100) : 0;
+    const roi = amount > 0 ? (totalReward / amount) * 100 : 0;
+
+    // Render result
+    const resultEl = document.getElementById('stakingResult');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = `
+        <div class="staking-result-main">
+            <div class="staking-result-label">Total Reward</div>
+            <div class="staking-result-big">$${totalReward.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div class="staking-result-sub">${mode === 'compound' ? `Compound ${getFrequencyLabel(freq)}` : 'Simple (no compound)'} · ${getDurationLabel(durationDays)}</div>
+        </div>
+        <div class="staking-result-grid">
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">Modal Awal</span>
+                <span class="staking-result-item-value">$${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+            </div>
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">Total Akhir</span>
+                <span class="staking-result-item-value green">$${finalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+            </div>
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">APY Efektif</span>
+                <span class="staking-result-item-value gold">${effectiveApy.toFixed(2)}%</span>
+            </div>
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">Total ROI</span>
+                <span class="staking-result-item-value green">+${roi.toFixed(2)}%</span>
+            </div>
+        </div>
+    `;
+
+    // Render chart
+    renderStakingChart(amount, apy, durationDays, mode, freq);
+
+    // Render comparison
+    renderStakingComparison(amount, apy, durationDays, freq);
+}
+
+function getFrequencyLabel(freq) {
+    const labels = { 365: 'Harian', 52: 'Mingguan', 12: 'Bulanan', 4: 'Triwulanan', 1: 'Tahunan' };
+    return labels[freq] || 'Bulanan';
+}
+
+function getDurationLabel(days) {
+    if (days === 30) return '1 Bulan';
+    if (days === 90) return '3 Bulan';
+    if (days === 180) return '6 Bulan';
+    if (days === 365) return '1 Tahun';
+    if (days === 730) return '2 Tahun';
+    if (days === 1095) return '3 Tahun';
+    if (days === 1825) return '5 Tahun';
+    return `${days} hari`;
+}
+
+function renderStakingChart(amount, apy, durationDays, mode, freq) {
+    const container = document.getElementById('stakingChart');
+    const section = document.getElementById('stakingChartSection');
+    if (!container || !section) return;
+    section.style.display = 'block';
+    container.innerHTML = '';
+    if (stakingChartInstance) { try { stakingChartInstance.remove(); } catch(e) {} stakingChartInstance = null; }
+
+    if (typeof LightweightCharts === 'undefined') { container.innerHTML = '<div style="color:#f00;padding:20px;text-align:center;font-size:12px;">❌ Chart library tidak tersedia</div>'; return; }
+
+    stakingChartInstance = LightweightCharts.createChart(container, {
+        width: container.clientWidth, height: 200,
+        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
+        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+    });
+
+    const series = stakingChartInstance.addAreaSeries({ lineColor: '#22d3ee', topColor: 'rgba(34, 211, 238, 0.4)', bottomColor: 'rgba(34, 211, 238, 0.02)', lineWidth: 2 });
+
+    // Generate data points (30 titik)
+    const points = 30;
+    const data = [];
+    const now = new Date();
+    const startDate = new Date(now.getTime() - (durationDays * 24 * 60 * 60 * 1000));
+
+    for (let i = 0; i <= points; i++) {
+        const dayFraction = (i / points) * durationDays;
+        const yearsElapsed = dayFraction / 365;
+        let value = 0;
+        if (mode === 'compound') {
+            value = amount * Math.pow(1 + apy / freq, freq * yearsElapsed);
+        } else {
+            value = amount * (1 + apy * yearsElapsed);
+        }
+        const pointDate = new Date(startDate.getTime() + (dayFraction * 24 * 60 * 60 * 1000));
+        const timestamp = Math.floor(pointDate.getTime() / 1000);
+        data.push({ time: timestamp, value: parseFloat(value.toFixed(2)) });
+    }
+
+    series.setData(data);
+    stakingChartInstance.timeScale().fitContent();
+}
+
+function renderStakingComparison(amount, apy, durationDays, freq) {
+    const el = document.getElementById('stakingComparison');
+    if (!el) return;
+    el.style.display = 'block';
+    const years = durationDays / 365;
+    const simpleValue = amount * (1 + apy * years);
+    const compoundValue = amount * Math.pow(1 + apy / freq, freq * years);
+    const simpleReward = simpleValue - amount;
+    const compoundReward = compoundValue - amount;
+    const diff = compoundReward - simpleReward;
+
+    el.innerHTML = `
+        <div class="staking-comparison-title">⚖️ Simple vs Compound</div>
+        <div class="staking-comparison-grid">
+            <div class="staking-comp-card simple">
+                <div class="staking-comp-label">📊 Simple</div>
+                <div class="staking-comp-value">$${simpleReward.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
+                <div class="staking-comp-sub">Total: $${simpleValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
+            </div>
+            <div class="staking-comp-card compound">
+                <div class="staking-comp-label">📈 Compound</div>
+                <div class="staking-comp-value">$${compoundReward.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
+                <div class="staking-comp-sub">Total: $${compoundValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
+            </div>
+        </div>
+        ${diff > 0 ? `<div style="margin-top:10px;text-align:center;font-size:11px;color:var(--green);font-weight:700;">💰 Compound lebih untung $${diff.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>` : ''}
+    `;
+}
+
+// Crypto converter
 function populateCryptoConverterDropdowns() {
     const fromSel = document.getElementById('cryptoConvFrom'); const toSel = document.getElementById('cryptoConvTo');
     if (!fromSel || !toSel) return;
@@ -1380,6 +1552,7 @@ document.getElementById('closeDcfModal').addEventListener('click', closeDcf);
 document.getElementById('dcfCalcBtn').addEventListener('click', calculateDCF);
 document.getElementById('openCryptoScorecardBtn').addEventListener('click', openCryptoScorecard);
 document.getElementById('closeCryptoScorecardModal').addEventListener('click', closeCryptoScorecard);
+document.getElementById('stakingCalcBtn').addEventListener('click', calculateStakingRewards);
 const holdingModal = document.getElementById('holdingModal');
 document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
 document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active'));
@@ -1417,6 +1590,7 @@ document.getElementById('cryptoConvRefreshBtn').addEventListener('click', async 
 applyTheme(currentTheme);
 populateCurrencyDropdowns();
 populateCompareDropdowns();
+initStakingCalculator();
 renderGroupsBar();
 renderWatchlist();
 renderPriceAlerts();
