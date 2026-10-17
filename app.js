@@ -410,7 +410,7 @@ async function openScorecard() {
         const result = calculateValueScore(fundamental, { price: currentPrice }, chartData);
         const verdict = getScoreVerdict(result.score);
         renderScorecardHero(result.score, verdict); renderScorecardBreakdown(result.criteria); renderScorecardVerdict(result, verdict, fundamental);
-    } catch (error) { console.error('Scorecard error:', error); heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung skor</p><p class="error-detail">${error.message}</p></div>`; }
+    } catch (error) { heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung skor</p><p class="error-detail">${error.message}</p></div>`; }
 }
 function renderScorecardHero(score, verdict) { const heroEl = document.getElementById('scorecardHero'); heroEl.innerHTML = `<div class="scorecard-score-big">${score}</div><div class="scorecard-score-label">Value Score / 100</div><div class="scorecard-verdict-badge ${verdict.class}">${verdict.icon} ${verdict.label}</div><div class="scorecard-hero-desc">${verdict.desc}</div>`; }
 function renderScorecardBreakdown(criteria) {
@@ -454,9 +454,9 @@ async function openDcf() {
         document.getElementById('dcfEps').value = eps > 0 ? eps.toFixed(2) : '';
         if (fundamental.eps_growth && fundamental.eps_growth > 0) { const g = Math.min(fundamental.eps_growth * 100, 30); document.getElementById('dcfGrowth1').value = g.toFixed(1); }
         dcfState.eps = eps; dcfState.currentPrice = currentPrice; dcfState.symbol = currentSymbol; dcfState.name = currentName;
-        heroEl.innerHTML = `<div class="dcf-intrinsic-label">Harga Saham Sekarang</div><div class="dcf-intrinsic-value fair">$${currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div><div class="dcf-current-price">EPS (auto-fill): <strong>$${eps > 0 ? eps.toFixed(2) : 'N/A'}</strong> | P/E: <strong>${fundamental.pe_ratio ? fundamental.pe_ratio.toFixed(1) : 'N/A'}</strong></div><div class="dcf-hero-desc">Sesuaikan asumsi di bawah, lalu tap "Hitung Valuasi".</div>`;
+        heroEl.innerHTML = `<div class="dcf-intrinsic-label">Harga Saham Sekarang</div><div class="dcf-intrinsic-value fair">$${currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div><div class="dcf-current-price">EPS: <strong>$${eps > 0 ? eps.toFixed(2) : 'N/A'}</strong> | P/E: <strong>${fundamental.pe_ratio ? fundamental.pe_ratio.toFixed(1) : 'N/A'}</strong></div><div class="dcf-hero-desc">Sesuaikan asumsi, lalu tap "Hitung Valuasi".</div>`;
         if (eps > 0) calculateDCF();
-    } catch (error) { console.error('DCF error:', error); heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal mengambil data</p><p class="error-detail">${error.message}</p></div>`; }
+    } catch (error) { heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal</p><p class="error-detail">${error.message}</p></div>`; }
 }
 function calculateDCF() {
     const eps = parseFloat(document.getElementById('dcfEps').value) || 0;
@@ -464,8 +464,8 @@ function calculateDCF() {
     const growth2 = (parseFloat(document.getElementById('dcfGrowth2').value) || 5) / 100;
     const terminal = (parseFloat(document.getElementById('dcfTerminal').value) || 2.5) / 100;
     const discount = (parseFloat(document.getElementById('dcfDiscount').value) || 10) / 100;
-    if (eps <= 0) { alert('EPS harus lebih dari 0!'); return; }
-    if (discount <= terminal) { alert('Discount rate harus lebih besar dari terminal growth!'); return; }
+    if (eps <= 0) { alert('EPS harus > 0!'); return; }
+    if (discount <= terminal) { alert('Discount rate harus > terminal growth!'); return; }
     dcfState.eps = eps; dcfState.growth1 = growth1 * 100; dcfState.growth2 = growth2 * 100; dcfState.terminal = terminal * 100; dcfState.discount = discount * 100;
     let pv = 0; let currentEps = eps;
     for (let year = 1; year <= 5; year++) { currentEps = currentEps * (1 + growth1); pv += currentEps / Math.pow(1 + discount, year); }
@@ -484,9 +484,9 @@ function renderDCFResult(intrinsicValue, pv, pvTerminal, terminalValue) {
     else if (updown < -20) { verdict = 'OVERVALUED'; verdictClass = 'overvalued'; verdictIcon = '⚠️'; verdictDesc = `Harga saham <strong>${Math.abs(updown).toFixed(1)}%</strong> di atas intrinsic value.`; }
     else { verdict = 'FAIRLY VALUED'; verdictClass = 'fair'; verdictIcon = '⚖️'; verdictDesc = `Harga saham <strong>mendekati</strong> intrinsic value.`; }
     const heroEl = document.getElementById('dcfHero'); heroEl.className = 'dcf-hero ' + verdictClass;
-    heroEl.innerHTML = `<div class="dcf-intrinsic-label">Intrinsic Value (DCF)</div><div class="dcf-intrinsic-value ${verdictClass}">$${intrinsicValue.toFixed(2)}</div><div class="dcf-verdict-badge ${verdictClass}">${verdictIcon} ${verdict}</div><div class="dcf-current-price">Harga sekarang: <strong>$${currentPrice.toFixed(2)}</strong> | Potensi: <strong>${updown >= 0 ? '+' : ''}${updown.toFixed(1)}%</strong></div><div class="dcf-margin-of-safety"><div class="dcf-mos-item"><span class="dcf-mos-label">Margin of Safety</span><span class="dcf-mos-value ${mos >= 0 ? 'positive' : 'negative'}">${mos >= 0 ? '+' : ''}${mos.toFixed(1)}%</span></div><div class="dcf-mos-item"><span class="dcf-mos-label">Terminal Value</span><span class="dcf-mos-value">$${terminalValue.toFixed(2)}</span></div></div><div class="dcf-hero-desc">${verdictDesc}</div>`;
+    heroEl.innerHTML = `<div class="dcf-intrinsic-label">Intrinsic Value (DCF)</div><div class="dcf-intrinsic-value ${verdictClass}">$${intrinsicValue.toFixed(2)}</div><div class="dcf-verdict-badge ${verdictClass}">${verdictIcon} ${verdict}</div><div class="dcf-current-price">Harga: <strong>$${currentPrice.toFixed(2)}</strong> | Potensi: <strong>${updown >= 0 ? '+' : ''}${updown.toFixed(1)}%</strong></div><div class="dcf-margin-of-safety"><div class="dcf-mos-item"><span class="dcf-mos-label">Margin of Safety</span><span class="dcf-mos-value ${mos >= 0 ? 'positive' : 'negative'}">${mos >= 0 ? '+' : ''}${mos.toFixed(1)}%</span></div><div class="dcf-mos-item"><span class="dcf-mos-label">Terminal Value</span><span class="dcf-mos-value">$${terminalValue.toFixed(2)}</span></div></div><div class="dcf-hero-desc">${verdictDesc}</div>`;
     const resultEl = document.getElementById('dcfResult');
-    resultEl.innerHTML = `<div class="dcf-result-title">📊 Breakdown Perhitungan DCF</div><div class="dcf-result-row"><span class="dcf-result-label">EPS Saat Ini</span><span class="dcf-result-value">$${dcfState.eps.toFixed(2)}</span></div><div class="dcf-result-row"><span class="dcf-result-label">Growth 5 Tahun Pertama</span><span class="dcf-result-value positive">${dcfState.growth1.toFixed(1)}%</span></div><div class="dcf-result-row"><span class="dcf-result-label">Growth 5 Tahun Kedua</span><span class="dcf-result-value positive">${dcfState.growth2.toFixed(1)}%</span></div><div class="dcf-result-row"><span class="dcf-result-label">Terminal Growth</span><span class="dcf-result-value">${dcfState.terminal.toFixed(1)}%</span></div><div class="dcf-result-row"><span class="dcf-result-label">Discount Rate (WACC)</span><span class="dcf-result-value negative">${dcfState.discount.toFixed(1)}%</span></div><div class="dcf-result-row"><span class="dcf-result-label">PV Cash Flows 10 Tahun</span><span class="dcf-result-value">$${pv.toFixed(2)}</span></div><div class="dcf-result-row"><span class="dcf-result-label">PV Terminal Value</span><span class="dcf-result-value">$${pvTerminal.toFixed(2)}</span></div><div class="dcf-result-row" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);"><span class="dcf-result-label"><strong>INTRINSIC VALUE</strong></span><span class="dcf-result-value positive" style="font-size: 16px;">$${intrinsicValue.toFixed(2)}</span></div>`;
+    resultEl.innerHTML = `<div class="dcf-result-title">📊 Breakdown Perhitungan DCF</div><div class="dcf-result-row"><span class="dcf-result-label">EPS</span><span class="dcf-result-value">$${dcfState.eps.toFixed(2)}</span></div><div class="dcf-result-row"><span class="dcf-result-label">Growth 5 Tahun Pertama</span><span class="dcf-result-value positive">${dcfState.growth1.toFixed(1)}%</span></div><div class="dcf-result-row"><span class="dcf-result-label">Growth 5 Tahun Kedua</span><span class="dcf-result-value positive">${dcfState.growth2.toFixed(1)}%</span></div><div class="dcf-result-row"><span class="dcf-result-label">Terminal Growth</span><span class="dcf-result-value">${dcfState.terminal.toFixed(1)}%</span></div><div class="dcf-result-row"><span class="dcf-result-label">Discount Rate (WACC)</span><span class="dcf-result-value negative">${dcfState.discount.toFixed(1)}%</span></div><div class="dcf-result-row"><span class="dcf-result-label">PV Cash Flows 10 Tahun</span><span class="dcf-result-value">$${pv.toFixed(2)}</span></div><div class="dcf-result-row"><span class="dcf-result-label">PV Terminal Value</span><span class="dcf-result-value">$${pvTerminal.toFixed(2)}</span></div><div class="dcf-result-row" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);"><span class="dcf-result-label"><strong>INTRINSIC VALUE</strong></span><span class="dcf-result-value positive" style="font-size: 16px;">$${intrinsicValue.toFixed(2)}</span></div>`;
 }
 function renderDCFSensitivity(eps, growth1, growth2, terminal, discount) {
     const discountRates = [discount - 0.02, discount, discount + 0.02]; const growthRates = [growth1 - 0.05, growth1, growth1 + 0.05];
@@ -495,7 +495,7 @@ function renderDCFSensitivity(eps, growth1, growth2, terminal, discount) {
     growthRates.forEach(g => { tableHtml += `<div class="dcf-sens-cell dcf-sens-header">${(g*100).toFixed(1)}%</div>`; });
     discountRates.forEach(d => { tableHtml += `<div class="dcf-sens-cell dcf-sens-row-label">${(d*100).toFixed(1)}%</div>`; growthRates.forEach(g => { const val = calcDCFValue(eps, g, growth2, terminal, d); const diff = dcfState.currentPrice > 0 ? ((val / dcfState.currentPrice) - 1) * 100 : 0; let cls = 'neutral'; if (diff > 15) cls = 'cheap'; else if (diff < -15) cls = 'expensive'; tableHtml += `<div class="dcf-sens-cell dcf-sens-value ${cls}">$${val.toFixed(0)}</div>`; }); });
     tableHtml += `</div>`;
-    el.innerHTML = `<div class="dcf-sens-title">🎛️ Sensitivity Analysis</div><div class="dcf-sens-desc">Matriks valuasi: hijau = undervalued, merah = overvalued.</div>${tableHtml}`;
+    el.innerHTML = `<div class="dcf-sens-title">🎛️ Sensitivity Analysis</div><div class="dcf-sens-desc">Hijau = undervalued, merah = overvalued.</div>${tableHtml}`;
 }
 function calcDCFValue(eps, growth1, growth2, terminal, discount) {
     let pv = 0; let currentEps = eps;
@@ -506,8 +506,7 @@ function calcDCFValue(eps, growth1, growth2, terminal, discount) {
 }
 function renderDCFMethods(eps, dcfValue) {
     const currentPrice = dcfState.currentPrice;
-    const grahamValue = Math.sqrt(22.5 * eps * (eps * 15));
-    const pe15Value = eps * 15; const pe20Value = eps * 20; const peAvgValue = eps * 17.5;
+    const grahamValue = Math.sqrt(22.5 * eps * (eps * 15)); const pe15Value = eps * 15; const pe20Value = eps * 20; const peAvgValue = eps * 17.5;
     let methodsHtml = `<div class="dcf-methods-title">📐 Metode Valuasi Alternatif</div>`;
     const dcfVerdict = currentPrice > 0 ? ((dcfValue / currentPrice) - 1) * 100 : 0; const dcfCls = dcfVerdict > 15 ? 'cheap' : dcfVerdict < -15 ? 'expensive' : 'fair'; const dcfLabel = dcfVerdict > 15 ? 'MURAH' : dcfVerdict < -15 ? 'MAHAL' : 'WAJAR';
     methodsHtml += `<div class="dcf-method-item"><div class="dcf-method-name">💰 DCF</div><div class="dcf-method-desc">Metode utama</div><div class="dcf-method-value">$${dcfValue.toFixed(2)}</div><span class="dcf-method-verdict ${dcfCls}">${dcfLabel} (${dcfVerdict >= 0 ? '+' : ''}${dcfVerdict.toFixed(1)}%)</span></div>`;
@@ -524,7 +523,6 @@ const CRYPTO_FALLBACK = [
     { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', current_price: 65000, market_cap: 1280000000000, market_cap_rank: 1, price_change_percentage_24h: 0, total_volume: 30000000000, circulating_supply: 19000000, total_supply: 21000000, ath: 73750, ath_change_percentage: -12 },
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
 ];
-
 async function fetchCryptoPrices() {
     try {
         const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h,7d,30d';
@@ -533,17 +531,11 @@ async function fetchCryptoPrices() {
         const data = await response.json();
         if (!Array.isArray(data) || data.length === 0) throw new Error('Empty data');
         return data;
-    } catch (error) { console.warn('Crypto fetch failed, fallback:', error.message); return CRYPTO_FALLBACK; }
+    } catch (error) { return CRYPTO_FALLBACK; }
 }
-async function fetchCryptoGlobal() {
-    try { const response = await fetch('https://api.coingecko.com/api/v3/global'); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return data.data || null; } catch (error) { return null; }
-}
-async function fetchCryptoFNG() {
-    try { const response = await fetch('https://api.alternative.me/fng/?limit=1'); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); if (data.data && data.data[0]) return { value: parseInt(data.data[0].value), label: data.data[0].value_classification }; return null; } catch (error) { return null; }
-}
-async function fetchCryptoTrending() {
-    try { const response = await fetch('https://api.coingecko.com/api/v3/search/trending'); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return (data.coins || []).map(c => c.item).slice(0, 7); } catch (error) { return []; }
-}
+async function fetchCryptoGlobal() { try { const response = await fetch('https://api.coingecko.com/api/v3/global'); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return data.data || null; } catch (error) { return null; } }
+async function fetchCryptoFNG() { try { const response = await fetch('https://api.alternative.me/fng/?limit=1'); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); if (data.data && data.data[0]) return { value: parseInt(data.data[0].value), label: data.data[0].value_classification }; return null; } catch (error) { return null; } }
+async function fetchCryptoTrending() { try { const response = await fetch('https://api.coingecko.com/api/v3/search/trending'); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return (data.coins || []).map(c => c.item).slice(0, 7); } catch (error) { return []; } }
 async function fetchCryptoDetail(coinId) {
     try {
         const url = `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`;
@@ -554,9 +546,19 @@ async function fetchCryptoDetail(coinId) {
 }
 function formatCryptoPrice(price) { if (price == null || isNaN(price)) return 'N/A'; if (price >= 1000) return '$' + price.toLocaleString('en-US', { maximumFractionDigits: 0 }); if (price >= 1) return '$' + price.toLocaleString('en-US', { maximumFractionDigits: 2 }); if (price >= 0.01) return '$' + price.toFixed(4); if (price >= 0.0001) return '$' + price.toFixed(6); return '$' + price.toFixed(8); }
 function formatCryptoBig(num) { if (!num || isNaN(num)) return 'N/A'; if (num >= 1e12) return '$' + (num / 1e12).toFixed(2) + 'T'; if (num >= 1e9) return '$' + (num / 1e9).toFixed(2) + 'B'; if (num >= 1e6) return '$' + (num / 1e6).toFixed(2) + 'M'; if (num >= 1e3) return '$' + (num / 1e3).toFixed(2) + 'K'; return '$' + num.toFixed(0); }
-
+function getCryptoHeatColor(change) {
+    if (change >= 10) return { bg: 'rgba(5, 150, 105, 0.9)', text: '#ffffff' };
+    if (change >= 5) return { bg: 'rgba(16, 185, 129, 0.7)', text: '#ffffff' };
+    if (change >= 2) return { bg: 'rgba(52, 211, 153, 0.5)', text: '#ffffff' };
+    if (change >= 0.5) return { bg: 'rgba(110, 231, 183, 0.35)', text: '#ffffff' };
+    if (change > -0.5) return { bg: 'rgba(100, 116, 139, 0.4)', text: '#ffffff' };
+    if (change > -2) return { bg: 'rgba(254, 202, 202, 0.4)', text: '#ffffff' };
+    if (change > -5) return { bg: 'rgba(239, 68, 68, 0.6)', text: '#ffffff' };
+    if (change > -10) return { bg: 'rgba(220, 38, 38, 0.8)', text: '#ffffff' };
+    return { bg: 'rgba(153, 27, 27, 0.95)', text: '#ffffff' };
+}
 async function initCryptoTab() {
-    if (cryptoData.length === 0) renderCryptoList();
+    if (cryptoData.length === 0) { renderCryptoList(); renderCryptoHeatmap(); }
     if (!document.getElementById('cryptoGlobalStats').dataset.loaded) loadCryptoGlobalStats();
     if (!document.getElementById('cryptoFngSection').dataset.loaded) loadCryptoFNG();
     if (!document.getElementById('cryptoTrendingSection').dataset.loaded) loadCryptoTrending();
@@ -566,7 +568,7 @@ async function loadCryptoData() {
     const list = document.getElementById('cryptoList'); if (!list) return;
     list.innerHTML = '<div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data crypto...</p></div>';
     try {
-        const data = await fetchCryptoPrices(); cryptoData = data; renderCryptoList();
+        const data = await fetchCryptoPrices(); cryptoData = data; renderCryptoList(); renderCryptoHeatmap();
         const now = new Date(); const el = document.getElementById('cryptoLastUpdated');
         if (el) el.textContent = 'Data dari CoinGecko · Terakhir diupdate: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     } catch (error) { list.innerHTML = '<div class="empty-state">❌ Gagal memuat data crypto.</div>'; }
@@ -585,9 +587,24 @@ function renderCryptoList() {
         return `<div class="crypto-item" onclick="openCryptoDetail('${coin.id}')"><div class="crypto-item-left"><span class="crypto-rank">${cryptoView === 'marketcap' ? (coin.market_cap_rank || i + 1) : i + 1}</span><img src="${coin.image}" alt="${coin.symbol}" class="crypto-icon" onerror="this.style.display='none'"><div class="crypto-info"><span class="crypto-symbol">${coin.symbol.toUpperCase()}</span><span class="crypto-name">${coin.name}</span></div></div><div class="crypto-item-right"><span class="crypto-price">${formatCryptoPrice(coin.current_price)}</span><span class="crypto-change ${trend}">${sign}${change.toFixed(2)}%</span><span class="crypto-marketcap">${formatCryptoBig(coin.market_cap)}</span></div></div>`;
     }).join('');
 }
+function renderCryptoHeatmap() {
+    const grid = document.getElementById('cryptoHeatmapGrid'); if (!grid) return;
+    if (cryptoData.length === 0) { grid.innerHTML = '<div class="crypto-heatmap-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat heatmap...</p></div>'; return; }
+    const top50 = cryptoData.slice(0, 50);
+    grid.innerHTML = top50.map((coin, i) => {
+        const change = coin.price_change_percentage_24h || 0;
+        const sign = change >= 0 ? '+' : '';
+        const color = getCryptoHeatColor(change);
+        const isLarge = i < 2;
+        return `<div class="crypto-heatmap-item ${isLarge ? 'large' : ''}" style="background: ${color.bg}; color: ${color.text};" onclick="openCryptoDetail('${coin.id}')">
+            <div class="crypto-heatmap-symbol">${coin.symbol.toUpperCase()}</div>
+            <div class="crypto-heatmap-change">${sign}${change.toFixed(2)}%</div>
+            ${isLarge ? `<div class="crypto-heatmap-name">${coin.name}</div>` : ''}
+        </div>`;
+    }).join('');
+}
 async function openCryptoDetail(coinId) {
-    const coin = cryptoData.find(c => c.id === coinId);
-    if (!coin) return;
+    const coin = cryptoData.find(c => c.id === coinId); if (!coin) return;
     const symbol = coin.symbol.toUpperCase();
     currentCryptoData = coin;
     openAssetDetail(symbol, coin.name, coin.current_price, coin.price_change_percentage_24h || 0, 'crypto');
@@ -626,8 +643,6 @@ async function loadCryptoTrending() {
     el.dataset.loaded = '1';
 }
 document.querySelectorAll('.crypto-top-tab').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.crypto-top-tab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); cryptoView = btn.dataset.view; renderCryptoList(); }); });
-
-// Crypto Converter
 function populateCryptoConverterDropdowns() {
     const fromSel = document.getElementById('cryptoConvFrom'); const toSel = document.getElementById('cryptoConvTo');
     if (!fromSel || !toSel) return;
@@ -658,19 +673,15 @@ function swapCryptoConverter() { const fromSel = document.getElementById('crypto
 // ============ 🪙 CRYPTO VALUE SCORECARD ============
 function calculateCryptoScore(coinData, detailData, chartData) {
     const criteria = []; let totalScore = 0; let maxPossible = 0;
-
-    // 1. Market Cap Rank — max 15
     const rank = coinData.market_cap_rank || 999;
     let rankScore = 0; let rankStatus = 'fail'; let rankDesc = '';
-    if (rank <= 5) { rankScore = 15; rankStatus = 'pass'; rankDesc = `Rank #${rank} — top tier crypto, sangat likuid`; }
+    if (rank <= 5) { rankScore = 15; rankStatus = 'pass'; rankDesc = `Rank #${rank} — top tier`; }
     else if (rank <= 15) { rankScore = 12; rankStatus = 'pass'; rankDesc = `Rank #${rank} — major crypto`; }
-    else if (rank <= 30) { rankScore = 8; rankStatus = 'partial'; rankDesc = `Rank #${rank} — mid-cap, masih oke`; }
-    else if (rank <= 100) { rankScore = 4; rankStatus = 'partial'; rankDesc = `Rank #${rank} — small cap, lebih berisiko`; }
-    else { rankScore = 0; rankStatus = 'fail'; rankDesc = `Rank #${rank} — micro cap, risiko tinggi`; }
+    else if (rank <= 30) { rankScore = 8; rankStatus = 'partial'; rankDesc = `Rank #${rank} — mid-cap`; }
+    else if (rank <= 100) { rankScore = 4; rankStatus = 'partial'; rankDesc = `Rank #${rank} — small cap`; }
+    else { rankScore = 0; rankStatus = 'fail'; rankDesc = `Rank #${rank} — micro cap`; }
     criteria.push({ label: 'Market Cap Rank', icon: '🏆', score: rankScore, max: 15, value: `#${rank}`, status: rankStatus, desc: rankDesc });
     totalScore += rankScore; maxPossible += 15;
-
-    // 2. Liquidity (Volume / Market Cap) — max 15
     const volMcapRatio = coinData.market_cap > 0 ? (coinData.total_volume / coinData.market_cap) * 100 : 0;
     let liqScore = 0; let liqStatus = 'fail'; let liqDesc = '';
     if (volMcapRatio >= 15) { liqScore = 15; liqStatus = 'pass'; liqDesc = `Liquidity sangat tinggi (${volMcapRatio.toFixed(1)}%)`; }
@@ -681,79 +692,65 @@ function calculateCryptoScore(coinData, detailData, chartData) {
     else { liqScore = 0; liqStatus = 'fail'; liqDesc = 'Data volume tidak tersedia'; }
     criteria.push({ label: 'Liquidity (Vol/MCap)', icon: '💧', score: liqScore, max: 15, value: `${volMcapRatio.toFixed(2)}%`, status: liqStatus, desc: liqDesc });
     totalScore += liqScore; maxPossible += 15;
-
-    // 3. ATH Distance — max 10
     const athChange = coinData.ath_change_percentage || 0;
     let athScore = 0; let athStatus = 'fail'; let athDesc = '';
-    if (athChange >= -10) { athScore = 3; athStatus = 'fail'; athDesc = `Dekat ATH (${athChange.toFixed(1)}%) — risiko beli di puncak`; }
-    else if (athChange >= -30) { athScore = 6; athStatus = 'partial'; athDesc = `Turun ${Math.abs(athChange).toFixed(1)}% dari ATH — moderate`; }
-    else if (athChange >= -60) { athScore = 10; athStatus = 'pass'; athDesc = `Turun ${Math.abs(athChange).toFixed(1)}% dari ATH — potensi rebound`; }
+    if (athChange >= -10) { athScore = 3; athStatus = 'fail'; athDesc = `Dekat ATH (${athChange.toFixed(1)}%)`; }
+    else if (athChange >= -30) { athScore = 6; athStatus = 'partial'; athDesc = `Turun ${Math.abs(athChange).toFixed(1)}% dari ATH`; }
+    else if (athChange >= -60) { athScore = 10; athStatus = 'pass'; athDesc = `Turun ${Math.abs(athChange).toFixed(1)}% dari ATH — potensi`; }
     else if (athChange >= -85) { athScore = 8; athStatus = 'pass'; athDesc = `Turun ${Math.abs(athChange).toFixed(1)}% dari ATH — deep discount`; }
-    else { athScore = 4; athStatus = 'partial'; athDesc = `Turun ${Math.abs(athChange).toFixed(1)}% dari ATH — very bearish`; }
+    else { athScore = 4; athStatus = 'partial'; athDesc = `Turun ${Math.abs(athChange).toFixed(1)}% dari ATH`; }
     criteria.push({ label: 'ATH Distance', icon: '📉', score: athScore, max: 10, value: `${athChange.toFixed(1)}%`, status: athStatus, desc: athDesc });
     totalScore += athScore; maxPossible += 10;
-
-    // 4. Supply Ratio (Circ / Total) — max 10
     const circ = coinData.circulating_supply || 0; const total = coinData.total_supply || circ || 1;
     const supplyRatio = total > 0 ? (circ / total) * 100 : 100;
     let supScore = 0; let supStatus = 'fail'; let supDesc = '';
-    if (supplyRatio >= 95) { supScore = 10; supStatus = 'pass'; supDesc = `Supply hampir fully circulating (${supplyRatio.toFixed(1)}%) — tidak ada inflasi besar`; }
+    if (supplyRatio >= 95) { supScore = 10; supStatus = 'pass'; supDesc = `Fully circulating (${supplyRatio.toFixed(1)}%)`; }
     else if (supplyRatio >= 75) { supScore = 7; supStatus = 'pass'; supDesc = `Supply ratio baik (${supplyRatio.toFixed(1)}%)`; }
-    else if (supplyRatio >= 50) { supScore = 4; supStatus = 'partial'; supDesc = `Supply ratio moderat (${supplyRatio.toFixed(1)}%) — ada risiko unlock`; }
-    else { supScore = 0; supStatus = 'fail'; supDesc = `Supply ratio rendah (${supplyRatio.toFixed(1)}%) — risiko dilusi tinggi`; }
+    else if (supplyRatio >= 50) { supScore = 4; supStatus = 'partial'; supDesc = `Supply ratio moderat (${supplyRatio.toFixed(1)}%)`; }
+    else { supScore = 0; supStatus = 'fail'; supDesc = `Supply ratio rendah (${supplyRatio.toFixed(1)}%)`; }
     criteria.push({ label: 'Supply Ratio', icon: '🪙', score: supScore, max: 10, value: `${supplyRatio.toFixed(1)}%`, status: supStatus, desc: supDesc });
     totalScore += supScore; maxPossible += 10;
-
-    // 5. Price Stability (Volatility) — max 10
     const change1d = Math.abs(coinData.price_change_percentage_24h || 0);
     let stabScore = 0; let stabStatus = 'fail'; let stabDesc = '';
-    if (change1d <= 3) { stabScore = 10; stabStatus = 'pass'; stabDesc = `Volatilitas rendah (${change1d.toFixed(2)}% 24h) — stabil`; }
+    if (change1d <= 3) { stabScore = 10; stabStatus = 'pass'; stabDesc = `Volatilitas rendah (${change1d.toFixed(2)}%)`; }
     else if (change1d <= 7) { stabScore = 7; stabStatus = 'pass'; stabDesc = `Volatilitas normal (${change1d.toFixed(2)}%)`; }
     else if (change1d <= 15) { stabScore = 4; stabStatus = 'partial'; stabDesc = `Volatilitas tinggi (${change1d.toFixed(2)}%)`; }
-    else { stabScore = 0; stabStatus = 'fail'; stabDesc = `Volatilitas ekstrem (${change1d.toFixed(2)}%) — sangat berisiko`; }
+    else { stabScore = 0; stabStatus = 'fail'; stabDesc = `Volatilitas ekstrem (${change1d.toFixed(2)}%)`; }
     criteria.push({ label: 'Price Stability (24h)', icon: '⚖️', score: stabScore, max: 10, value: `${change1d.toFixed(2)}%`, status: stabStatus, desc: stabDesc });
     totalScore += stabScore; maxPossible += 10;
-
-    // 6. 7 Day Performance — max 10
     const change7d = coinData.price_change_percentage_7d_in_currency || 0;
     let wScore = 0; let wStatus = 'fail'; let wDesc = '';
-    if (change7d >= 10) { wScore = 10; wStatus = 'pass'; wDesc = `Momentum 7 hari kuat (+${change7d.toFixed(1)}%)`; }
-    else if (change7d >= 3) { wScore = 7; wStatus = 'pass'; wDesc = `Momentum 7 hari positif (+${change7d.toFixed(1)}%)`; }
+    if (change7d >= 10) { wScore = 10; wStatus = 'pass'; wDesc = `Momentum 7h kuat (+${change7d.toFixed(1)}%)`; }
+    else if (change7d >= 3) { wScore = 7; wStatus = 'pass'; wDesc = `Momentum 7h positif (+${change7d.toFixed(1)}%)`; }
     else if (change7d >= -3) { wScore = 4; wStatus = 'partial'; wDesc = `Sideways (${change7d.toFixed(1)}%)`; }
-    else if (change7d >= -10) { wScore = 2; wStatus = 'fail'; wDesc = `Momentum 7 hari negatif (${change7d.toFixed(1)}%)`; }
-    else { wScore = 0; wStatus = 'fail'; wDesc = `Momentum 7 hari buruk (${change7d.toFixed(1)}%)`; }
+    else if (change7d >= -10) { wScore = 2; wStatus = 'fail'; wDesc = `Momentum 7h negatif (${change7d.toFixed(1)}%)`; }
+    else { wScore = 0; wStatus = 'fail'; wDesc = `Momentum 7h buruk (${change7d.toFixed(1)}%)`; }
     criteria.push({ label: 'Momentum 7 Hari', icon: '📊', score: wScore, max: 10, value: `${change7d >= 0 ? '+' : ''}${change7d.toFixed(2)}%`, status: wStatus, desc: wDesc });
     totalScore += wScore; maxPossible += 10;
-
-    // 7. 30 Day Performance — max 10
     const change30d = coinData.price_change_percentage_30d_in_currency || 0;
     let mScore = 0; let mStatus = 'fail'; let mDesc = '';
-    if (change30d >= 30) { mScore = 10; mStatus = 'pass'; mDesc = `Bullish kuat 30 hari (+${change30d.toFixed(1)}%)`; }
-    else if (change30d >= 10) { mScore = 7; mStatus = 'pass'; mDesc = `Bullish 30 hari (+${change30d.toFixed(1)}%)`; }
+    if (change30d >= 30) { mScore = 10; mStatus = 'pass'; mDesc = `Bullish kuat 30h (+${change30d.toFixed(1)}%)`; }
+    else if (change30d >= 10) { mScore = 7; mStatus = 'pass'; mDesc = `Bullish 30h (+${change30d.toFixed(1)}%)`; }
     else if (change30d >= -10) { mScore = 4; mStatus = 'partial'; mDesc = `Stabil (${change30d.toFixed(1)}%)`; }
-    else if (change30d >= -25) { mScore = 2; mStatus = 'fail'; mDesc = `Bearish 30 hari (${change30d.toFixed(1)}%)`; }
-    else { mScore = 0; mStatus = 'fail'; mDesc = `Bearish kuat 30 hari (${change30d.toFixed(1)}%)`; }
+    else if (change30d >= -25) { mScore = 2; mStatus = 'fail'; mDesc = `Bearish 30h (${change30d.toFixed(1)}%)`; }
+    else { mScore = 0; mStatus = 'fail'; mDesc = `Bearish kuat 30h (${change30d.toFixed(1)}%)`; }
     criteria.push({ label: 'Momentum 30 Hari', icon: '📈', score: mScore, max: 10, value: `${change30d >= 0 ? '+' : ''}${change30d.toFixed(2)}%`, status: mStatus, desc: mDesc });
     totalScore += mScore; maxPossible += 10;
-
-    // 8. Market Cap Size — max 10
     const mcap = coinData.market_cap || 0;
     let mcScore = 0; let mcStatus = 'fail'; let mcDesc = '';
-    if (mcap >= 500e9) { mcScore = 10; mcStatus = 'pass'; mcDesc = `Mega cap (${formatCryptoBig(mcap)}) — blue chip crypto`; }
+    if (mcap >= 500e9) { mcScore = 10; mcStatus = 'pass'; mcDesc = `Mega cap (${formatCryptoBig(mcap)})`; }
     else if (mcap >= 50e9) { mcScore = 8; mcStatus = 'pass'; mcDesc = `Large cap (${formatCryptoBig(mcap)})`; }
     else if (mcap >= 5e9) { mcScore = 5; mcStatus = 'partial'; mcDesc = `Mid cap (${formatCryptoBig(mcap)})`; }
     else if (mcap >= 500e6) { mcScore = 3; mcStatus = 'partial'; mcDesc = `Small cap (${formatCryptoBig(mcap)})`; }
-    else { mcScore = 0; mcStatus = 'fail'; mcDesc = `Micro cap (${formatCryptoBig(mcap)}) — risiko tinggi`; }
+    else { mcScore = 0; mcStatus = 'fail'; mcDesc = `Micro cap (${formatCryptoBig(mcap)})`; }
     criteria.push({ label: 'Market Cap Size', icon: '💎', score: mcScore, max: 10, value: formatCryptoBig(mcap), status: mcStatus, desc: mcDesc });
     totalScore += mcScore; maxPossible += 10;
-
-    // 9. Community Score — max 10 (dari detail)
     let commScore = 5; let commStatus = 'partial'; let commDesc = 'Data community tidak tersedia';
     if (detailData && detailData.community_data) {
         const twitterFollowers = detailData.community_data.twitter_followers || 0;
         const redditSubs = detailData.community_data.reddit_subscribers || 0;
         const totalCommunity = twitterFollowers + redditSubs;
-        if (totalCommunity >= 3000000) { commScore = 10; commStatus = 'pass'; commDesc = `Community sangat besar (${(totalCommunity/1e6).toFixed(2)}M followers)`; }
+        if (totalCommunity >= 3000000) { commScore = 10; commStatus = 'pass'; commDesc = `Community sangat besar (${(totalCommunity/1e6).toFixed(2)}M)`; }
         else if (totalCommunity >= 1000000) { commScore = 8; commStatus = 'pass'; commDesc = `Community besar (${(totalCommunity/1e6).toFixed(2)}M)`; }
         else if (totalCommunity >= 300000) { commScore = 6; commStatus = 'pass'; commDesc = `Community baik (${(totalCommunity/1e3).toFixed(0)}K)`; }
         else if (totalCommunity >= 50000) { commScore = 3; commStatus = 'partial'; commDesc = `Community kecil (${(totalCommunity/1e3).toFixed(0)}K)`; }
@@ -761,13 +758,10 @@ function calculateCryptoScore(coinData, detailData, chartData) {
     }
     criteria.push({ label: 'Community Size', icon: '👥', score: commScore, max: 10, value: detailData && detailData.community_data ? ((detailData.community_data.twitter_followers || 0) + (detailData.community_data.reddit_subscribers || 0)) > 1000 ? ((detailData.community_data.twitter_followers || 0) + (detailData.community_data.reddit_subscribers || 0)).toLocaleString('en-US') : 'N/A' : 'N/A', status: commStatus, desc: commDesc });
     totalScore += commScore; maxPossible += 10;
-
-    // 10. Developer Activity (GitHub) — max 10
     let devScore = 5; let devStatus = 'partial'; let devDesc = 'Data developer tidak tersedia';
     if (detailData && detailData.developer_data) {
         const commitCount = detailData.developer_data.commit_count_4_weeks || 0;
-        const stars = detailData.developer_data.stars || 0;
-        if (commitCount >= 100) { devScore = 10; devStatus = 'pass'; devDesc = `Developer sangat aktif (${commitCount} commits 4 minggu)`; }
+        if (commitCount >= 100) { devScore = 10; devStatus = 'pass'; devDesc = `Developer sangat aktif (${commitCount} commits)`; }
         else if (commitCount >= 30) { devScore = 8; devStatus = 'pass'; devDesc = `Developer aktif (${commitCount} commits)`; }
         else if (commitCount >= 10) { devScore = 5; devStatus = 'partial'; devDesc = `Developer moderat (${commitCount} commits)`; }
         else if (commitCount > 0) { devScore = 2; devStatus = 'fail'; devDesc = `Developer kurang aktif (${commitCount} commits)`; }
@@ -775,7 +769,6 @@ function calculateCryptoScore(coinData, detailData, chartData) {
     }
     criteria.push({ label: 'Developer Activity', icon: '💻', score: devScore, max: 10, value: detailData && detailData.developer_data ? `${detailData.developer_data.commit_count_4_weeks || 0} commits/4w` : 'N/A', status: devStatus, desc: devDesc });
     totalScore += devScore; maxPossible += 10;
-
     const normalizedScore = maxPossible > 0 ? Math.round((totalScore / maxPossible) * 100) : 0;
     return { score: normalizedScore, criteria };
 }
@@ -793,38 +786,21 @@ async function openCryptoScorecard() {
     heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Menganalisis crypto...</p></div>';
     breakdownEl.innerHTML = ''; verdictEl.style.display = 'none';
     try {
-        // Cari coin di cryptoData
         let coinData = cryptoData.find(c => c.symbol.toUpperCase() === currentSymbol.toUpperCase());
-        // Kalau tidak ada di list, fetch dari CoinGecko
         if (!coinData && currentCryptoData) coinData = currentCryptoData;
         if (!coinData) {
-            // Coba fetch detail
             const searchRes = await fetch(`https://api.coingecko.com/api/v3/search?query=${currentSymbol}`);
-            if (searchRes.ok) {
-                const searchData = await searchRes.json();
-                if (searchData.coins && searchData.coins[0]) {
-                    const coinId = searchData.coins[0].id;
-                    const detail = await fetchCryptoDetail(coinId);
-                    if (detail) coinData = { ...detail, current_price: detail.market_data?.current_price?.usd, market_cap: detail.market_data?.market_cap?.usd, total_volume: detail.market_data?.total_volume?.usd, price_change_percentage_24h: detail.market_data?.price_change_percentage_24h, market_cap_rank: detail.market_cap_rank, ath_change_percentage: detail.market_data?.ath_change_percentage?.usd, circulating_supply: detail.market_data?.circulating_supply, total_supply: detail.market_data?.total_supply, price_change_percentage_7d_in_currency: detail.market_data?.price_change_percentage_7d, price_change_percentage_30d_in_currency: detail.market_data?.price_change_percentage_30d };
-                }
-            }
+            if (searchRes.ok) { const searchData = await searchRes.json(); if (searchData.coins && searchData.coins[0]) { const coinId = searchData.coins[0].id; const detail = await fetchCryptoDetail(coinId); if (detail) coinData = { ...detail, current_price: detail.market_data?.current_price?.usd, market_cap: detail.market_data?.market_cap?.usd, total_volume: detail.market_data?.total_volume?.usd, price_change_percentage_24h: detail.market_data?.price_change_percentage_24h, market_cap_rank: detail.market_cap_rank, ath_change_percentage: detail.market_data?.ath_change_percentage?.usd, circulating_supply: detail.market_data?.circulating_supply, total_supply: detail.market_data?.total_supply, price_change_percentage_7d_in_currency: detail.market_data?.price_change_percentage_7d, price_change_percentage_30d_in_currency: detail.market_data?.price_change_percentage_30d }; } }
         }
         if (!coinData) { heroEl.innerHTML = '<div class="analysis-error"><p>❌ Data crypto tidak tersedia</p></div>'; return; }
-        // Fetch detail lengkap untuk community & developer
-        let detailData = null;
-        try { if (coinData.id) detailData = await fetchCryptoDetail(coinData.id); } catch (e) {}
+        let detailData = null; try { if (coinData.id) detailData = await fetchCryptoDetail(coinData.id); } catch (e) {}
         const chartData = await fetchChartData(currentSymbol, 'crypto', '1d', '1y');
         const result = calculateCryptoScore(coinData, detailData, chartData);
         const verdict = getCryptoVerdict(result.score);
-        renderCryptoScorecardHero(result.score, verdict);
-        renderCryptoScorecardBreakdown(result.criteria);
-        renderCryptoScorecardVerdict(result, verdict, coinData);
-    } catch (error) { console.error('Crypto Scorecard error:', error); heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menganalisis</p><p class="error-detail">${error.message}</p></div>`; }
+        renderCryptoScorecardHero(result.score, verdict); renderCryptoScorecardBreakdown(result.criteria); renderCryptoScorecardVerdict(result, verdict, coinData);
+    } catch (error) { heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menganalisis</p><p class="error-detail">${error.message}</p></div>`; }
 }
-function renderCryptoScorecardHero(score, verdict) {
-    const heroEl = document.getElementById('cryptoScorecardHero');
-    heroEl.innerHTML = `<div class="scorecard-score-big">${score}</div><div class="scorecard-score-label">Crypto Score / 100</div><div class="scorecard-verdict-badge ${verdict.class}">${verdict.icon} ${verdict.label}</div><div class="scorecard-hero-desc">${verdict.desc}</div>`;
-}
+function renderCryptoScorecardHero(score, verdict) { const heroEl = document.getElementById('cryptoScorecardHero'); heroEl.innerHTML = `<div class="scorecard-score-big">${score}</div><div class="scorecard-score-label">Crypto Score / 100</div><div class="scorecard-verdict-badge ${verdict.class}">${verdict.icon} ${verdict.label}</div><div class="scorecard-hero-desc">${verdict.desc}</div>`; }
 function renderCryptoScorecardBreakdown(criteria) {
     const breakdownEl = document.getElementById('cryptoScorecardBreakdown');
     let html = `<div class="crypto-scorecard-breakdown-title">📋 Detail Penilaian (10 Kriteria Crypto)</div>`;
@@ -841,11 +817,10 @@ function renderCryptoScorecardVerdict(result, verdict, coinData) {
     const partialCount = result.criteria.filter(c => c.status === 'partial').length;
     const failCount = result.criteria.filter(c => c.status === 'fail').length;
     let summaryText = '';
-    if (result.score >= 80) summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>sangat baik</strong>. ${passCount} kriteria lolos, ${partialCount} cukup, ${failCount} gagal. Crypto ini punya fundamental & momentum yang kuat.`;
-    else if (result.score >= 60) summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>baik</strong>. ${passCount} lolos, ${partialCount} cukup, ${failCount} gagal. Layak dipertimbangkan dengan catatan.`;
-    else if (result.score >= 40) summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>cukup</strong> tapi ada red flag. ${passCount} lolos, ${partialCount} cukup, ${failCount} gagal. Perlu riset mendalam.`;
-    else summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>lemah</strong>. ${passCount} lolos, ${partialCount} cukup, ${failCount} gagal. Hati-hati, risiko tinggi.`;
-    const mcap = coinData.market_cap || 0;
+    if (result.score >= 80) summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>sangat baik</strong>.`;
+    else if (result.score >= 60) summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>baik</strong>.`;
+    else if (result.score >= 40) summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>cukup</strong> tapi ada red flag.`;
+    else summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>lemah</strong>.`;
     const rank = coinData.market_cap_rank || 'N/A';
     verdictEl.innerHTML = `<div class="scorecard-verdict-title">🧠 Kesimpulan Crypto</div><div class="scorecard-verdict-text">${summaryText}</div><div class="scorecard-stats-row"><div class="scorecard-stat-box"><span class="scorecard-stat-label">Lolos</span><span class="scorecard-stat-value excellent">${passCount}/10</span></div><div class="scorecard-stat-box"><span class="scorecard-stat-label">Skor</span><span class="scorecard-stat-value ${verdict.class}">${result.score}</span></div><div class="scorecard-stat-box"><span class="scorecard-stat-label">Rank</span><span class="scorecard-stat-value">#${rank}</span></div></div>`;
     verdictEl.style.display = 'block';
@@ -907,18 +882,18 @@ async function checkAlerts() {
             const priceData = await fetchPrice(alert.symbol, alert.type); if (!priceData) continue;
             let triggered = false; let triggerReason = '';
             if (alert.alertType === 'price' || !alert.alertType) { const direction = alert.direction || 'above'; if (direction === 'above' && priceData.price >= alert.targetPrice) { triggered = true; triggerReason = `Harga naik ke $${priceData.price.toFixed(2)}`; } else if (direction === 'below' && priceData.price <= alert.targetPrice) { triggered = true; triggerReason = `Harga turun ke $${priceData.price.toFixed(2)}`; } }
-            else if (alert.alertType === 'rsi') { const candles = await fetchChartData(alert.symbol, alert.type, '1d', '1mo'); if (candles.length >= 15) { const closes = candles.map(c => c.close); const rsi = calcRSI(closes, 14); const targetRsi = alert.rsiValue; if ((targetRsi <= 30 && rsi <= targetRsi) || (targetRsi >= 70 && rsi >= targetRsi)) { triggered = true; triggerReason = `RSI ${rsi.toFixed(1)} menyentuh ${targetRsi}`; } } }
-            else if (alert.alertType === 'ema') { const candles = await fetchChartData(alert.symbol, alert.type, '1d', '3mo'); if (candles.length >= alert.emaPeriod) { const closes = candles.map(c => c.close); const ema = calcEMA(closes, alert.emaPeriod); const currentPrice = closes[closes.length - 1]; if (Math.abs(currentPrice - ema) / ema < 0.01) { triggered = true; triggerReason = `Harga menyentuh EMA ${alert.emaPeriod} ($${ema.toFixed(2)})`; } } }
+            else if (alert.alertType === 'rsi') { const candles = await fetchChartData(alert.symbol, alert.type, '1d', '1mo'); if (candles.length >= 15) { const closes = candles.map(c => c.close); const rsi = calcRSI(closes, 14); const targetRsi = alert.rsiValue; if ((targetRsi <= 30 && rsi <= targetRsi) || (targetRsi >= 70 && rsi >= targetRsi)) { triggered = true; triggerReason = `RSI ${rsi.toFixed(1)}`; } } }
+            else if (alert.alertType === 'ema') { const candles = await fetchChartData(alert.symbol, alert.type, '1d', '3mo'); if (candles.length >= alert.emaPeriod) { const closes = candles.map(c => c.close); const ema = calcEMA(closes, alert.emaPeriod); const currentPrice = closes[closes.length - 1]; if (Math.abs(currentPrice - ema) / ema < 0.01) { triggered = true; triggerReason = `Harga menyentuh EMA ${alert.emaPeriod}`; } } }
             else if (alert.alertType === 'volume') { const candles = await fetchChartData(alert.symbol, alert.type, '1d', '1mo'); if (candles.length >= 20) { const recentVolume = candles[candles.length - 1].volume || 0; const avgVolume = candles.slice(-20, -1).reduce((sum, c) => sum + (c.volume || 0), 0) / 19; if (recentVolume >= avgVolume * alert.volumeMultiplier) { triggered = true; triggerReason = `Volume spike ${alert.volumeMultiplier}x`; } } }
             else if (alert.alertType === 'multi') { const candles = await fetchChartData(alert.symbol, alert.type, '1d', '1mo'); if (candles.length >= 15) { const closes = candles.map(c => c.close); const rsi = calcRSI(closes, 14); const currentPrice = priceData.price; const priceCondition = alert.direction === 'above' ? currentPrice >= alert.targetPrice : currentPrice <= alert.targetPrice; const rsiCondition = rsi <= alert.rsiValue; if (priceCondition && rsiCondition) { triggered = true; triggerReason = `Harga $${currentPrice.toFixed(2)} + RSI ${rsi.toFixed(1)}`; } } }
             if (triggered) { alert.triggered = true; alert.triggeredAt = Date.now(); alert.triggeredPrice = priceData.price; alert.triggerReason = triggerReason; hasNewTrigger = true; showAlertToast(alert, priceData.price, false, triggerReason); }
-        } catch (error) { console.error(`Error checking alert:`, error); }
+        } catch (error) {}
     }
     if (hasNewTrigger) { saveAlerts(); renderPriceAlerts(); renderWatchlist(); }
 }
 function showAlertToast(alert, currentPrice, isNewSet = false, reason = '') {
     const toast = document.getElementById('alertToast'); const title = document.getElementById('alertToastTitle'); const message = document.getElementById('alertToastMessage');
-    if (isNewSet) { title.textContent = '🔔 Alert Aktif!'; const typeLabels = { price: 'Harga', rsi: 'RSI', ema: 'EMA', volume: 'Volume', multi: 'Multi-Kondisi' }; message.textContent = `${alert.symbol} - Alert ${typeLabels[alert.alertType] || 'Price'} berhasil dibuat`; }
+    if (isNewSet) { title.textContent = '🔔 Alert Aktif!'; message.textContent = `${alert.symbol} - Alert berhasil dibuat`; }
     else { title.textContent = '🔔 SMART ALERT TRIGGERED!'; message.innerHTML = `<strong>${alert.symbol}</strong>: ${reason}<br/>Harga: $${currentPrice?.toFixed(2) || 'N/A'}`; }
     toast.classList.add('active'); setTimeout(() => toast.classList.remove('active'), 10000);
 }
@@ -936,8 +911,6 @@ function renderPriceAlerts() {
         return `<div class="price-alert-item ${dirClass}" onclick="openAssetDetail('${a.symbol}', '${a.name.replace(/'/g, "\\'")}', 0, 0, '${a.type}')"><div class="price-alert-icon">${icon}</div><div class="price-alert-info"><div class="price-alert-symbol">${a.symbol} <span class="price-alert-dir">${label}</span></div><div class="price-alert-target">${detail}${a.note ? ' • ' + a.note : ''}</div></div><button class="price-alert-delete" onclick="deleteAlert('${a.id}', event)">×</button></div>`;
     }).join('');
 }
-
-// ============ BROWSE & FETCH ============
 function openBrowseModal() { document.getElementById('browseModal').classList.add('active'); renderBrowseStocks(); }
 function closeBrowseModal() { document.getElementById('browseModal').classList.remove('active'); }
 function renderBrowseStocks() {
@@ -948,7 +921,6 @@ function renderBrowseStocks() {
     body.innerHTML = filtered.map(stock => { const inWatchlist = watchlist.some(w => w.symbol === stock.symbol); return `<div class="browse-item ${inWatchlist ? 'in-watchlist' : ''}" onclick="toggleFromBrowse('${stock.symbol}', '${stock.name.replace(/'/g, "\\'")}', '${stock.type}')"><div class="browse-item-info"><span class="browse-symbol">${stock.symbol}</span><span class="browse-name">${stock.name}</span></div><div class="browse-item-action">${inWatchlist ? '<span class="browse-badge added">✓ Added</span>' : '<span class="browse-badge add">+ Add</span>'}</div></div>`; }).join('');
 }
 function toggleFromBrowse(symbol, name, type) { const idx = watchlist.findIndex(w => w.symbol === symbol); if (idx >= 0) watchlist.splice(idx, 1); else watchlist.push({ symbol, name, type }); saveWatchlist(); renderBrowseStocks(); renderWatchlist(); }
-
 async function fetchPrice(symbol, type) {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-price`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type }) });
@@ -996,8 +968,6 @@ async function fetchIndexChartData(symbol, interval = '1d', range = '1y') {
         } return [];
     } catch (error) { return []; }
 }
-
-// ============ MARKET MOVERS ============
 async function fetchMarketMovers() {
     const container = document.getElementById('marketMovers'); if (!container) return;
     container.innerHTML = '<div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat pergerakan pasar...</p></div>';
@@ -1014,8 +984,6 @@ function renderMarketMovers() {
     if (losers.length > 0) html += `<div class="movers-section"><div class="movers-header"><span class="movers-title losers-title">📉 Top Losers</span><span class="movers-count">${losers.length}</span></div><div class="movers-list">${losers.map(l => `<div class="mover-item loser" onclick="openAssetDetail('${l.symbol}', '${l.name.replace(/'/g, "\\'")}', ${l.price}, ${l.change}, '${l.type}')"><div class="mover-info"><span class="mover-symbol">${l.symbol}</span><span class="mover-name">${l.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${l.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change loser">${l.change.toFixed(2)}%</span></div></div>`).join('')}</div></div>`;
     container.innerHTML = html;
 }
-
-// ============ RENDER WATCHLIST ============
 function renderAssetCard(asset, priceData, index) {
     const p = priceData; const isFav = isFavorite(asset.symbol); const hasAl = hasAlert(asset.symbol);
     if (!p) return `<div class="watchlist-card-wrapper"><button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button><div class="asset-card"><div class="asset-info"><span class="asset-symbol">${asset.symbol}</span><span class="asset-name">${asset.name}</span></div><div class="asset-price"><div class="price">-</div><div class="change">Gagal memuat</div></div></div><button class="watchlist-delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>`;
@@ -1037,19 +1005,15 @@ async function renderWatchlist() {
     } else { container.innerHTML = `<div class="watchlist-section">${results.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('')}</div>`; }
 }
 function deleteFromWatchlist(index, event) { if (event) event.stopPropagation(); const asset = watchlist[index]; if (!confirm(`Hapus ${asset.symbol}?`)) return; const favIdx = favorites.indexOf(asset.symbol); if (favIdx >= 0) { favorites.splice(favIdx, 1); saveFavorites(); } alerts = alerts.filter(a => a.symbol !== asset.symbol); saveAlerts(); renderPriceAlerts(); watchlist.splice(index, 1); saveWatchlist(); renderWatchlist(); renderGroupsBar(); }
-
-// AI SORT
 async function sortWatchlistByAI() {
     const btn = document.getElementById('sortAiBtn'); if (!btn) return; const originalText = btn.innerHTML;
     btn.innerHTML = '⏳ Sorting...'; btn.style.opacity = '0.7'; btn.disabled = true;
     try {
         const scoredWatchlist = await Promise.all(watchlist.map(async (asset) => { const fund = await fetchFundamental(asset.symbol, asset.type); let score = 50; const roe = fund.roe || 0; const der = fund.debt_to_equity || 0; const pe = fund.pe_ratio || 0; const epsGrowth = fund.eps_growth || 0; if (roe > 0.15) score += 25; else if (roe > 0.10) score += 10; if (der < 0.5) score += 20; else if (der < 1.0) score += 10; else score -= 10; if (epsGrowth > 0.10) score += 20; else if (epsGrowth > 0) score += 10; if (pe > 0 && pe < 15) score += 15; else if (pe >= 15 && pe < 25) score += 5; else if (pe >= 35) score -= 10; score = Math.max(0, Math.min(100, score)); return { ...asset, aiScore: score }; }));
         scoredWatchlist.sort((a, b) => b.aiScore - a.aiScore); watchlist = scoredWatchlist; renderWatchlist();
-    } catch (error) { console.error("Error sorting:", error); alert("Gagal mengurutkan."); }
+    } catch (error) { alert("Gagal mengurutkan."); }
     finally { btn.innerHTML = originalText; btn.style.opacity = '1'; btn.disabled = false; }
 }
-
-// INDIKATOR
 function calcEMA(closes, period) { if (closes.length < period) return closes[closes.length - 1] || 0; const k = 2 / (period + 1); let ema = closes[0]; for (let i = 1; i < closes.length; i++) ema = closes[i] * k + ema * (1 - k); return ema; }
 function calcRSI(closes, period = 14) { if (closes.length < period + 1) return 50; let gains = 0, losses = 0; for (let i = 1; i <= period; i++) { const diff = closes[i] - closes[i - 1]; if (diff >= 0) gains += diff; else losses -= diff; } let avgGain = gains / period, avgLoss = losses / period; for (let i = period + 1; i < closes.length; i++) { const diff = closes[i] - closes[i - 1]; avgGain = (avgGain * (period - 1) + (diff > 0 ? diff : 0)) / period; avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period; } if (avgLoss === 0) return 100; const rs = avgGain / avgLoss; return 100 - 100 / (1 + rs); }
 function calcSMA(closes, period) { const result = []; for (let i = 0; i < closes.length; i++) { if (i < period - 1) { result.push(null); continue; } let sum = 0; for (let j = i - period + 1; j <= i; j++) sum += closes[j]; result.push(sum / period); } return result; }
@@ -1112,15 +1076,12 @@ function clearIndicatorSeries() {
     if (macdChart) { try { macdChart.remove(); } catch(e) {} macdChart = null; }
     const macdContainer = document.getElementById('macdContainer'); if (macdContainer) macdContainer.style.display = 'none';
 }
-
-// ============ ASSET DETAIL & CHART ============
 let currentSymbol = null, currentType = null, currentName = null, currentPrice = 0, currentChange = 0;
 async function openAssetDetail(symbol, name, price, change, type) {
     currentSymbol = symbol; currentType = type; currentName = name; currentPrice = price; currentChange = change;
     document.getElementById('chartModal').classList.add('active'); document.getElementById('chartTitle').textContent = symbol + ' — ' + name;
     updateChartPrice(); document.getElementById('analysisBody').innerHTML = `<div class="loading-spinner"></div><p class="loading-text">Mengambil data fundamental...</p>`;
     ['htfValue','ltfValue','ema20Value','rsiValue','bidValue','askValue','buyerPct','sellerPct'].forEach(id => document.getElementById(id).textContent = '-');
-    // Toggle tombol Scorecard saham vs crypto
     const stockScorecardBtn = document.getElementById('openScorecardBtn'); const cryptoScorecardBtn = document.getElementById('openCryptoScorecardBtn'); const dcfBtn = document.getElementById('openDcfBtn');
     if (type === 'crypto') { stockScorecardBtn.style.display = 'none'; dcfBtn.style.display = 'none'; cryptoScorecardBtn.style.display = 'flex'; }
     else { stockScorecardBtn.style.display = 'flex'; dcfBtn.style.display = 'flex'; cryptoScorecardBtn.style.display = 'none'; }
@@ -1156,7 +1117,6 @@ function aggregateToYearly(monthlyCandles) {
 }
 function setupTimeframeButtons() { document.querySelectorAll('.tf-btn').forEach(btn => { const newBtn = btn.cloneNode(true); btn.parentNode.replaceChild(newBtn, btn); newBtn.addEventListener('click', () => { document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active')); newBtn.classList.add('active'); currentTimeframe = newBtn.dataset.tf; if (currentSymbol && currentType) loadChartData(currentSymbol, currentType, currentTimeframe); }); }); }
 function resizeChart() { if (currentChart) { const container = document.getElementById('tradingviewContainer'); currentChart.applyOptions({ width: container.clientWidth }); } }
-
 async function loadAnalysis(symbol, name, price, type) {
     const container = document.getElementById('analysisBody');
     container.innerHTML = `<div style="text-align:center; padding: 30px 0;"><div class="loading-spinner"></div><p class="loading-text" style="margin-top:10px;">🤖 AI Warren Buffett sedang menganalisis ${symbol}...</p></div>`;
@@ -1178,8 +1138,6 @@ function renderAISignalUI(data, container) {
 }
 function formatAnalysis(text) { if (!text) return ''; return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
 function closeAssetDetail() { document.getElementById('chartModal').classList.remove('active'); document.getElementById('tradingviewContainer').innerHTML = ''; clearIndicatorSeries(); if (currentChart) { currentChart.remove(); currentChart = null; candleSeries = null; volumeSeries = null; } if (indicatorInterval) { clearInterval(indicatorInterval); indicatorInterval = null; } window.removeEventListener('resize', resizeChart); }
-
-// ============ SCREENER ============
 async function runScreener() {
     const results = document.getElementById('screenerResults'); results.innerHTML = '<div class="empty-state">Screener lagi diproses...</div>';
     const peMax = parseFloat(document.getElementById('peMax').value) || 15; const pbMax = parseFloat(document.getElementById('pbMax').value) || 1.5;
@@ -1191,8 +1149,6 @@ async function runScreener() {
         results.innerHTML = `<p class="description">${data.count} saham lolos filter:</p>` + data.results.map(stock => `<div class="asset-card"><div class="asset-info"><span class="asset-symbol">${stock.symbol}</span><span class="asset-name">${stock.company_name}</span><span class="asset-metrics">P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%</span></div></div>`).join('');
     } catch (error) { results.innerHTML = `<div class="empty-state">❌ Gagal: ${error.message}</div>`; }
 }
-
-// ============ PORTFOLIO ============
 let portfolioPerfChart = null;
 async function renderPortfolio() {
     const container = document.getElementById('holdings'); const totalValueEl = document.getElementById('totalValue'); const unrealizedPLEl = document.getElementById('unrealizedPL');
@@ -1228,7 +1184,7 @@ async function renderPortfolioPerformance() {
         const allCharts = await Promise.all(portfolio.map(async (h) => { const candles = await fetchChartData(h.symbol, h.type, '1d', '1mo'); return { holding: h, candles }; }));
         const dateMap = {}; allCharts.forEach(({ holding, candles }) => { if (!candles || candles.length === 0) return; candles.forEach(c => { const key = c.time; if (!dateMap[key]) dateMap[key] = { time: key, value: 0 }; dateMap[key].value += c.close * holding.shares; }); });
         const sortedPoints = Object.values(dateMap).sort((a, b) => a.time - b.time); if (sortedPoints.length === 0) { section.style.display = 'none'; return; }
-        portfolioPerfChart = LightweightCharts.createChart(container, { width: container.clientWidth, height: 220, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false }, handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true } });
+        portfolioPerfChart = LightweightCharts.createChart(container, { width: container.clientWidth, height: 220, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false }, handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true } });
         const series = portfolioPerfChart.addAreaSeries({ lineColor: '#10b981', topColor: 'rgba(16, 185, 129, 0.4)', bottomColor: 'rgba(16, 185, 129, 0.02)', lineWidth: 2 });
         series.setData(sortedPoints.map(p => ({ time: p.time, value: p.value }))); portfolioPerfChart.timeScale().fitContent();
         const first = sortedPoints[0].value; const last = sortedPoints[sortedPoints.length - 1].value; const diff = last - first; const diffPct = (diff / first) * 100; const trend = diff >= 0 ? 'up' : 'down'; const sign = diff >= 0 ? '+' : '';
@@ -1252,8 +1208,6 @@ async function analyzePortfolioRisk() {
         container.innerHTML = `<div class="risk-analysis-container"><div class="risk-header"><span class="risk-level-badge" style="background: ${riskColor}20; color: ${riskColor}; border-color: ${riskColor}">${riskLevel} RISK</span></div><p class="risk-message">${riskMessage}</p><div class="risk-sectors"><div class="risk-section-title">📊 Alokasi Sektor:</div>${sectorHtml}</div></div>`;
     } catch (error) { container.innerHTML = `<div class="analysis-error"><p>❌ Gagal menganalisis risiko</p></div>`; }
 }
-
-// ============ 🔥 SECTOR HEATMAP ============
 function getHeatColor(change) { if (change >= 3) return '#10b981'; if (change >= 1.5) return '#34d399'; if (change >= 0.5) return '#6ee7b7'; if (change > 0) return '#a7f3d0'; if (change === 0) return '#64748b'; if (change > -0.5) return '#fecaca'; if (change > -1.5) return '#f87171'; if (change > -3) return '#ef4444'; return '#dc2626'; }
 async function fetchSectorData(sectorKey) { const stocks = STOCK_UNIVERSE.filter(s => s.category === sectorKey); const results = await Promise.all(stocks.map(async (stock) => { const priceData = await fetchPrice(stock.symbol, stock.type); if (!priceData) return null; return { symbol: stock.symbol, name: stock.name, type: stock.type, price: priceData.price, change: priceData.change }; })); return results.filter(Boolean); }
 async function renderSectorHeatmap() {
@@ -1281,8 +1235,6 @@ function openSectorDetail(index) {
     document.getElementById('sdStocksList').innerHTML = sortedStocks.map(s => { const trendClass = s.change > 0 ? 'up' : s.change < 0 ? 'down' : 'flat'; const sign = s.change > 0 ? '+' : ''; const barColor = getHeatColor(s.change); const barWidth = Math.min(Math.abs(s.change) * 20, 100); return `<div class="sector-stock-item" onclick="closeSectorDetail(); openAssetDetail('${s.symbol}', '${s.name.replace(/'/g, "\\'")}', ${s.price}, ${s.change}, '${s.type}')"><div class="sector-stock-top"><div class="sector-stock-info"><span class="sector-stock-symbol">${s.symbol}</span><span class="sector-stock-name">${s.name}</span></div><div class="sector-stock-price-wrap"><div class="sector-stock-price">$${s.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div><div class="sector-stock-change ${trendClass}">${sign}${s.change.toFixed(2)}%</div></div></div><div class="sector-stock-bar"><div class="sector-stock-bar-fill" style="width: ${barWidth}%; background: ${barColor};"></div></div></div>`; }).join('');
 }
 function closeSectorDetail() { document.getElementById('sectorDetailModal').classList.remove('active'); }
-
-// ============ NEWS ============
 function getNewsSentiment(text) { if (!text) return { label: 'NEUTRAL', class: 'neutral', icon: '⚪' }; const lowerText = text.toLowerCase(); const bullishWords = ['surge', 'jump', 'rally', 'beat', 'growth', 'profit', 'gain', 'bull', 'soar', 'record', 'up', 'rise', 'boost', 'high', 'buy', 'upgrade', 'positive', 'strong', 'recovery', 'breakout', 'momentum']; const bearishWords = ['drop', 'fall', 'crash', 'miss', 'loss', 'decline', 'bear', 'plunge', 'slump', 'down', 'cut', 'warn', 'low', 'sell', 'downgrade', 'negative', 'weak', 'recession', 'fear', 'risk', 'inflation', 'debt']; let bullScore = 0; let bearScore = 0; bullishWords.forEach(word => { if (lowerText.includes(word)) bullScore++; }); bearishWords.forEach(word => { if (lowerText.includes(word)) bearScore++; }); if (bullScore > bearScore) return { label: 'BULLISH', class: 'positive', icon: '🟢' }; if (bearScore > bullScore) return { label: 'BEARISH', class: 'negative', icon: '🔴' }; return { label: 'NEUTRAL', class: 'neutral', icon: '⚪' }; }
 async function renderNews() {
     const container = document.getElementById('newsList'); container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
@@ -1304,8 +1256,6 @@ function copyNewsLink() { if (!currentNewsItem || !currentNewsItem.url) return; 
 function fallbackCopy(text) { const temp = document.createElement('textarea'); temp.value = text; temp.style.position = 'fixed'; temp.style.left = '-9999px'; document.body.appendChild(temp); temp.select(); try { document.execCommand('copy'); showToastSimple('📋 Link berhasil dicopy!'); } catch (e) { showToastSimple('❌ Gagal copy link'); } document.body.removeChild(temp); }
 function showToastSimple(message) { const toast = document.createElement('div'); toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1a1a2e,#0f0f1a);color:#fff;padding:12px 20px;border-radius:12px;border:1px solid rgba(251,191,36,0.4);font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9999;animation:toastIn 0.3s ease;`; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease'; setTimeout(() => document.body.removeChild(toast), 300); }, 2000); }
 function formatTime(timeStr) { if (!timeStr) return ''; const date = new Date(timeStr * 1000); const day = String(date.getDate()).padStart(2, '0'); const month = String(date.getMonth() + 1).padStart(2, '0'); const year = date.getFullYear(); const hour = String(date.getHours()).padStart(2, '0'); const minute = String(date.getMinutes()).padStart(2, '0'); return `${day}/${month}/${year} ${hour}:${minute}`; }
-
-// ============ COMPARE ============
 function populateCompareDropdowns() { const selA = document.getElementById('compareStockA'); const selB = document.getElementById('compareStockB'); if (!selA || !selB) return; if (selA.options.length > 0) return; const options = STOCK_UNIVERSE.map(s => `<option value="${s.symbol}">${s.symbol} — ${s.name}</option>`).join(''); selA.innerHTML = options; selB.innerHTML = options; selA.value = 'AAPL'; selB.value = 'MSFT'; }
 function swapCompareStocks() { const selA = document.getElementById('compareStockA'); const selB = document.getElementById('compareStockB'); if (!selA || !selB) return; const temp = selA.value; selA.value = selB.value; selB.value = temp; const btn = document.getElementById('compareVsBtn'); if (btn) { btn.style.transform = 'rotate(180deg)'; setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 300); } const result = document.getElementById('compareResult'); if (result && !result.querySelector('.empty-state')) { runCompare(); } }
 async function runCompare() {
@@ -1356,8 +1306,6 @@ function renderCompareChart(containerId, symbolA, chartA, symbolB, chartB) {
     const dataB = chartB.map(c => ({ time: c.time, value: ((c.close / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
     seriesA.setData(dataA); seriesB.setData(dataB); compareChart.timeScale().fitContent();
 }
-
-// ============ 🌍 GLOBAL INDEKS ============
 function renderIndeksCard(idx) {
     const d = idx.data;
     if (!d || d.price == null) return `<div class="indeks-card" onclick="openIndeksDetail('${idx.symbol}')"><div class="indeks-card-header"><div class="indeks-card-title"><span class="indeks-card-flag">${idx.flag}</span><div class="indeks-card-name-wrap"><span class="indeks-card-name">${idx.name}</span><span class="indeks-card-country">${idx.country}</span></div></div><div class="indeks-card-price-wrap"><div class="indeks-card-price" style="color:rgba(255,255,255,0.4);">N/A</div><div class="indeks-card-change" style="color:rgba(255,255,255,0.3);">Tidak tersedia</div></div></div></div>`;
@@ -1404,8 +1352,6 @@ async function loadIndeksChart(symbol) {
     series.setData(formattedData); indeksDetailChart.timeScale().fitContent();
 }
 function closeIndeksDetail() { document.getElementById('indeksDetailModal').classList.remove('active'); if (indeksDetailChart) { try { indeksDetailChart.remove(); } catch(e) {} indeksDetailChart = null; } document.getElementById('indeksChartContainer').innerHTML = ''; indeksDetailSymbol = null; }
-
-// ============ EVENT LISTENERS ============
 document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
 document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
 document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
@@ -1468,8 +1414,6 @@ document.getElementById('cryptoConvAmount').addEventListener('input', convertCry
 document.getElementById('cryptoConvFrom').addEventListener('change', convertCrypto);
 document.getElementById('cryptoConvTo').addEventListener('change', convertCrypto);
 document.getElementById('cryptoConvRefreshBtn').addEventListener('click', async () => { await loadCryptoData(); populateCryptoConverterDropdowns(); convertCrypto(); });
-
-// ============ INIT ============
 applyTheme(currentTheme);
 populateCurrencyDropdowns();
 populateCompareDropdowns();
