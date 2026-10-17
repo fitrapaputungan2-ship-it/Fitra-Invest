@@ -142,6 +142,83 @@
                     </div>
                 </div>
 
+                <!-- STAKING CALCULATOR -->
+                <div class="staking-section" id="stakingSection">
+                    <div class="staking-header">
+                        <div class="staking-section-title">🥩 Staking Calculator</div>
+                        <div class="staking-subtitle">Hitung estimasi reward staking crypto kamu</div>
+                    </div>
+
+                    <div class="staking-inputs">
+                        <div class="staking-input-group">
+                            <label>Coin</label>
+                            <select id="stakingCoin">
+                                <option value="ETH" data-apy="3.5">🪙 ETH - Ethereum (APY 3.5%)</option>
+                                <option value="SOL" data-apy="7.0">🪙 SOL - Solana (APY 7.0%)</option>
+                                <option value="ADA" data-apy="3.0">🪙 ADA - Cardano (APY 3.0%)</option>
+                                <option value="DOT" data-apy="14.0">🪙 DOT - Polkadot (APY 14.0%)</option>
+                                <option value="ATOM" data-apy="15.0">🪙 ATOM - Cosmos (APY 15.0%)</option>
+                                <option value="MATIC" data-apy="4.5">🪙 MATIC - Polygon (APY 4.5%)</option>
+                                <option value="AVAX" data-apy="7.5">🪙 AVAX - Avalanche (APY 7.5%)</option>
+                                <option value="BNB" data-apy="2.5">🪙 BNB - Binance Coin (APY 2.5%)</option>
+                                <option value="TRX" data-apy="4.0">🪙 TRX - TRON (APY 4.0%)</option>
+                                <option value="NEAR" data-apy="9.0">🪙 NEAR - NEAR Protocol (APY 9.0%)</option>
+                            </select>
+                        </div>
+
+                        <div class="staking-input-group">
+                            <label>Jumlah Staking ($)</label>
+                            <input type="number" id="stakingAmount" value="1000" min="0" step="1">
+                        </div>
+
+                        <div class="staking-input-group">
+                            <label>APY (%) <span style="font-size: 10px; color: var(--text-muted);">— bisa di-edit manual</span></label>
+                            <input type="number" id="stakingApy" value="3.5" min="0" max="100" step="0.1">
+                        </div>
+
+                        <div class="staking-input-group">
+                            <label>Durasi</label>
+                            <select id="stakingDuration">
+                                <option value="30">1 Bulan</option>
+                                <option value="90">3 Bulan</option>
+                                <option value="180">6 Bulan</option>
+                                <option value="365" selected>1 Tahun</option>
+                                <option value="730">2 Tahun</option>
+                                <option value="1095">3 Tahun</option>
+                                <option value="1825">5 Tahun</option>
+                            </select>
+                        </div>
+
+                        <div class="staking-input-group">
+                            <label>Mode</label>
+                            <select id="stakingMode">
+                                <option value="compound">📈 Compound (Bunga Berbunga)</option>
+                                <option value="simple">📊 Simple (Tanpa Compound)</option>
+                            </select>
+                        </div>
+
+                        <div class="staking-input-group">
+                            <label>Frekuensi Compound</label>
+                            <select id="stakingFrequency">
+                                <option value="365">Harian</option>
+                                <option value="52">Mingguan</option>
+                                <option value="12" selected>Bulanan</option>
+                                <option value="4">Triwulanan</option>
+                                <option value="1">Tahunan</option>
+                            </select>
+                        </div>
+
+                        <button class="staking-calc-btn" id="stakingCalcBtn">📊 Hitung Reward Staking</button>
+                    </div>
+
+                    <div class="staking-result" id="stakingResult" style="display: none;"></div>
+                    <div class="staking-chart-section" id="stakingChartSection" style="display: none;">
+                        <div class="staking-chart-title">📈 Pertumbuhan Staking</div>
+                        <div id="stakingChart" class="staking-chart"></div>
+                    </div>
+                    <div class="staking-comparison" id="stakingComparison" style="display: none;"></div>
+                </div>
+
                 <div class="crypto-top-section">
                     <div class="crypto-top-header">
                         <div class="crypto-section-title">💎 Top Crypto</div>
@@ -538,6 +615,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=22000"></script>
+    <script src="app.js?v=23000"></script>
 </body>
 </html>
