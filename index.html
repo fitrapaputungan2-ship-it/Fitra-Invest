@@ -128,6 +128,14 @@
                     <div class="crypto-trending-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat trending...</p></div>
                 </div>
 
+                <!-- 🆕 CRYPTO EVENTS CALENDAR -->
+                <div class="crypto-events-section" id="cryptoEventsSection">
+                    <div class="crypto-section-title">📅 Crypto Events Calendar</div>
+                    <div class="crypto-events-list" id="cryptoEventsList">
+                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat event...</p></div>
+                    </div>
+                </div>
+
                 <!-- CRYPTO CATEGORIES -->
                 <div class="crypto-categories-section" id="cryptoCategoriesSection">
                     <div class="crypto-section-title">🎯 Categories</div>
@@ -168,7 +176,6 @@
                         <div class="staking-section-title">🥩 Staking Calculator</div>
                         <div class="staking-subtitle">Hitung estimasi reward staking crypto kamu</div>
                     </div>
-
                     <div class="staking-inputs">
                         <div class="staking-input-group">
                             <label>Coin</label>
@@ -185,17 +192,8 @@
                                 <option value="NEAR" data-apy="9.0">🪙 NEAR - NEAR Protocol (APY 9.0%)</option>
                             </select>
                         </div>
-
-                        <div class="staking-input-group">
-                            <label>Jumlah Staking ($)</label>
-                            <input type="number" id="stakingAmount" value="1000" min="0" step="1">
-                        </div>
-
-                        <div class="staking-input-group">
-                            <label>APY (%) <span style="font-size: 10px; color: var(--text-muted);">— bisa di-edit manual</span></label>
-                            <input type="number" id="stakingApy" value="3.5" min="0" max="100" step="0.1">
-                        </div>
-
+                        <div class="staking-input-group"><label>Jumlah Staking ($)</label><input type="number" id="stakingAmount" value="1000" min="0" step="1"></div>
+                        <div class="staking-input-group"><label>APY (%) <span style="font-size: 10px; color: var(--text-muted);">— bisa di-edit manual</span></label><input type="number" id="stakingApy" value="3.5" min="0" max="100" step="0.1"></div>
                         <div class="staking-input-group">
                             <label>Durasi</label>
                             <select id="stakingDuration">
@@ -208,7 +206,6 @@
                                 <option value="1825">5 Tahun</option>
                             </select>
                         </div>
-
                         <div class="staking-input-group">
                             <label>Mode</label>
                             <select id="stakingMode">
@@ -216,7 +213,6 @@
                                 <option value="simple">📊 Simple (Tanpa Compound)</option>
                             </select>
                         </div>
-
                         <div class="staking-input-group">
                             <label>Frekuensi Compound</label>
                             <select id="stakingFrequency">
@@ -227,16 +223,87 @@
                                 <option value="1">Tahunan</option>
                             </select>
                         </div>
-
                         <button class="staking-calc-btn" id="stakingCalcBtn">📊 Hitung Reward Staking</button>
                     </div>
-
                     <div class="staking-result" id="stakingResult" style="display: none;"></div>
                     <div class="staking-chart-section" id="stakingChartSection" style="display: none;">
                         <div class="staking-chart-title">📈 Pertumbuhan Staking</div>
                         <div id="stakingChart" class="staking-chart"></div>
                     </div>
                     <div class="staking-comparison" id="stakingComparison" style="display: none;"></div>
+                </div>
+
+                <!-- 🆕 IMPERMANENT LOSS CALCULATOR -->
+                <div class="il-calculator-section">
+                    <div class="staking-header">
+                        <div class="staking-section-title">⚖️ Impermanent Loss Calculator</div>
+                        <div class="staking-subtitle">Hitung risiko kerugian di Liquidity Pool (DeFi)</div>
+                    </div>
+                    <div class="staking-inputs">
+                        <div class="il-input-grid">
+                            <div class="staking-input-group">
+                                <label>Harga Awal Coin A ($)</label>
+                                <input type="number" id="ilInitA" value="1" step="any">
+                            </div>
+                            <div class="staking-input-group">
+                                <label>Harga Akhir Coin A ($)</label>
+                                <input type="number" id="ilFinalA" value="2" step="any">
+                            </div>
+                            <div class="staking-input-group">
+                                <label>Harga Awal Coin B ($)</label>
+                                <input type="number" id="ilInitB" value="1" step="any">
+                            </div>
+                            <div class="staking-input-group">
+                                <label>Harga Akhir Coin B ($)</label>
+                                <input type="number" id="ilFinalB" value="1" step="any">
+                            </div>
+                        </div>
+                        <button class="staking-calc-btn" id="ilCalcBtn" style="background: linear-gradient(135deg, var(--red), var(--violet)); color: white;">📉 Hitung Impermanent Loss</button>
+                    </div>
+                    <div class="il-result" id="ilResult" style="display: none;"></div>
+                </div>
+
+                <!-- 🆕 DCA CALCULATOR -->
+                <div class="dca-calculator-section">
+                    <div class="staking-header">
+                        <div class="staking-section-title">💰 DCA Calculator (Dollar-Cost Averaging)</div>
+                        <div class="staking-subtitle">Simulasi nabung crypto rutin (Beli di harga rata-rata)</div>
+                    </div>
+                    <div class="staking-inputs">
+                        <div class="staking-input-group">
+                            <label>Pilih Coin</label>
+                            <select id="dcaCoin"></select>
+                        </div>
+                        <div class="il-input-grid">
+                            <div class="staking-input-group">
+                                <label>Nabung per Periode ($)</label>
+                                <input type="number" id="dcaAmount" value="100" min="1">
+                            </div>
+                            <div class="staking-input-group">
+                                <label>Frekuensi</label>
+                                <select id="dcaFrequency">
+                                    <option value="7">Mingguan</option>
+                                    <option value="30" selected>Bulanan</option>
+                                </select>
+                            </div>
+                            <div class="staking-input-group">
+                                <label>Durasi</label>
+                                <select id="dcaDuration">
+                                    <option value="30">1 Bulan</option>
+                                    <option value="90">3 Bulan</option>
+                                    <option value="180">6 Bulan</option>
+                                    <option value="365" selected>1 Tahun</option>
+                                    <option value="730">2 Tahun</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="staking-calc-btn" id="dcaCalcBtn" style="background: linear-gradient(135deg, var(--gold), var(--green)); color: #0a0a0f;">💸 Hitung Hasil DCA</button>
+                    </div>
+                    <div class="dca-result" id="dcaResult" style="display: none;"></div>
+                    <div class="dca-chart-section" id="dcaChartSection" style="display: none;">
+                        <div class="staking-chart-title">📈 Portfolio vs Invested</div>
+                        <div id="dcaChart" class="staking-chart"></div>
+                    </div>
                 </div>
 
                 <div class="crypto-top-section">
@@ -670,6 +737,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=24002"></script>
+    <script src="app.js?v=24003"></script>
 </body>
-</html>
+                        </html>
