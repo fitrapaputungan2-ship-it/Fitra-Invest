@@ -113,8 +113,10 @@
                 <div class="crypto-banner">
                     <div class="crypto-banner-icon">🪙</div>
                     <div class="crypto-banner-text"><strong>Crypto Market</strong><span>Pantau harga, market cap, dan sentimen pasar crypto real-time</span></div>
-                    <button class="crypto-correlation-btn" id="openCryptoCorrelationBtn" title="Correlation">📊</button>
-                    <button class="crypto-converter-btn" id="openCryptoConverterBtn">🔄</button>
+                    <div class="crypto-banner-actions">
+                        <button class="crypto-correlation-btn" id="openCryptoCorrelationBtn" aria-label="Correlation">📊</button>
+                        <button class="crypto-converter-btn" id="openCryptoConverterBtn" aria-label="Converter">🔄</button>
+                    </div>
                 </div>
                 <div class="crypto-global-stats" id="cryptoGlobalStats"><div class="crypto-stat-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data global...</p></div></div>
                 <div class="crypto-fng-section" id="cryptoFngSection">
@@ -124,6 +126,23 @@
                 <div class="crypto-trending-section" id="cryptoTrendingSection">
                     <div class="crypto-section-title">🔥 Trending Sekarang</div>
                     <div class="crypto-trending-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat trending...</p></div>
+                </div>
+
+                <!-- CRYPTO CATEGORIES -->
+                <div class="crypto-categories-section" id="cryptoCategoriesSection">
+                    <div class="crypto-section-title">🎯 Categories</div>
+                    <div class="crypto-cat-bar" id="cryptoCatBar">
+                        <button class="crypto-cat-chip active" data-cat="all">🌐 All</button>
+                        <button class="crypto-cat-chip" data-cat="defi">🏦 DeFi</button>
+                        <button class="crypto-cat-chip" data-cat="ai">🤖 AI</button>
+                        <button class="crypto-cat-chip" data-cat="meme">🐕 Meme</button>
+                        <button class="crypto-cat-chip" data-cat="layer1">⚡ Layer 1</button>
+                        <button class="crypto-cat-chip" data-cat="gamefi">🎮 GameFi</button>
+                        <button class="crypto-cat-chip" data-cat="rwa">🏠 RWA</button>
+                    </div>
+                    <div class="crypto-cat-list" id="cryptoCatList">
+                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat categories...</p></div>
+                    </div>
                 </div>
 
                 <!-- CRYPTO HEATMAP -->
@@ -219,9 +238,6 @@
                     </div>
                     <div class="staking-comparison" id="stakingComparison" style="display: none;"></div>
                 </div>
-
-                <!-- CRYPTO CATEGORY BAR -->
-                <div class="crypto-category-bar" id="cryptoCategoryBar"></div>
 
                 <div class="crypto-top-section">
                     <div class="crypto-top-header">
@@ -622,37 +638,38 @@
     <div class="crypto-correlation-modal" id="cryptoCorrelationModal">
         <div class="crypto-correlation-content">
             <div class="crypto-correlation-header">
-                <div><h3>📊 Crypto Correlation</h3><div class="crypto-correlation-subtitle">Banding 2 coin untuk strategi diversifikasi</div></div>
+                <div><h3>📊 Crypto Correlation</h3><div class="crypto-correlation-subtitle">Bandingkan pergerakan 2 coin</div></div>
                 <button class="analysis-close" id="closeCryptoCorrelationModal">×</button>
             </div>
             <div class="crypto-correlation-card">
-                <div class="crypto-correlation-field">
+                <div class="crypto-corr-input-group">
                     <label>Coin A</label>
-                    <select id="cryptoCorrCoinA"></select>
+                    <select id="corrCoinA"></select>
                 </div>
-                <div class="crypto-correlation-field">
+                <div class="crypto-corr-vs">VS</div>
+                <div class="crypto-corr-input-group">
                     <label>Coin B</label>
-                    <select id="cryptoCorrCoinB"></select>
+                    <select id="corrCoinB"></select>
                 </div>
-                <div class="crypto-correlation-field">
-                    <label>Periode</label>
-                    <select id="cryptoCorrPeriod">
+                <div class="crypto-corr-input-group">
+                    <label>Period</label>
+                    <select id="corrPeriod">
                         <option value="30">30 Hari</option>
                         <option value="90" selected>90 Hari</option>
                         <option value="365">365 Hari</option>
                     </select>
                 </div>
-                <button class="crypto-correlation-calc-btn" id="cryptoCorrCalcBtn">📊 Hitung Correlation</button>
+                <button class="crypto-corr-calc-btn" id="corrCalcBtn">📊 Hitung Korelasi</button>
             </div>
-            <div class="crypto-correlation-result" id="cryptoCorrResult" style="display:none;"></div>
-            <div class="crypto-correlation-chart-section" id="cryptoCorrChartSection" style="display:none;">
-                <div class="crypto-correlation-chart-title">📈 Performance Overlay (Normalized)</div>
-                <div id="cryptoCorrChart" class="crypto-correlation-chart"></div>
+            <div class="crypto-correlation-result" id="corrResult" style="display:none;"></div>
+            <div class="crypto-correlation-chart-section" id="corrChartSection" style="display:none;">
+                <div class="crypto-corr-chart-title">📈 Chart Overlay (Normalized %)</div>
+                <div id="corrChart" class="crypto-corr-chart"></div>
             </div>
         </div>
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=24000"></script>
+    <script src="app.js?v=24001"></script>
 </body>
 </html>
