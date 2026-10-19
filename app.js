@@ -1051,8 +1051,9 @@ async function runCryptoCorrelation() {
             <div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : verdict.insightCls === 'warn' ? '⚠️' : '🚨'}</span><span>${verdict.insight}</span></div>
         `;
 
-        renderCorrelationChart(alignedA, alignedB, times, symbolA, symbolB);
+        // 🔥 FIX: Tampilkan section chart DULU, kasih jeda 100ms biar browser hitung width, baru render chart
         document.getElementById('corrChartSection').style.display = 'block';
+        setTimeout(() => { renderCorrelationChart(alignedA, alignedB, times, symbolA, symbolB); }, 100);
     } catch (err) {
         resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`;
     } finally {
