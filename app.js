@@ -3,7 +3,6 @@ const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
 // ============ ⏱️ FETCH WITH TIMEOUT ============
-// Prevent requests from hanging forever when network slow or server cold-start
 function fetchWithTimeout(url, options = {}, timeout = 12000) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
@@ -39,13 +38,13 @@ let indeksSearch = '';
 let indeksDetailChart = null;
 let indeksDetailSymbol = null;
 let indeksRenderToken = 0;
-// Crypto globals
 let cryptoData = [];
 let cryptoView = 'marketcap';
 let cryptoRates = {};
 let cryptoLastFetch = 0;
 let currentCryptoData = null;
-// Staking globals
+let cryptoCatView = 'all';
+let corrChartInstance = null;
 let stakingChartInstance = null;
 
 // ============ 🌐 TRANSLATION CACHE ============
@@ -534,12 +533,35 @@ function renderDCFMethods(eps, dcfValue) {
     document.getElementById('dcfMethods').innerHTML = methodsHtml;
 }
 function closeDcf() { document.getElementById('dcfModal').classList.remove('active'); }
-
 // ============ 🪙 CRYPTO TAB ============
 const CRYPTO_FALLBACK = [
     { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', current_price: 65000, market_cap: 1280000000000, market_cap_rank: 1, price_change_percentage_24h: 0, total_volume: 30000000000, circulating_supply: 19000000, total_supply: 21000000, ath: 73750, ath_change_percentage: -12 },
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
 ];
+
+// ============ 🪙 CRYPTO CATEGORIES MAPPING (BARU) ============
+// Mapping symbol (lowercase) → category key
+// Kalau coin tidak ada di mapping, masuk ke "all" saja
+const CRYPTO_CATEGORY_MAP = {
+    // DeFi
+    'uni': 'defi', 'aave': 'defi', 'link': 'defi', 'mkr': 'defi', 'comp': 'defi', 'snx': 'defi', 'crv': 'defi', 'ldo': 'defi', 'sushi': 'defi', '1inch': 'defi', 'grt': 'defi', 'rpl': 'defi', 'ens': 'defi', 'dydx': 'defi', 'cake': 'defi', 'pancakeswap': 'defi',
+    // AI
+    'fet': 'ai', 'agix': 'ai', 'rndr': 'ai', 'tao': 'ai', 'ocean': 'ai', 'nmr': 'ai', 'grt': 'ai', 'wld': 'ai', 'arkm': 'ai', 'ai': 'ai', 'aioz': 'ai',
+    // Meme
+    'doge': 'meme', 'shib': 'meme', 'pepe': 'meme', 'wif': 'meme', 'bonk': 'meme', 'floki': 'meme', 'elon': 'meme', 'babydoge': 'meme', 'mog': 'meme', 'brett': 'meme', 'popcat': 'meme',
+    // Layer 1
+    'btc': 'layer1', 'eth': 'layer1', 'sol': 'layer1', 'bnb': 'layer1', 'ada': 'layer1', 'avax': 'layer1', 'dot': 'layer1', 'atom': 'layer1', 'near': 'layer1', 'trx': 'layer1', 'ton': 'layer1', 'apt': 'layer1', 'sui': 'layer1', 'sei': 'layer1', 'icp': 'layer1', 'ftm': 'layer1', 'algo': 'layer1', 'hbar': 'layer1', 'xrp': 'layer1', 'ltc': 'layer1', 'bch': 'layer1', 'etc': 'layer1', 'xlm': 'layer1', 'vet': 'layer1', 'kas': 'layer1',
+    // GameFi
+    'axs': 'gamefi', 'sand': 'gamefi', 'mana': 'gamefi', 'imx': 'gamefi', 'gala': 'gamefi', 'enj': 'gamefi', 'ape': 'gamefi', 'flow': 'gamefi', 'ilv': 'gamefi', 'beam': 'gamefi', 'prime': 'gamefi',
+    // RWA (Real World Assets)
+    'ondo': 'rwa', 'polyx': 'rwa', 'mpl': 'rwa', 'cfg': 'rwa', 'gfi': 'rwa', 'rio': 'rwa', 'landx': 'rwa', 'tru': 'rwa', 'mkr': 'rwa'
+};
+
+function getCoinCategory(symbol) {
+    const lower = (symbol || '').toLowerCase();
+    return CRYPTO_CATEGORY_MAP[lower] || null;
+}
+
 async function fetchCryptoPrices() {
     try {
         const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h,7d,30d';
@@ -571,11 +593,11 @@ function getCryptoHeatColor(change) {
     if (change > -0.5) return { bg: 'rgba(100, 116, 139, 0.4)', text: '#ffffff' };
     if (change > -2) return { bg: 'rgba(254, 202, 202, 0.4)', text: '#ffffff' };
     if (change > -5) return { bg: 'rgba(239, 68, 68, 0.6)', text: '#ffffff' };
-    if (change > -10) return { bg: 'rgba(220, 38, 38, 0.8)', text: '#ffffff' };
+    if (change > -10) { return { bg: 'rgba(220, 38, 38, 0.8)', text: '#ffffff' }; }
     return { bg: 'rgba(153, 27, 27, 0.95)', text: '#ffffff' };
 }
 async function initCryptoTab() {
-    if (cryptoData.length === 0) { renderCryptoList(); renderCryptoHeatmap(); }
+    if (cryptoData.length === 0) { renderCryptoList(); renderCryptoHeatmap(); renderCryptoCategoryList(); }
     if (!document.getElementById('cryptoGlobalStats').dataset.loaded) loadCryptoGlobalStats();
     if (!document.getElementById('cryptoFngSection').dataset.loaded) loadCryptoFNG();
     if (!document.getElementById('cryptoTrendingSection').dataset.loaded) loadCryptoTrending();
@@ -585,7 +607,8 @@ async function loadCryptoData() {
     const list = document.getElementById('cryptoList'); if (!list) return;
     list.innerHTML = '<div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data crypto...</p></div>';
     try {
-        const data = await fetchCryptoPrices(); cryptoData = data; renderCryptoList(); renderCryptoHeatmap();
+        const data = await fetchCryptoPrices(); cryptoData = data;
+        renderCryptoList(); renderCryptoHeatmap(); renderCryptoCategoryList();
         const now = new Date(); const el = document.getElementById('cryptoLastUpdated');
         if (el) el.textContent = 'Data dari CoinGecko · Terakhir diupdate: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     } catch (error) { list.innerHTML = '<div class="empty-state">❌ Gagal memuat data crypto.</div>'; }
@@ -620,6 +643,51 @@ function renderCryptoHeatmap() {
         </div>`;
     }).join('');
 }
+
+// ============ 🎯 CRYPTO CATEGORIES RENDER (BARU) ============
+function renderCryptoCategoryList() {
+    const container = document.getElementById('cryptoCatList'); if (!container) return;
+    if (cryptoData.length === 0) { container.innerHTML = '<div class="empty-state">Memuat categories...</div>'; return; }
+    let filtered = cryptoData;
+    if (cryptoCatView !== 'all') {
+        filtered = cryptoData.filter(coin => getCoinCategory(coin.symbol) === cryptoCatView);
+    }
+    // Kalau "all", tampilkan top 20 by market cap
+    if (cryptoCatView === 'all') {
+        filtered = [...cryptoData].sort((a, b) => (a.market_cap_rank || 999) - (b.market_cap_rank || 999)).slice(0, 20);
+    }
+    if (filtered.length === 0) {
+        const catNames = { all: 'All', defi: 'DeFi', ai: 'AI', meme: 'Meme', layer1: 'Layer 1', gamefi: 'GameFi', rwa: 'RWA' };
+        container.innerHTML = `<div class="empty-state">Belum ada coin kategori <strong>${catNames[cryptoCatView] || cryptoCatView}</strong> di top 50.</div>`;
+        return;
+    }
+    container.innerHTML = filtered.map((coin, i) => {
+        const change = coin.price_change_percentage_24h || 0;
+        const trend = change >= 0 ? 'up' : 'down';
+        const sign = change >= 0 ? '+' : '';
+        const catLabel = cryptoCatView === 'all' ? (getCoinCategory(coin.symbol) ? getCategoryLabel(getCoinCategory(coin.symbol)) : '') : '';
+        return `<div class="crypto-item" onclick="openCryptoDetail('${coin.id}')">
+            <div class="crypto-item-left">
+                <span class="crypto-rank">${coin.market_cap_rank || i + 1}</span>
+                <img src="${coin.image}" alt="${coin.symbol}" class="crypto-icon" onerror="this.style.display='none'">
+                <div class="crypto-info">
+                    <span class="crypto-symbol">${coin.symbol.toUpperCase()}${catLabel ? ` <span class="crypto-symbol-badge">${catLabel}</span>` : ''}</span>
+                    <span class="crypto-name">${coin.name}</span>
+                </div>
+            </div>
+            <div class="crypto-item-right">
+                <span class="crypto-price">${formatCryptoPrice(coin.current_price)}</span>
+                <span class="crypto-change ${trend}">${sign}${change.toFixed(2)}%</span>
+                <span class="crypto-marketcap">${formatCryptoBig(coin.market_cap)}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+function getCategoryLabel(cat) {
+    const labels = { defi: 'DeFi', ai: 'AI', meme: 'Meme', layer1: 'L1', gamefi: 'GameFi', rwa: 'RWA' };
+    return labels[cat] || '';
+}
+
 async function openCryptoDetail(coinId) {
     const coin = cryptoData.find(c => c.id === coinId); if (!coin) return;
     const symbol = coin.symbol.toUpperCase();
@@ -660,6 +728,16 @@ async function loadCryptoTrending() {
     el.dataset.loaded = '1';
 }
 document.querySelectorAll('.crypto-top-tab').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.crypto-top-tab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); cryptoView = btn.dataset.view; renderCryptoList(); }); });
+
+// ============ 🎯 CRYPTO CATEGORIES EVENT (BARU) ============
+document.querySelectorAll('.crypto-cat-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        document.querySelectorAll('.crypto-cat-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        cryptoCatView = chip.dataset.cat;
+        renderCryptoCategoryList();
+    });
+});
 
 // ============ 🥩 STAKING CALCULATOR ============
 function initStakingCalculator() {
@@ -849,6 +927,180 @@ async function openCryptoConverter() {
 function closeCryptoConverter() { document.getElementById('cryptoConverterModal').classList.remove('active'); }
 function swapCryptoConverter() { const fromSel = document.getElementById('cryptoConvFrom'); const toSel = document.getElementById('cryptoConvTo'); const temp = fromSel.value; fromSel.value = toSel.value; toSel.value = temp; const btn = document.getElementById('cryptoConvSwapBtn'); if (btn) { btn.style.transform = 'rotate(180deg)'; setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 300); } convertCrypto(); }
 
+// ============ 📊 CRYPTO CORRELATION (BARU) ============
+function populateCorrelationDropdowns() {
+    const selA = document.getElementById('corrCoinA'); const selB = document.getElementById('corrCoinB');
+    if (!selA || !selB) return;
+    if (selA.options.length > 0) return; // Already populated
+    const options = cryptoData.map(c => `<option value="${c.id}" data-symbol="${c.symbol.toUpperCase()}">${c.symbol.toUpperCase()} — ${c.name}</option>`).join('');
+    selA.innerHTML = options; selB.innerHTML = options;
+    if (cryptoData.length >= 2) {
+        selA.value = cryptoData[0].id;
+        selB.value = cryptoData[1].id;
+    }
+}
+
+async function openCryptoCorrelation() {
+    if (cryptoData.length === 0) {
+        const modal = document.getElementById('cryptoCorrelationModal');
+        if (modal) modal.classList.add('active');
+        const resultEl = document.getElementById('corrResult');
+        if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data crypto belum termuat.</p><p style="font-size:11px;margin-top:8px;">Buka tab Crypto dulu, tunggu data muncul, lalu coba lagi.</p></div>'; }
+        return;
+    }
+    populateCorrelationDropdowns();
+    document.getElementById('cryptoCorrelationModal').classList.add('active');
+    document.getElementById('corrResult').style.display = 'none';
+    document.getElementById('corrChartSection').style.display = 'none';
+}
+function closeCryptoCorrelation() {
+    document.getElementById('cryptoCorrelationModal').classList.remove('active');
+    if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
+}
+
+// Pearson correlation coefficient
+function calculatePearsonCorrelation(xs, ys) {
+    const n = Math.min(xs.length, ys.length);
+    if (n < 3) return 0;
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+    for (let i = 0; i < n; i++) {
+        sumX += xs[i]; sumY += ys[i];
+        sumXY += xs[i] * ys[i];
+        sumX2 += xs[i] * xs[i];
+        sumY2 += ys[i] * ys[i];
+    }
+    const numerator = n * sumXY - sumX * sumY;
+    const denomPart1 = n * sumX2 - sumX * sumX;
+    const denomPart2 = n * sumY2 - sumY * sumY;
+    const denom = Math.sqrt(denomPart1 * denomPart2);
+    if (denom === 0) return 0;
+    return numerator / denom;
+}
+
+// Align 2 chart series by timestamp, return daily % returns
+function alignReturnsSeries(candlesA, candlesB) {
+    const mapA = {}; const mapB = {};
+    (candlesA || []).forEach(c => { if (c.time != null && c.close > 0) mapA[c.time] = c.close; });
+    (candlesB || []).forEach(c => { if (c.time != null && c.close > 0) mapB[c.time] = c.close; });
+    const commonTimes = Object.keys(mapA).filter(t => mapB[t] != null).map(Number).sort((a, b) => a - b);
+    if (commonTimes.length < 3) return { returnsA: [], returnsB: [], alignedA: [], alignedB: [], times: [] };
+    const alignedA = []; const alignedB = []; const times = [];
+    commonTimes.forEach(t => { alignedA.push(mapA[t]); alignedB.push(mapB[t]); times.push(t); });
+    const returnsA = []; const returnsB = [];
+    for (let i = 1; i < alignedA.length; i++) {
+        returnsA.push((alignedA[i] - alignedA[i-1]) / alignedA[i-1]);
+        returnsB.push((alignedB[i] - alignedB[i-1]) / alignedB[i-1]);
+    }
+    return { returnsA, returnsB, alignedA, alignedB, times };
+}
+
+function getCorrelationVerdict(coef) {
+    if (coef >= 0.8) return { label: 'STRONG POSITIVE', cls: 'strong-pos', icon: '🔥', insight: 'Coin ini bergerak hampir identik. Diversifikasi KURANG efektif — kalau satu turun, yang lain ikut turun.', insightCls: 'bad' };
+    if (coef >= 0.5) return { label: 'POSITIVE', cls: 'pos', icon: '📈', insight: 'Coin ini cenderung bergerak searah. Diversifikasi SEDANG — kurang optimal buat hedging.', insightCls: 'warn' };
+    if (coef >= 0.2) return { label: 'WEAK POSITIVE', cls: 'neutral', icon: '↗️', insight: 'Ada korelasi lemah. Diversifikasi CUKUP baik, ada sedikit independensi.', insightCls: 'good' };
+    if (coef > -0.2) return { label: 'NEUTRAL', cls: 'neutral', icon: '⚖️', insight: 'Coin ini relatif independen. Diversifikasi BAGUS — pergerakan tidak saling terikat.', insightCls: 'good' };
+    if (coef > -0.5) return { label: 'WEAK NEGATIVE', cls: 'neutral', icon: '↘️', insight: 'Ada korelasi negatif lemah. Bagus buat diversifikasi — sebagian bergerak berlawanan.', insightCls: 'good' };
+    if (coef > -0.8) return { label: 'NEGATIVE', cls: 'neg', icon: '📉', insight: 'Coin ini cenderung bergerak berlawanan. SANGAT BAGUS buat hedging & diversifikasi.', insightCls: 'good' };
+    return { label: 'STRONG NEGATIVE', cls: 'strong-neg', icon: '💎', insight: 'Coin ini hampir selalu berlawanan arah. LUAR BIASA buat hedging, tapi hati-hati volatilitas.', insightCls: 'good' };
+}
+
+async function runCryptoCorrelation() {
+    const selA = document.getElementById('corrCoinA');
+    const selB = document.getElementById('corrCoinB');
+    const periodEl = document.getElementById('corrPeriod');
+    const btn = document.getElementById('corrCalcBtn');
+    const resultEl = document.getElementById('corrResult');
+
+    if (!selA || !selB || !periodEl || !btn || !resultEl) return;
+    const idA = selA.value; const idB = selB.value;
+    if (idA === idB) { alert('Pilih 2 coin yang berbeda!'); return; }
+
+    const days = parseInt(periodEl.value) || 90;
+    let range = '3mo';
+    if (days === 30) range = '1mo';
+    else if (days === 90) range = '3mo';
+    else if (days === 365) range = '1y';
+
+    const coinA = cryptoData.find(c => c.id === idA);
+    const coinB = cryptoData.find(c => c.id === idB);
+    const symbolA = coinA ? coinA.symbol.toUpperCase() : idA.toUpperCase();
+    const symbolB = coinB ? coinB.symbol.toUpperCase() : idB.toUpperCase();
+    const nameA = coinA ? coinA.name : symbolA;
+    const nameB = coinB ? coinB.name : symbolB;
+
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Menghitung...';
+    btn.disabled = true;
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
+
+    try {
+        const [chartA, chartB] = await Promise.all([
+            fetchChartData(symbolA, 'crypto', '1d', range),
+            fetchChartData(symbolB, 'crypto', '1d', range)
+        ]);
+
+        if (!chartA || chartA.length < 5 || !chartB || chartB.length < 5) {
+            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p><p style="font-size:11px;margin-top:8px;">Coba periode lebih pendek atau coin lain.</p></div>';
+            return;
+        }
+
+        const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartA, chartB);
+        if (returnsA.length < 3) {
+            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>';
+            return;
+        }
+
+        const coef = calculatePearsonCorrelation(returnsA, returnsB);
+        const verdict = getCorrelationVerdict(coef);
+
+        resultEl.innerHTML = `
+            <div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div>
+            <div class="corr-coef-label">Pearson Correlation Coefficient</div>
+            <div class="corr-verdict-badge ${verdict.cls}">${verdict.icon} ${verdict.label}</div>
+            <div class="corr-interpretation"><strong>${symbolA}</strong> vs <strong>${symbolB}</strong> — ${days} hari terakhir (${returnsA.length} data point)</div>
+            <div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : verdict.insightCls === 'warn' ? '⚠️' : '🚨'}</span><span>${verdict.insight}</span></div>
+        `;
+
+        // Render overlay chart (normalized %)
+        renderCorrelationChart(alignedA, alignedB, times, symbolA, symbolB);
+        document.getElementById('corrChartSection').style.display = 'block';
+    } catch (err) {
+        resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`;
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+function renderCorrelationChart(alignedA, alignedB, times, symbolA, symbolB) {
+    const container = document.getElementById('corrChart'); if (!container) return;
+    container.innerHTML = '';
+    if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
+    if (typeof LightweightCharts === 'undefined') { container.innerHTML = '❌ Chart library tidak tersedia'; return; }
+    if (!alignedA || alignedA.length < 2) { container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:20px;text-align:center;font-size:12px;">Data tidak cukup</div>'; return; }
+
+    corrChartInstance = LightweightCharts.createChart(container, {
+        width: container.clientWidth, height: 260,
+        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
+        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+    });
+
+    const baseA = alignedA[0]; const baseB = alignedB[0];
+    const seriesA = corrChartInstance.addLineSeries({ color: '#22d3ee', lineWidth: 2, title: symbolA });
+    const seriesB = corrChartInstance.addLineSeries({ color: '#a855f7', lineWidth: 2, title: symbolB });
+
+    const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+
+    seriesA.setData(dataA); seriesB.setData(dataB);
+    corrChartInstance.timeScale().fitContent();
+}
+
 // ============ 🪙 CRYPTO VALUE SCORECARD ============
 function calculateCryptoScore(coinData, detailData, chartData) {
     const criteria = []; let totalScore = 0; let maxPossible = 0;
@@ -1005,7 +1257,6 @@ function renderCryptoScorecardVerdict(result, verdict, coinData) {
     verdictEl.style.display = 'block';
 }
 function closeCryptoScorecard() { document.getElementById('cryptoScorecardModal').classList.remove('active'); }
-
 // ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol; currentAlertName = name; currentAlertAssetType = type; currentAlertPrice = price;
@@ -1531,6 +1782,8 @@ async function loadIndeksChart(symbol) {
     series.setData(formattedData); indeksDetailChart.timeScale().fitContent();
 }
 function closeIndeksDetail() { document.getElementById('indeksDetailModal').classList.remove('active'); if (indeksDetailChart) { try { indeksDetailChart.remove(); } catch(e) {} indeksDetailChart = null; } document.getElementById('indeksChartContainer').innerHTML = ''; indeksDetailSymbol = null; }
+
+// ============ EVENT LISTENERS ============
 document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
 document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
 document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
@@ -1594,6 +1847,16 @@ document.getElementById('cryptoConvAmount').addEventListener('input', convertCry
 document.getElementById('cryptoConvFrom').addEventListener('change', convertCrypto);
 document.getElementById('cryptoConvTo').addEventListener('change', convertCrypto);
 document.getElementById('cryptoConvRefreshBtn').addEventListener('click', async () => { await loadCryptoData(); populateCryptoConverterDropdowns(); convertCrypto(); });
+
+// ============ CRYPTO CORRELATION EVENTS (BARU) ============
+const openCorrBtn = document.getElementById('openCryptoCorrelationBtn');
+if (openCorrBtn) openCorrBtn.addEventListener('click', openCryptoCorrelation);
+const closeCorrBtn = document.getElementById('closeCryptoCorrelationModal');
+if (closeCorrBtn) closeCorrBtn.addEventListener('click', closeCryptoCorrelation);
+const corrCalcBtn = document.getElementById('corrCalcBtn');
+if (corrCalcBtn) corrCalcBtn.addEventListener('click', runCryptoCorrelation);
+
+// ============ INIT ============
 applyTheme(currentTheme);
 populateCurrencyDropdowns();
 populateCompareDropdowns();
