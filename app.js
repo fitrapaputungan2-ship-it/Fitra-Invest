@@ -38,6 +38,7 @@ let indeksSearch = '';
 let indeksDetailChart = null;
 let indeksDetailSymbol = null;
 let indeksRenderToken = 0;
+// Crypto globals
 let cryptoData = [];
 let cryptoView = 'marketcap';
 let cryptoRates = {};
@@ -46,6 +47,7 @@ let currentCryptoData = null;
 let cryptoCatView = 'all';
 let corrChartInstance = null;
 let stakingChartInstance = null;
+let dcaChartInstance = null; // Global baru untuk DCA
 
 // ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
@@ -549,6 +551,16 @@ const CRYPTO_CATEGORY_MAP = {
     'ondo': 'rwa', 'polyx': 'rwa', 'mpl': 'rwa', 'cfg': 'rwa', 'gfi': 'rwa', 'rio': 'rwa', 'landx': 'rwa', 'tru': 'rwa', 'mkr': 'rwa'
 };
 
+// ============ 🆕 CRYPTO EVENTS DATA (STATIC) ============
+const CRYPTO_EVENTS_DATA = [
+    { date: '2024-04-19', title: 'Bitcoin Halving 2024', desc: 'Block reward BTC turun dari 6.25 ke 3.125 BTC.', coin: 'BTC' },
+    { date: '2024-09-30', title: 'Ethereum Dencun Upgrade', desc: 'Update jaringan Ethereum (Proto-Danksharding).', coin: 'ETH' },
+    { date: '2024-11-15', title: 'Cardano Chang Hard Fork', desc: 'Upgrade besar Cardano menuju desentralisasi penuh.', coin: 'ADA' },
+    { date: '2025-03-01', title: 'Solana Firedancer Launch', desc: 'Validator client baru untuk jaringan Solana yang lebih cepat.', coin: 'SOL' },
+    { date: '2025-05-15', title: 'Bittensor Halving', desc: 'Halving pertama untuk jaringan AI Bittensor (TAO).', coin: 'TAO' },
+    { date: '2026-04-20', title: 'Bitcoin Halving 2026', desc: 'Block reward BTC turun dari 3.125 ke 1.5625 BTC.', coin: 'BTC' }
+];
+
 function getCoinCategory(symbol) {
     const lower = (symbol || '').toLowerCase();
     return CRYPTO_CATEGORY_MAP[lower] || null;
@@ -590,6 +602,7 @@ function getCryptoHeatColor(change) {
 }
 async function initCryptoTab() {
     if (cryptoData.length === 0) { renderCryptoList(); renderCryptoHeatmap(); renderCryptoCategoryList(); }
+    renderCryptoEvents(); // 🆕 Render Events
     if (!document.getElementById('cryptoGlobalStats').dataset.loaded) loadCryptoGlobalStats();
     if (!document.getElementById('cryptoFngSection').dataset.loaded) loadCryptoFNG();
     if (!document.getElementById('cryptoTrendingSection').dataset.loaded) loadCryptoTrending();
@@ -601,6 +614,7 @@ async function loadCryptoData() {
     try {
         const data = await fetchCryptoPrices(); cryptoData = data;
         renderCryptoList(); renderCryptoHeatmap(); renderCryptoCategoryList();
+        populateDcaDropdowns(); // 🆕 Isi dropdown DCA
         const now = new Date(); const el = document.getElementById('cryptoLastUpdated');
         if (el) el.textContent = 'Data dari CoinGecko · Terakhir diupdate: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     } catch (error) { list.innerHTML = '<div class="empty-state">❌ Gagal memuat data crypto.</div>'; }
@@ -679,6 +693,37 @@ function getCategoryLabel(cat) {
     return labels[cat] || '';
 }
 
+// ============ 🆕 CRYPTO EVENTS RENDER ============
+function renderCryptoEvents() {
+    const list = document.getElementById('cryptoEventsList'); if (!list) return;
+    const today = new Date().getTime();
+    const sortedEvents = [...CRYPTO_EVENTS_DATA].sort((a, b) => new Date(a.date) - new Date(b.date));
+    let html = '';
+    sortedEvents.forEach(ev => {
+        const evDate = new Date(ev.date).getTime();
+        if (evDate > today - (7 * 24 * 60 * 60 * 1000)) { // Tampilin event yang belum lewat / baru lewat 7 hari
+            const dateObj = new Date(ev.date);
+            const day = dateObj.getDate();
+            const month = dateObj.toLocaleString('en-US', { month: 'short' });
+            const diffDays = Math.ceil((evDate - today) / (1000 * 60 * 60 * 24));
+            const countdown = diffDays > 0 ? `${diffDays} hari lagi` : (diffDays === 0 ? 'Hari ini!' : 'Baru lewat');
+            html += `<div class="event-card">
+                <div class="event-date-box">
+                    <span class="event-date-day">${day}</span>
+                    <span class="event-date-month">${month}</span>
+                </div>
+                <div class="event-info">
+                    <div class="event-title">${ev.title} <span class="crypto-symbol-badge" style="margin-left:6px;">${ev.coin}</span></div>
+                    <div class="event-desc">${ev.desc}</div>
+                    <div class="event-countdown">${countdown}</div>
+                </div>
+            </div>`;
+        }
+    });
+    if (!html) html = '<div class="empty-state">Belum ada event terdekat.</div>';
+    list.innerHTML = html;
+}
+
 async function openCryptoDetail(coinId) {
     const coin = cryptoData.find(c => c.id === coinId); if (!coin) return;
     const symbol = coin.symbol.toUpperCase();
@@ -719,16 +764,7 @@ async function loadCryptoTrending() {
     el.dataset.loaded = '1';
 }
 document.querySelectorAll('.crypto-top-tab').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.crypto-top-tab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); cryptoView = btn.dataset.view; renderCryptoList(); }); });
-
-// ============ 🎯 CRYPTO CATEGORIES EVENT ============
-document.querySelectorAll('.crypto-cat-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-        document.querySelectorAll('.crypto-cat-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        cryptoCatView = chip.dataset.cat;
-        renderCryptoCategoryList();
-    });
-});
+document.querySelectorAll('.crypto-cat-chip').forEach(chip => { chip.addEventListener('click', () => { document.querySelectorAll('.crypto-cat-chip').forEach(c => c.classList.remove('active')); chip.classList.add('active'); cryptoCatView = chip.dataset.cat; renderCryptoCategoryList(); }); });
 
 // ============ 🥩 STAKING CALCULATOR ============
 function initStakingCalculator() {
@@ -795,7 +831,6 @@ function calculateStakingRewards() {
             </div>
         </div>
     `;
-
     renderStakingChart(amount, apy, durationDays, mode, freq);
     renderStakingComparison(amount, apy, durationDays, freq);
 }
@@ -804,90 +839,221 @@ function getFrequencyLabel(freq) {
     const labels = { 365: 'Harian', 52: 'Mingguan', 12: 'Bulanan', 4: 'Triwulanan', 1: 'Tahunan' };
     return labels[freq] || 'Bulanan';
 }
-
 function getDurationLabel(days) {
-    if (days === 30) return '1 Bulan';
-    if (days === 90) return '3 Bulan';
-    if (days === 180) return '6 Bulan';
-    if (days === 365) return '1 Tahun';
-    if (days === 730) return '2 Tahun';
-    if (days === 1095) return '3 Tahun';
-    if (days === 1825) return '5 Tahun';
-    return `${days} hari`;
+    if (days === 30) return '1 Bulan'; if (days === 90) return '3 Bulan'; if (days === 180) return '6 Bulan';
+    if (days === 365) return '1 Tahun'; if (days === 730) return '2 Tahun'; if (days === 1095) return '3 Tahun';
+    if (days === 1825) return '5 Tahun'; return `${days} hari`;
 }
 
 function renderStakingChart(amount, apy, durationDays, mode, freq) {
-    const container = document.getElementById('stakingChart');
-    const section = document.getElementById('stakingChartSection');
+    const container = document.getElementById('stakingChart'); const section = document.getElementById('stakingChartSection');
     if (!container || !section) return;
-    section.style.display = 'block';
-    container.innerHTML = '';
+    section.style.display = 'block'; container.innerHTML = '';
     if (stakingChartInstance) { try { stakingChartInstance.remove(); } catch(e) {} stakingChartInstance = null; }
-
     if (typeof LightweightCharts === 'undefined') { container.innerHTML = '<div style="color:#f00;padding:20px;text-align:center;font-size:12px;">❌ Chart library tidak tersedia</div>'; return; }
-
     stakingChartInstance = LightweightCharts.createChart(container, {
         width: container.clientWidth, height: 200,
         layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
         grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
-        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
-        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
-        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
-        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
     });
-
     const series = stakingChartInstance.addAreaSeries({ lineColor: '#22d3ee', topColor: 'rgba(34, 211, 238, 0.4)', bottomColor: 'rgba(34, 211, 238, 0.02)', lineWidth: 2 });
-
-    const points = 30;
-    const data = [];
-    const now = new Date();
-    const startDate = new Date(now.getTime() - (durationDays * 24 * 60 * 60 * 1000));
-
+    const points = 30; const data = []; const now = new Date(); const startDate = new Date(now.getTime() - (durationDays * 24 * 60 * 60 * 1000));
     for (let i = 0; i <= points; i++) {
-        const dayFraction = (i / points) * durationDays;
-        const yearsElapsed = dayFraction / 365;
-        let value = 0;
-        if (mode === 'compound') {
-            value = amount * Math.pow(1 + apy / freq, freq * yearsElapsed);
-        } else {
-            value = amount * (1 + apy * yearsElapsed);
-        }
-        const pointDate = new Date(startDate.getTime() + (dayFraction * 24 * 60 * 60 * 1000));
-        const timestamp = Math.floor(pointDate.getTime() / 1000);
+        const dayFraction = (i / points) * durationDays; const yearsElapsed = dayFraction / 365; let value = 0;
+        if (mode === 'compound') { value = amount * Math.pow(1 + apy / freq, freq * yearsElapsed); } else { value = amount * (1 + apy * yearsElapsed); }
+        const pointDate = new Date(startDate.getTime() + (dayFraction * 24 * 60 * 60 * 1000)); const timestamp = Math.floor(pointDate.getTime() / 1000);
         data.push({ time: timestamp, value: parseFloat(value.toFixed(2)) });
     }
-
-    series.setData(data);
-    stakingChartInstance.timeScale().fitContent();
+    series.setData(data); stakingChartInstance.timeScale().fitContent();
 }
-
 function renderStakingComparison(amount, apy, durationDays, freq) {
-    const el = document.getElementById('stakingComparison');
-    if (!el) return;
+    const el = document.getElementById('stakingComparison'); if (!el) return;
     el.style.display = 'block';
     const years = durationDays / 365;
     const simpleValue = amount * (1 + apy * years);
     const compoundValue = amount * Math.pow(1 + apy / freq, freq * years);
-    const simpleReward = simpleValue - amount;
-    const compoundReward = compoundValue - amount;
-    const diff = compoundReward - simpleReward;
-
+    const simpleReward = simpleValue - amount; const compoundReward = compoundValue - amount; const diff = compoundReward - simpleReward;
     el.innerHTML = `
         <div class="staking-comparison-title">⚖️ Simple vs Compound</div>
         <div class="staking-comparison-grid">
-            <div class="staking-comp-card simple">
-                <div class="staking-comp-label">📊 Simple</div>
-                <div class="staking-comp-value">$${simpleReward.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
-                <div class="staking-comp-sub">Total: $${simpleValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
-            </div>
-            <div class="staking-comp-card compound">
-                <div class="staking-comp-label">📈 Compound</div>
-                <div class="staking-comp-value">$${compoundReward.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
-                <div class="staking-comp-sub">Total: $${compoundValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
-            </div>
+            <div class="staking-comp-card simple"><div class="staking-comp-label">📊 Simple</div><div class="staking-comp-value">$${simpleReward.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div class="staking-comp-sub">Total: $${simpleValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div></div>
+            <div class="staking-comp-card compound"><div class="staking-comp-label">📈 Compound</div><div class="staking-comp-value">$${compoundReward.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div class="staking-comp-sub">Total: $${compoundValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div></div>
         </div>
         ${diff > 0 ? `<div style="margin-top:10px;text-align:center;font-size:11px;color:var(--green);font-weight:700;">💰 Compound lebih untung $${diff.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>` : ''}
     `;
+}
+
+// ============ 🆕 IMPERMANENT LOSS CALCULATOR ============
+function calculateIL() {
+    const initA = parseFloat(document.getElementById('ilInitA').value) || 0;
+    const finalA = parseFloat(document.getElementById('ilFinalA').value) || 0;
+    const initB = parseFloat(document.getElementById('ilInitB').value) || 0;
+    const finalB = parseFloat(document.getElementById('ilFinalB').value) || 0;
+
+    if (initA <= 0 || initB <= 0 || finalA <= 0 || finalB <= 0) { alert('Harga harus lebih besar dari 0!'); return; }
+
+    // Price Ratio = (Harga Akhir A / Harga Awal A) / (Harga Akhir B / Harga Awal B)
+    const priceRatioA = finalA / initA;
+    const priceRatioB = finalB / initB;
+    const k = priceRatioA / priceRatioB;
+
+    // Rumus Impermanent Loss: 2 * sqrt(k) / (1 + k) - 1
+    const il = (2 * Math.sqrt(k)) / (1 + k) - 1;
+    const ilPercent = il * 100;
+
+    const resultEl = document.getElementById('ilResult');
+    resultEl.style.display = 'block';
+    
+    let verdict = 'Aman';
+    let verdictClass = 'positive';
+    if (ilPercent < -5 && ilPercent >= -15) { verdict = 'Risiko Sedang'; verdictClass = 'negative'; }
+    else if (ilPercent < -15) { verdict = 'Risiko Tinggi!'; verdictClass = 'negative'; }
+
+    resultEl.innerHTML = `
+        <div class="il-result-main">
+            <div class="il-result-label">Estimasi Impermanent Loss</div>
+            <div class="il-result-big ${verdictClass}">${ilPercent.toFixed(2)}%</div>
+            <div class="il-result-sub">${verdict}</div>
+        </div>
+        <div class="il-result-grid">
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">Rasio Harga A</span>
+                <span class="staking-result-item-value gold">${priceRatioA.toFixed(2)}x</span>
+            </div>
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">Rasio Harga B</span>
+                <span class="staking-result-item-value gold">${priceRatioB.toFixed(2)}x</span>
+            </div>
+        </div>
+        <div class="corr-insight-box ${ilPercent < -5 ? 'bad' : 'good'}" style="margin-top:12px;">
+            <span style="font-size:14px;">${ilPercent < -5 ? '⚠️' : '✅'}</span>
+            <span>${ilPercent < -5 ? 'Harga coin tidak seimbang. Hati-hati, kamu berpotensi kehilangan nilai aset dibandingkan sekadar hold (HODL).' : 'Harga coin relatif seimbang. IL kecil, aman untuk tetap di Liquidity Pool.'}</span>
+        </div>
+    `;
+}
+
+// ============ 🆕 DCA CALCULATOR ============
+function populateDcaDropdowns() {
+    const sel = document.getElementById('dcaCoin');
+    if (!sel || sel.options.length > 0) return;
+    const options = cryptoData.map(c => `<option value="${c.id}" data-symbol="${c.symbol.toUpperCase()}">${c.symbol.toUpperCase()} — ${c.name}</option>`).join('');
+    sel.innerHTML = options;
+}
+
+async function calculateDCA() {
+    const coinId = document.getElementById('dcaCoin').value;
+    const amount = parseFloat(document.getElementById('dcaAmount').value) || 100;
+    const freq = parseInt(document.getElementById('dcaFrequency').value) || 30; // Days
+    const duration = parseInt(document.getElementById('dcaDuration').value) || 365; // Days
+
+    if (!coinId) { alert('Pilih coin dulu!'); return; }
+    if (amount <= 0) { alert('Jumlah harus > 0!'); return; }
+
+    const resultEl = document.getElementById('dcaResult');
+    const chartSection = document.getElementById('dcaChartSection');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
+    chartSection.style.display = 'none';
+
+    const coin = cryptoData.find(c => c.id === coinId);
+    const symbol = coin ? coin.symbol.toUpperCase() : coinId.toUpperCase();
+    
+    let range = '1y';
+    if (duration === 30) range = '1mo';
+    else if (duration === 90) range = '3mo';
+    else if (duration === 180) range = '6mo';
+    else if (duration === 730) range = '2y';
+
+    try {
+        const candles = await fetchChartData(symbol, 'crypto', '1d', range);
+        if (!candles || candles.length === 0) throw new Error('Data historis gagal dimuat.');
+
+        // Logika Simulasi DCA
+        let totalInvested = 0;
+        let totalCoins = 0;
+        let dcaDataChart = [];
+        
+        const startTime = candles[0].time;
+        let nextBuyTime = startTime;
+
+        candles.forEach(c => {
+            if (c.time >= nextBuyTime) {
+                const coinsBought = amount / c.close;
+                totalCoins += coinsBought;
+                totalInvested += amount;
+                nextBuyTime += (freq * 24 * 60 * 60); // Maju ke jadwal beli berikutnya
+            }
+            // Catat pertumbuhan nilai portfolio setiap hari
+            const currentPortfolioValue = totalCoins * c.close;
+            if (totalInvested > 0) {
+                dcaDataChart.push({ time: c.time, value: currentPortfolioValue });
+            }
+        });
+
+        const currentPrice = candles[candles.length - 1].close;
+        const finalValue = totalCoins * currentPrice;
+        const profit = finalValue - totalInvested;
+        const roi = (profit / totalInvested) * 100;
+
+        let verdictClass = profit >= 0 ? 'positive' : 'negative';
+        let sign = profit >= 0 ? '+' : '';
+
+        resultEl.innerHTML = `
+            <div class="dca-result-main">
+                <div class="dca-result-label">Nilai Portfolio DCA (${symbol})</div>
+                <div class="dca-result-big ${verdictClass}">$${finalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
+                <div class="dca-result-sub">ROI: ${sign}${roi.toFixed(2)}% (${sign}$${profit.toLocaleString('en-US', { maximumFractionDigits: 2 })})</div>
+            </div>
+            <div class="dca-result-grid">
+                <div class="staking-result-item">
+                    <span class="staking-result-item-label">Total Modal</span>
+                    <span class="staking-result-item-value">$${totalInvested.toLocaleString('en-US')}</span>
+                </div>
+                <div class="staking-result-item">
+                    <span class="staking-result-item-label">Total Coin Didapat</span>
+                    <span class="staking-result-item-value gold">${totalCoins.toLocaleString('en-US', { maximumFractionDigits: 4 })} ${symbol}</span>
+                </div>
+                <div class="staking-result-item">
+                    <span class="staking-result-item-label">Harga Rata-rata (Avg)</span>
+                    <span class="staking-result-item-value">$${(totalInvested / totalCoins).toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                </div>
+                <div class="staking-result-item">
+                    <span class="staking-result-item-label">Harga Sekarang</span>
+                    <span class="staking-result-item-value">$${currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                </div>
+            </div>
+            <div class="corr-insight-box ${profit >= 0 ? 'good' : 'bad'}" style="margin-top:12px;">
+                <span style="font-size:14px;">${profit >= 0 ? '🚀' : '📉'}</span>
+                <span>${profit >= 0 ? 'Selamat! Strategi DCA kamu sedang profit.' : 'Sabar, DCA adalah strategi jangka panjang. Justru saat merah begini kamu bisa dapat lebih banyak coin murah.'}</span>
+            </div>
+        `;
+
+        renderDcaChart(dcaDataChart);
+        chartSection.style.display = 'block';
+    } catch (err) {
+        resultEl.innerHTML = `<div class="analysis-error"><p>❌ ${err.message}</p></div>`;
+    }
+}
+
+function renderDcaChart(data) {
+    const container = document.getElementById('dcaChart');
+    if (!container) return;
+    container.innerHTML = '';
+    if (dcaChartInstance) { try { dcaChartInstance.remove(); } catch(e) {} dcaChartInstance = null; }
+    if (typeof LightweightCharts === 'undefined') return;
+
+    dcaChartInstance = LightweightCharts.createChart(container, {
+        width: container.clientWidth, height: 200,
+        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+    });
+    const series = dcaChartInstance.addAreaSeries({ lineColor: '#10b981', topColor: 'rgba(16, 185, 129, 0.4)', bottomColor: 'rgba(16, 185, 129, 0.02)', lineWidth: 2 });
+    series.setData(data);
+    dcaChartInstance.timeScale().fitContent();
 }
 
 // Crypto converter
@@ -925,18 +1091,13 @@ function populateCorrelationDropdowns() {
     if (selA.options.length > 0) return;
     const options = cryptoData.map(c => `<option value="${c.id}" data-symbol="${c.symbol.toUpperCase()}">${c.symbol.toUpperCase()} — ${c.name}</option>`).join('');
     selA.innerHTML = options; selB.innerHTML = options;
-    if (cryptoData.length >= 2) {
-        selA.value = cryptoData[0].id;
-        selB.value = cryptoData[1].id;
-    }
+    if (cryptoData.length >= 2) { selA.value = cryptoData[0].id; selB.value = cryptoData[1].id; }
 }
-
 async function openCryptoCorrelation() {
     if (cryptoData.length === 0) {
-        const modal = document.getElementById('cryptoCorrelationModal');
-        if (modal) modal.classList.add('active');
+        const modal = document.getElementById('cryptoCorrelationModal'); if (modal) modal.classList.add('active');
         const resultEl = document.getElementById('corrResult');
-        if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data crypto belum termuat.</p><p style="font-size:11px;margin-top:8px;">Buka tab Crypto dulu, tunggu data muncul, lalu coba lagi.</p></div>'; }
+        if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data crypto belum termuat.</p></div>'; }
         return;
     }
     populateCorrelationDropdowns();
@@ -948,25 +1109,14 @@ function closeCryptoCorrelation() {
     document.getElementById('cryptoCorrelationModal').classList.remove('active');
     if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
 }
-
 function calculatePearsonCorrelation(xs, ys) {
-    const n = Math.min(xs.length, ys.length);
-    if (n < 3) return 0;
+    const n = Math.min(xs.length, ys.length); if (n < 3) return 0;
     let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-    for (let i = 0; i < n; i++) {
-        sumX += xs[i]; sumY += ys[i];
-        sumXY += xs[i] * ys[i];
-        sumX2 += xs[i] * xs[i];
-        sumY2 += ys[i] * ys[i];
-    }
-    const numerator = n * sumXY - sumX * sumY;
-    const denomPart1 = n * sumX2 - sumX * sumX;
-    const denomPart2 = n * sumY2 - sumY * sumY;
-    const denom = Math.sqrt(denomPart1 * denomPart2);
-    if (denom === 0) return 0;
+    for (let i = 0; i < n; i++) { sumX += xs[i]; sumY += ys[i]; sumXY += xs[i] * ys[i]; sumX2 += xs[i] * xs[i]; sumY2 += ys[i] * ys[i]; }
+    const numerator = n * sumXY - sumX * sumY; const denomPart1 = n * sumX2 - sumX * sumX; const denomPart2 = n * sumY2 - sumY * sumY;
+    const denom = Math.sqrt(denomPart1 * denomPart2); if (denom === 0) return 0;
     return numerator / denom;
 }
-
 function alignReturnsSeries(candlesA, candlesB) {
     const mapA = {}; const mapB = {};
     (candlesA || []).forEach(c => { if (c.time != null && c.close > 0) mapA[c.time] = c.close; });
@@ -976,13 +1126,9 @@ function alignReturnsSeries(candlesA, candlesB) {
     const alignedA = []; const alignedB = []; const times = [];
     commonTimes.forEach(t => { alignedA.push(mapA[t]); alignedB.push(mapB[t]); times.push(t); });
     const returnsA = []; const returnsB = [];
-    for (let i = 1; i < alignedA.length; i++) {
-        returnsA.push((alignedA[i] - alignedA[i-1]) / alignedA[i-1]);
-        returnsB.push((alignedB[i] - alignedB[i-1]) / alignedB[i-1]);
-    }
+    for (let i = 1; i < alignedA.length; i++) { returnsA.push((alignedA[i] - alignedA[i-1]) / alignedA[i-1]); returnsB.push((alignedB[i] - alignedB[i-1]) / alignedB[i-1]); }
     return { returnsA, returnsB, alignedA, alignedB, times };
 }
-
 function getCorrelationVerdict(coef) {
     if (coef >= 0.8) return { label: 'STRONG POSITIVE', cls: 'strong-pos', icon: '🔥', insight: 'Coin ini bergerak hampir identik. Diversifikasi KURANG efektif — kalau satu turun, yang lain ikut turun.', insightCls: 'bad' };
     if (coef >= 0.5) return { label: 'POSITIVE', cls: 'pos', icon: '📈', insight: 'Coin ini cenderung bergerak searah. Diversifikasi SEDANG — kurang optimal buat hedging.', insightCls: 'warn' };
@@ -992,57 +1138,24 @@ function getCorrelationVerdict(coef) {
     if (coef > -0.8) return { label: 'NEGATIVE', cls: 'neg', icon: '📉', insight: 'Coin ini cenderung bergerak berlawanan. SANGAT BAGUS buat hedging & diversifikasi.', insightCls: 'good' };
     return { label: 'STRONG NEGATIVE', cls: 'strong-neg', icon: '💎', insight: 'Coin ini hampir selalu berlawanan arah. LUAR BIASA buat hedging, tapi hati-hati volatilitas.', insightCls: 'good' };
 }
-
 async function runCryptoCorrelation() {
-    const selA = document.getElementById('corrCoinA');
-    const selB = document.getElementById('corrCoinB');
-    const periodEl = document.getElementById('corrPeriod');
-    const btn = document.getElementById('corrCalcBtn');
-    const resultEl = document.getElementById('corrResult');
-
+    const selA = document.getElementById('corrCoinA'); const selB = document.getElementById('corrCoinB');
+    const periodEl = document.getElementById('corrPeriod'); const btn = document.getElementById('corrCalcBtn'); const resultEl = document.getElementById('corrResult');
     if (!selA || !selB || !periodEl || !btn || !resultEl) return;
     const idA = selA.value; const idB = selB.value;
     if (idA === idB) { alert('Pilih 2 coin yang berbeda!'); return; }
-
-    const days = parseInt(periodEl.value) || 90;
-    let range = '3mo';
-    if (days === 30) range = '1mo';
-    else if (days === 90) range = '3mo';
-    else if (days === 365) range = '1y';
-
-    const coinA = cryptoData.find(c => c.id === idA);
-    const coinB = cryptoData.find(c => c.id === idB);
-    const symbolA = coinA ? coinA.symbol.toUpperCase() : idA.toUpperCase();
-    const symbolB = coinB ? coinB.symbol.toUpperCase() : idB.toUpperCase();
-    const nameA = coinA ? coinA.name : symbolA;
-    const nameB = coinB ? coinB.name : symbolB;
-
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Menghitung...';
-    btn.disabled = true;
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
-
+    const days = parseInt(periodEl.value) || 90; let range = '3mo';
+    if (days === 30) range = '1mo'; else if (days === 90) range = '3mo'; else if (days === 365) range = '1y';
+    const coinA = cryptoData.find(c => c.id === idA); const coinB = cryptoData.find(c => c.id === idB);
+    const symbolA = coinA ? coinA.symbol.toUpperCase() : idA.toUpperCase(); const symbolB = coinB ? coinB.symbol.toUpperCase() : idB.toUpperCase();
+    const originalText = btn.innerHTML; btn.innerHTML = '⏳ Menghitung...'; btn.disabled = true;
+    resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
     try {
-        const [chartA, chartB] = await Promise.all([
-            fetchChartData(symbolA, 'crypto', '1d', range),
-            fetchChartData(symbolB, 'crypto', '1d', range)
-        ]);
-
-        if (!chartA || chartA.length < 5 || !chartB || chartB.length < 5) {
-            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p><p style="font-size:11px;margin-top:8px;">Coba periode lebih pendek atau coin lain.</p></div>';
-            return;
-        }
-
+        const [chartA, chartB] = await Promise.all([ fetchChartData(symbolA, 'crypto', '1d', range), fetchChartData(symbolB, 'crypto', '1d', range) ]);
+        if (!chartA || chartA.length < 5 || !chartB || chartB.length < 5) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p></div>'; return; }
         const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartA, chartB);
-        if (returnsA.length < 3) {
-            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>';
-            return;
-        }
-
-        const coef = calculatePearsonCorrelation(returnsA, returnsB);
-        const verdict = getCorrelationVerdict(coef);
-
+        if (returnsA.length < 3) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>'; return; }
+        const coef = calculatePearsonCorrelation(returnsA, returnsB); const verdict = getCorrelationVerdict(coef);
         resultEl.innerHTML = `
             <div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div>
             <div class="corr-coef-label">Pearson Correlation Coefficient</div>
@@ -1050,44 +1163,30 @@ async function runCryptoCorrelation() {
             <div class="corr-interpretation"><strong>${symbolA}</strong> vs <strong>${symbolB}</strong> — ${days} hari terakhir (${returnsA.length} data point)</div>
             <div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : verdict.insightCls === 'warn' ? '⚠️' : '🚨'}</span><span>${verdict.insight}</span></div>
         `;
-
-        // 🔥 FIX: Tampilkan section chart DULU, kasih jeda 100ms biar browser hitung width, baru render chart
         document.getElementById('corrChartSection').style.display = 'block';
         setTimeout(() => { renderCorrelationChart(alignedA, alignedB, times, symbolA, symbolB); }, 100);
-    } catch (err) {
-        resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`;
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
+    } catch (err) { resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`; }
+    finally { btn.innerHTML = originalText; btn.disabled = false; }
 }
-
 function renderCorrelationChart(alignedA, alignedB, times, symbolA, symbolB) {
     const container = document.getElementById('corrChart'); if (!container) return;
     container.innerHTML = '';
     if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
     if (typeof LightweightCharts === 'undefined') { container.innerHTML = '❌ Chart library tidak tersedia'; return; }
     if (!alignedA || alignedA.length < 2) { container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:20px;text-align:center;font-size:12px;">Data tidak cukup</div>'; return; }
-
     corrChartInstance = LightweightCharts.createChart(container, {
         width: container.clientWidth, height: 260,
         layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
         grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
-        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
-        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
-        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
-        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
     });
-
     const baseA = alignedA[0]; const baseB = alignedB[0];
     const seriesA = corrChartInstance.addLineSeries({ color: '#22d3ee', lineWidth: 2, title: symbolA });
     const seriesB = corrChartInstance.addLineSeries({ color: '#a855f7', lineWidth: 2, title: symbolB });
-
     const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
     const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
-
-    seriesA.setData(dataA); seriesB.setData(dataB);
-    corrChartInstance.timeScale().fitContent();
+    seriesA.setData(dataA); seriesB.setData(dataB); corrChartInstance.timeScale().fitContent();
 }
 
 // ============ 🪙 CRYPTO VALUE SCORECARD ============
@@ -1167,9 +1266,7 @@ function calculateCryptoScore(coinData, detailData, chartData) {
     totalScore += mcScore; maxPossible += 10;
     let commScore = 5; let commStatus = 'partial'; let commDesc = 'Data community tidak tersedia';
     if (detailData && detailData.community_data) {
-        const twitterFollowers = detailData.community_data.twitter_followers || 0;
-        const redditSubs = detailData.community_data.reddit_subscribers || 0;
-        const totalCommunity = twitterFollowers + redditSubs;
+        const twitterFollowers = detailData.community_data.twitter_followers || 0; const redditSubs = detailData.community_data.reddit_subscribers || 0; const totalCommunity = twitterFollowers + redditSubs;
         if (totalCommunity >= 3000000) { commScore = 10; commStatus = 'pass'; commDesc = `Community sangat besar (${(totalCommunity/1e6).toFixed(2)}M)`; }
         else if (totalCommunity >= 1000000) { commScore = 8; commStatus = 'pass'; commDesc = `Community besar (${(totalCommunity/1e6).toFixed(2)}M)`; }
         else if (totalCommunity >= 300000) { commScore = 6; commStatus = 'pass'; commDesc = `Community baik (${(totalCommunity/1e3).toFixed(0)}K)`; }
@@ -1802,6 +1899,11 @@ document.getElementById('dcfCalcBtn').addEventListener('click', calculateDCF);
 document.getElementById('openCryptoScorecardBtn').addEventListener('click', openCryptoScorecard);
 document.getElementById('closeCryptoScorecardModal').addEventListener('click', closeCryptoScorecard);
 document.getElementById('stakingCalcBtn').addEventListener('click', calculateStakingRewards);
+
+// 🆕 EVENT LISTENERS BARU
+document.getElementById('ilCalcBtn').addEventListener('click', calculateIL);
+document.getElementById('dcaCalcBtn').addEventListener('click', calculateDCA);
+
 const holdingModal = document.getElementById('holdingModal');
 document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
 document.getElementById('closeHoldingModal').addEventListener('click', () => holdingModal.classList.remove('active'));
