@@ -539,21 +539,13 @@ const CRYPTO_FALLBACK = [
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
 ];
 
-// ============ 🪙 CRYPTO CATEGORIES MAPPING (BARU) ============
-// Mapping symbol (lowercase) → category key
-// Kalau coin tidak ada di mapping, masuk ke "all" saja
+// ============ 🎯 CRYPTO CATEGORIES MAPPING ============
 const CRYPTO_CATEGORY_MAP = {
-    // DeFi
     'uni': 'defi', 'aave': 'defi', 'link': 'defi', 'mkr': 'defi', 'comp': 'defi', 'snx': 'defi', 'crv': 'defi', 'ldo': 'defi', 'sushi': 'defi', '1inch': 'defi', 'grt': 'defi', 'rpl': 'defi', 'ens': 'defi', 'dydx': 'defi', 'cake': 'defi', 'pancakeswap': 'defi',
-    // AI
     'fet': 'ai', 'agix': 'ai', 'rndr': 'ai', 'tao': 'ai', 'ocean': 'ai', 'nmr': 'ai', 'grt': 'ai', 'wld': 'ai', 'arkm': 'ai', 'ai': 'ai', 'aioz': 'ai',
-    // Meme
     'doge': 'meme', 'shib': 'meme', 'pepe': 'meme', 'wif': 'meme', 'bonk': 'meme', 'floki': 'meme', 'elon': 'meme', 'babydoge': 'meme', 'mog': 'meme', 'brett': 'meme', 'popcat': 'meme',
-    // Layer 1
     'btc': 'layer1', 'eth': 'layer1', 'sol': 'layer1', 'bnb': 'layer1', 'ada': 'layer1', 'avax': 'layer1', 'dot': 'layer1', 'atom': 'layer1', 'near': 'layer1', 'trx': 'layer1', 'ton': 'layer1', 'apt': 'layer1', 'sui': 'layer1', 'sei': 'layer1', 'icp': 'layer1', 'ftm': 'layer1', 'algo': 'layer1', 'hbar': 'layer1', 'xrp': 'layer1', 'ltc': 'layer1', 'bch': 'layer1', 'etc': 'layer1', 'xlm': 'layer1', 'vet': 'layer1', 'kas': 'layer1',
-    // GameFi
     'axs': 'gamefi', 'sand': 'gamefi', 'mana': 'gamefi', 'imx': 'gamefi', 'gala': 'gamefi', 'enj': 'gamefi', 'ape': 'gamefi', 'flow': 'gamefi', 'ilv': 'gamefi', 'beam': 'gamefi', 'prime': 'gamefi',
-    // RWA (Real World Assets)
     'ondo': 'rwa', 'polyx': 'rwa', 'mpl': 'rwa', 'cfg': 'rwa', 'gfi': 'rwa', 'rio': 'rwa', 'landx': 'rwa', 'tru': 'rwa', 'mkr': 'rwa'
 };
 
@@ -644,7 +636,7 @@ function renderCryptoHeatmap() {
     }).join('');
 }
 
-// ============ 🎯 CRYPTO CATEGORIES RENDER (BARU) ============
+// ============ 🎯 CRYPTO CATEGORIES RENDER ============
 function renderCryptoCategoryList() {
     const container = document.getElementById('cryptoCatList'); if (!container) return;
     if (cryptoData.length === 0) { container.innerHTML = '<div class="empty-state">Memuat categories...</div>'; return; }
@@ -652,7 +644,6 @@ function renderCryptoCategoryList() {
     if (cryptoCatView !== 'all') {
         filtered = cryptoData.filter(coin => getCoinCategory(coin.symbol) === cryptoCatView);
     }
-    // Kalau "all", tampilkan top 20 by market cap
     if (cryptoCatView === 'all') {
         filtered = [...cryptoData].sort((a, b) => (a.market_cap_rank || 999) - (b.market_cap_rank || 999)).slice(0, 20);
     }
@@ -729,7 +720,7 @@ async function loadCryptoTrending() {
 }
 document.querySelectorAll('.crypto-top-tab').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.crypto-top-tab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); cryptoView = btn.dataset.view; renderCryptoList(); }); });
 
-// ============ 🎯 CRYPTO CATEGORIES EVENT (BARU) ============
+// ============ 🎯 CRYPTO CATEGORIES EVENT ============
 document.querySelectorAll('.crypto-cat-chip').forEach(chip => {
     chip.addEventListener('click', () => {
         document.querySelectorAll('.crypto-cat-chip').forEach(c => c.classList.remove('active'));
@@ -927,11 +918,11 @@ async function openCryptoConverter() {
 function closeCryptoConverter() { document.getElementById('cryptoConverterModal').classList.remove('active'); }
 function swapCryptoConverter() { const fromSel = document.getElementById('cryptoConvFrom'); const toSel = document.getElementById('cryptoConvTo'); const temp = fromSel.value; fromSel.value = toSel.value; toSel.value = temp; const btn = document.getElementById('cryptoConvSwapBtn'); if (btn) { btn.style.transform = 'rotate(180deg)'; setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 300); } convertCrypto(); }
 
-// ============ 📊 CRYPTO CORRELATION (BARU) ============
+// ============ 📊 CRYPTO CORRELATION ============
 function populateCorrelationDropdowns() {
     const selA = document.getElementById('corrCoinA'); const selB = document.getElementById('corrCoinB');
     if (!selA || !selB) return;
-    if (selA.options.length > 0) return; // Already populated
+    if (selA.options.length > 0) return;
     const options = cryptoData.map(c => `<option value="${c.id}" data-symbol="${c.symbol.toUpperCase()}">${c.symbol.toUpperCase()} — ${c.name}</option>`).join('');
     selA.innerHTML = options; selB.innerHTML = options;
     if (cryptoData.length >= 2) {
@@ -958,7 +949,6 @@ function closeCryptoCorrelation() {
     if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
 }
 
-// Pearson correlation coefficient
 function calculatePearsonCorrelation(xs, ys) {
     const n = Math.min(xs.length, ys.length);
     if (n < 3) return 0;
@@ -977,7 +967,6 @@ function calculatePearsonCorrelation(xs, ys) {
     return numerator / denom;
 }
 
-// Align 2 chart series by timestamp, return daily % returns
 function alignReturnsSeries(candlesA, candlesB) {
     const mapA = {}; const mapB = {};
     (candlesA || []).forEach(c => { if (c.time != null && c.close > 0) mapA[c.time] = c.close; });
@@ -1062,7 +1051,6 @@ async function runCryptoCorrelation() {
             <div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : verdict.insightCls === 'warn' ? '⚠️' : '🚨'}</span><span>${verdict.insight}</span></div>
         `;
 
-        // Render overlay chart (normalized %)
         renderCorrelationChart(alignedA, alignedB, times, symbolA, symbolB);
         document.getElementById('corrChartSection').style.display = 'block';
     } catch (err) {
@@ -1848,7 +1836,7 @@ document.getElementById('cryptoConvFrom').addEventListener('change', convertCryp
 document.getElementById('cryptoConvTo').addEventListener('change', convertCrypto);
 document.getElementById('cryptoConvRefreshBtn').addEventListener('click', async () => { await loadCryptoData(); populateCryptoConverterDropdowns(); convertCrypto(); });
 
-// ============ CRYPTO CORRELATION EVENTS (BARU) ============
+// ============ CRYPTO CORRELATION EVENTS ============
 const openCorrBtn = document.getElementById('openCryptoCorrelationBtn');
 if (openCorrBtn) openCorrBtn.addEventListener('click', openCryptoCorrelation);
 const closeCorrBtn = document.getElementById('closeCryptoCorrelationModal');
