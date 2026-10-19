@@ -2,6 +2,21 @@
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
+// ============ ⏱️ FETCH WITH TIMEOUT ============
+// Prevent requests from hanging forever when network slow or server cold-start
+function fetchWithTimeout(url, options = {}, timeout = 12000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    const opts = { ...options, signal: controller.signal };
+    return fetch(url, opts)
+        .then(res => { clearTimeout(timer); return res; })
+        .catch(err => {
+            clearTimeout(timer);
+            if (err.name === 'AbortError') throw new Error('Request timeout (' + timeout + 'ms)');
+            throw err;
+        });
+}
+
 let indicatorInterval = null;
 let alertCheckInterval = null;
 let currentChart = null;
@@ -41,7 +56,7 @@ async function translateText(text) {
     if (translationCache[text]) return translationCache[text];
     try {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=id&dt=t&q=${encodeURIComponent(text)}`;
-        const response = await fetch(url);
+        const response = await fetchWithTimeout(url, {}, 10000);
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         const translated = data[0].map(item => item[0]).filter(Boolean).join('');
@@ -67,7 +82,7 @@ async function fetchCurrencyRates(forceRefresh = false) {
     const now = Date.now();
     if (!forceRefresh && currencyRates && (now - currencyLastFetch) < CURRENCY_CACHE_TTL) return currencyRates;
     try {
-        const response = await fetch('https://open.er-api.com/v6/latest/USD');
+        const response = await fetchWithTimeout('https://open.er-api.com/v6/latest/USD', {}, 8000);
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         if (data.result !== 'success' || !data.rates) throw new Error('Invalid response');
@@ -528,20 +543,20 @@ const CRYPTO_FALLBACK = [
 async function fetchCryptoPrices() {
     try {
         const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h,7d,30d';
-        const response = await fetch(url);
+        const response = await fetchWithTimeout(url, {}, 12000);
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         if (!Array.isArray(data) || data.length === 0) throw new Error('Empty data');
         return data;
     } catch (error) { return CRYPTO_FALLBACK; }
 }
-async function fetchCryptoGlobal() { try { const response = await fetch('https://api.coingecko.com/api/v3/global'); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return data.data || null; } catch (error) { return null; } }
-async function fetchCryptoFNG() { try { const response = await fetch('https://api.alternative.me/fng/?limit=1'); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); if (data.data && data.data[0]) return { value: parseInt(data.data[0].value), label: data.data[0].value_classification }; return null; } catch (error) { return null; } }
-async function fetchCryptoTrending() { try { const response = await fetch('https://api.coingecko.com/api/v3/search/trending'); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return (data.coins || []).map(c => c.item).slice(0, 7); } catch (error) { return []; } }
+async function fetchCryptoGlobal() { try { const response = await fetchWithTimeout('https://api.coingecko.com/api/v3/global', {}, 8000); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return data.data || null; } catch (error) { return null; } }
+async function fetchCryptoFNG() { try { const response = await fetchWithTimeout('https://api.alternative.me/fng/?limit=1', {}, 8000); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); if (data.data && data.data[0]) return { value: parseInt(data.data[0].value), label: data.data[0].value_classification }; return null; } catch (error) { return null; } }
+async function fetchCryptoTrending() { try { const response = await fetchWithTimeout('https://api.coingecko.com/api/v3/search/trending', {}, 10000); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return (data.coins || []).map(c => c.item).slice(0, 7); } catch (error) { return []; } }
 async function fetchCryptoDetail(coinId) {
     try {
         const url = `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`;
-        const response = await fetch(url);
+        const response = await fetchWithTimeout(url, {}, 12000);
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return await response.json();
     } catch (error) { return null; }
@@ -650,7 +665,6 @@ document.querySelectorAll('.crypto-top-tab').forEach(btn => { btn.addEventListen
 function initStakingCalculator() {
     const coinSelect = document.getElementById('stakingCoin');
     if (!coinSelect) return;
-    // Set APY saat coin berubah
     coinSelect.addEventListener('change', () => {
         const selected = coinSelect.options[coinSelect.selectedIndex];
         const apy = selected.dataset.apy || '3.5';
@@ -673,10 +687,8 @@ function calculateStakingRewards() {
     let finalValue = 0;
     let simpleValue = 0;
 
-    // Simple
     simpleValue = amount * (1 + apy * years);
 
-    // Compound
     if (mode === 'compound') {
         finalValue = amount * Math.pow(1 + apy / freq, freq * years);
     } else {
@@ -687,7 +699,6 @@ function calculateStakingRewards() {
     const effectiveApy = amount > 0 ? ((Math.pow(finalValue / amount, 1 / years) - 1) * 100) : 0;
     const roi = amount > 0 ? (totalReward / amount) * 100 : 0;
 
-    // Render result
     const resultEl = document.getElementById('stakingResult');
     resultEl.style.display = 'block';
     resultEl.innerHTML = `
@@ -716,10 +727,7 @@ function calculateStakingRewards() {
         </div>
     `;
 
-    // Render chart
     renderStakingChart(amount, apy, durationDays, mode, freq);
-
-    // Render comparison
     renderStakingComparison(amount, apy, durationDays, freq);
 }
 
@@ -761,7 +769,6 @@ function renderStakingChart(amount, apy, durationDays, mode, freq) {
 
     const series = stakingChartInstance.addAreaSeries({ lineColor: '#22d3ee', topColor: 'rgba(34, 211, 238, 0.4)', bottomColor: 'rgba(34, 211, 238, 0.02)', lineWidth: 2 });
 
-    // Generate data points (30 titik)
     const points = 30;
     const data = [];
     const now = new Date();
@@ -961,7 +968,7 @@ async function openCryptoScorecard() {
         let coinData = cryptoData.find(c => c.symbol.toUpperCase() === currentSymbol.toUpperCase());
         if (!coinData && currentCryptoData) coinData = currentCryptoData;
         if (!coinData) {
-            const searchRes = await fetch(`https://api.coingecko.com/api/v3/search?query=${currentSymbol}`);
+            const searchRes = await fetchWithTimeout(`https://api.coingecko.com/api/v3/search?query=${currentSymbol}`, {}, 8000);
             if (searchRes.ok) { const searchData = await searchRes.json(); if (searchData.coins && searchData.coins[0]) { const coinId = searchData.coins[0].id; const detail = await fetchCryptoDetail(coinId); if (detail) coinData = { ...detail, current_price: detail.market_data?.current_price?.usd, market_cap: detail.market_data?.market_cap?.usd, total_volume: detail.market_data?.total_volume?.usd, price_change_percentage_24h: detail.market_data?.price_change_percentage_24h, market_cap_rank: detail.market_cap_rank, ath_change_percentage: detail.market_data?.ath_change_percentage?.usd, circulating_supply: detail.market_data?.circulating_supply, total_supply: detail.market_data?.total_supply, price_change_percentage_7d_in_currency: detail.market_data?.price_change_percentage_7d, price_change_percentage_30d_in_currency: detail.market_data?.price_change_percentage_30d }; } }
         }
         if (!coinData) { heroEl.innerHTML = '<div class="analysis-error"><p>❌ Data crypto tidak tersedia</p></div>'; return; }
@@ -1095,7 +1102,7 @@ function renderBrowseStocks() {
 function toggleFromBrowse(symbol, name, type) { const idx = watchlist.findIndex(w => w.symbol === symbol); if (idx >= 0) watchlist.splice(idx, 1); else watchlist.push({ symbol, name, type }); saveWatchlist(); renderBrowseStocks(); renderWatchlist(); }
 async function fetchPrice(symbol, type) {
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-price`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type }) });
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-price`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type }) }, 12000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
         if (type === 'crypto' && data.price) return { price: data.price, currency: 'USD', change: data.change || 0, name: data.name || symbol };
         if (type !== 'crypto' && data.chart && data.chart.result) { const meta = data.chart.result[0].meta; return { price: meta.regularMarketPrice, currency: meta.currency, change: meta.regularMarketChangePercent || 0, name: meta.longName || meta.shortName }; }
@@ -1103,11 +1110,11 @@ async function fetchPrice(symbol, type) {
     } catch (error) { return null; }
 }
 async function fetchFundamental(symbol, type) {
-    try { const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-fundamental`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type }) }); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return data.fundamental || {}; } catch (error) { return {}; }
+    try { const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-fundamental`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type }) }, 12000); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return data.fundamental || {}; } catch (error) { return {}; }
 }
 async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type, interval, range }) });
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-chart`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type, interval, range }) }, 15000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
         if (data.data && Array.isArray(data.data)) return data.data.map(c => ({ time: c.time, open: parseFloat(c.open), high: parseFloat(c.high), low: parseFloat(c.low), close: parseFloat(c.close), volume: parseFloat(c.volume || 0) })).filter(c => !isNaN(c.open) && !isNaN(c.close));
         if (data.chart && data.chart.result && data.chart.result[0]) {
@@ -1119,7 +1126,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
 }
 async function fetchIndexData(symbol) {
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-price`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type: 'stock' }) });
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-price`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type: 'stock' }) }, 12000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
         if (data.chart && data.chart.result && data.chart.result[0]) {
             const result = data.chart.result[0]; const meta = result.meta; const quote = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {}; const volumes = quote.volume || [];
@@ -1130,7 +1137,7 @@ async function fetchIndexData(symbol) {
 }
 async function fetchIndexChartData(symbol, interval = '1d', range = '1y') {
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-chart`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type: 'stock', interval, range }) });
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-chart`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type: 'stock', interval, range }) }, 15000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
         if (data.data && Array.isArray(data.data)) return data.data.map(c => ({ time: c.time, open: parseFloat(c.open), high: parseFloat(c.high), low: parseFloat(c.low), close: parseFloat(c.close), volume: parseFloat(c.volume || 0) })).filter(c => !isNaN(c.open) && !isNaN(c.close));
         if (data.chart && data.chart.result && data.chart.result[0]) {
@@ -1294,7 +1301,7 @@ async function loadAnalysis(symbol, name, price, type) {
     container.innerHTML = `<div style="text-align:center; padding: 30px 0;"><div class="loading-spinner"></div><p class="loading-text" style="margin-top:10px;">🤖 AI Warren Buffett sedang menganalisis ${symbol}...</p></div>`;
     try {
         const fundamental = await fetchFundamental(symbol, type);
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-stock`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, name, price, fundamental }) });
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/analyze-stock`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, name, price, fundamental }) }, 25000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
         if (data.ai_signal && data.confidence !== undefined) renderAISignalUI(data, container);
         else container.innerHTML = `<div class="ai-analysis-text">${formatAnalysis(data.analysis || 'Gagal memuat analisis.')}</div>`;
@@ -1315,7 +1322,7 @@ async function runScreener() {
     const peMax = parseFloat(document.getElementById('peMax').value) || 15; const pbMax = parseFloat(document.getElementById('pbMax').value) || 1.5;
     const roeMin = (parseFloat(document.getElementById('roeMin').value) || 15) / 100; const derMax = parseFloat(document.getElementById('derMax').value) || 1; const divMin = (parseFloat(document.getElementById('divMin').value) || 3) / 100;
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/run-screener`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ peMax, pbMax, roeMin, derMax, divMin }) });
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/run-screener`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ peMax, pbMax, roeMin, derMax, divMin }) }, 20000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
         if (!data.results || data.results.length === 0) { results.innerHTML = '<div class="empty-state">Gak ada saham yang lolos filter.</div>'; return; }
         results.innerHTML = `<p class="description">${data.count} saham lolos filter:</p>` + data.results.map(stock => `<div class="asset-card"><div class="asset-info"><span class="asset-symbol">${stock.symbol}</span><span class="asset-name">${stock.company_name}</span><span class="asset-metrics">P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%</span></div></div>`).join('');
@@ -1411,7 +1418,7 @@ function getNewsSentiment(text) { if (!text) return { label: 'NEUTRAL', class: '
 async function renderNews() {
     const container = document.getElementById('newsList'); container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-news`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ category: 'all' }) });
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-news`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ category: 'all' }) }, 12000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
         const news = data.news || []; newsCache = news;
         if (news.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada berita</div>'; return; }
