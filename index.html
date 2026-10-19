@@ -113,6 +113,7 @@
                 <div class="crypto-banner">
                     <div class="crypto-banner-icon">🪙</div>
                     <div class="crypto-banner-text"><strong>Crypto Market</strong><span>Pantau harga, market cap, dan sentimen pasar crypto real-time</span></div>
+                    <button class="crypto-correlation-btn" id="openCryptoCorrelationBtn" title="Correlation">📊</button>
                     <button class="crypto-converter-btn" id="openCryptoConverterBtn">🔄</button>
                 </div>
                 <div class="crypto-global-stats" id="cryptoGlobalStats"><div class="crypto-stat-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data global...</p></div></div>
@@ -218,6 +219,9 @@
                     </div>
                     <div class="staking-comparison" id="stakingComparison" style="display: none;"></div>
                 </div>
+
+                <!-- CRYPTO CATEGORY BAR -->
+                <div class="crypto-category-bar" id="cryptoCategoryBar"></div>
 
                 <div class="crypto-top-section">
                     <div class="crypto-top-header">
@@ -614,7 +618,41 @@
         </div>
     </div>
 
+    <!-- MODAL: CRYPTO CORRELATION -->
+    <div class="crypto-correlation-modal" id="cryptoCorrelationModal">
+        <div class="crypto-correlation-content">
+            <div class="crypto-correlation-header">
+                <div><h3>📊 Crypto Correlation</h3><div class="crypto-correlation-subtitle">Banding 2 coin untuk strategi diversifikasi</div></div>
+                <button class="analysis-close" id="closeCryptoCorrelationModal">×</button>
+            </div>
+            <div class="crypto-correlation-card">
+                <div class="crypto-correlation-field">
+                    <label>Coin A</label>
+                    <select id="cryptoCorrCoinA"></select>
+                </div>
+                <div class="crypto-correlation-field">
+                    <label>Coin B</label>
+                    <select id="cryptoCorrCoinB"></select>
+                </div>
+                <div class="crypto-correlation-field">
+                    <label>Periode</label>
+                    <select id="cryptoCorrPeriod">
+                        <option value="30">30 Hari</option>
+                        <option value="90" selected>90 Hari</option>
+                        <option value="365">365 Hari</option>
+                    </select>
+                </div>
+                <button class="crypto-correlation-calc-btn" id="cryptoCorrCalcBtn">📊 Hitung Correlation</button>
+            </div>
+            <div class="crypto-correlation-result" id="cryptoCorrResult" style="display:none;"></div>
+            <div class="crypto-correlation-chart-section" id="cryptoCorrChartSection" style="display:none;">
+                <div class="crypto-correlation-chart-title">📈 Performance Overlay (Normalized)</div>
+                <div id="cryptoCorrChart" class="crypto-correlation-chart"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=23000"></script>
+    <script src="app.js?v=24000"></script>
 </body>
 </html>
