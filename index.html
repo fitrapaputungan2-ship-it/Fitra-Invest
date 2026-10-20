@@ -275,11 +275,14 @@
                 <div class="crypto-footer"><span class="crypto-update-info" id="cryptoLastUpdated">Data dari CoinGecko · Terakhir diupdate: --</span></div>
             </div>
 
-            <!-- 🆕 COMMODITY TAB -->
+            <!-- COMMODITY TAB -->
             <div class="tab-content" id="tab-commodity">
                 <div class="commodity-banner">
                     <div class="commodity-banner-icon">🥇</div>
                     <div class="commodity-banner-text"><strong>Commodity Market</strong><span>Pantau harga emas, minyak, dan komoditas dunia</span></div>
+                    <div class="crypto-banner-actions">
+                        <button class="crypto-correlation-btn" id="openCommodityCorrelationBtn" aria-label="Correlation">📊</button>
+                    </div>
                 </div>
                 
                 <div class="commodity-spotlight-section">
@@ -287,6 +290,48 @@
                     <div class="commodity-spotlight-card" id="goldSpotlight">
                         <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data emas...</p></div>
                     </div>
+                </div>
+
+                <!-- 🆕 GOLD/SILVER RATIO -->
+                <div class="commodity-ratio-section" id="commodityRatioSection">
+                    <div class="crypto-section-title">⚖️ Gold/Silver Ratio</div>
+                    <div class="commodity-ratio-card" id="commodityRatioCard">
+                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat rasio...</p></div>
+                    </div>
+                </div>
+
+                <!-- 🆕 COMMODITY WEIGHT CONVERTER -->
+                <div class="commodity-weight-section">
+                    <div class="staking-header">
+                        <div class="staking-section-title">🧮 Weight Converter (Konversi Berat)</div>
+                        <div class="staking-subtitle">Ubah Troy Ounce ke Gram/Kg (Standar Emas)</div>
+                    </div>
+                    <div class="staking-inputs">
+                        <div class="il-input-grid">
+                            <div class="staking-input-group">
+                                <label>Jumlah</label>
+                                <input type="number" id="weightAmount" value="1" min="0" step="any">
+                            </div>
+                            <div class="staking-input-group">
+                                <label>Dari</label>
+                                <select id="weightFrom">
+                                    <option value="toz">Troy Ounce (oz t)</option>
+                                    <option value="g">Gram (g)</option>
+                                    <option value="kg">Kilogram (kg)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="staking-input-group">
+                            <label>Konversi Ke</label>
+                            <select id="weightTo">
+                                <option value="g">Gram (g)</option>
+                                <option value="toz">Troy Ounce (oz t)</option>
+                                <option value="kg">Kilogram (kg)</option>
+                            </select>
+                        </div>
+                        <button class="staking-calc-btn" id="weightCalcBtn" style="background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #0a0a0f;">⚖️ Hitung Konversi</button>
+                    </div>
+                    <div class="il-result" id="weightResult" style="display: none;"></div>
                 </div>
 
                 <div class="commodity-filters" id="commodityFilters">
@@ -707,7 +752,32 @@
         </div>
     </div>
 
+    <!-- 🆕 MODAL: COMMODITY CORRELATION -->
+    <div class="crypto-correlation-modal" id="commodityCorrelationModal">
+        <div class="crypto-correlation-content">
+            <div class="crypto-correlation-header">
+                <div><h3>📊 Commodity Correlation</h3><div class="crypto-correlation-subtitle">Bandingkan pergerakan 2 komoditas</div></div>
+                <button class="analysis-close" id="closeCommodityCorrelationModal">×</button>
+            </div>
+            <div class="crypto-correlation-card">
+                <div class="crypto-corr-input-group"><label>Komoditas A</label><select id="commCorrA"></select></div>
+                <div class="crypto-corr-vs">VS</div>
+                <div class="crypto-corr-input-group"><label>Komoditas B</label><select id="commCorrB"></select></div>
+                <div class="crypto-corr-input-group">
+                    <label>Period</label>
+                    <select id="commCorrPeriod"><option value="30">30 Hari</option><option value="90" selected>90 Hari</option><option value="365">365 Hari</option></select>
+                </div>
+                <button class="crypto-corr-calc-btn" id="commCorrCalcBtn">📊 Hitung Korelasi</button>
+            </div>
+            <div class="crypto-correlation-result" id="commCorrResult" style="display:none;"></div>
+            <div class="crypto-correlation-chart-section" id="commCorrChartSection" style="display:none;">
+                <div class="crypto-corr-chart-title">📈 Chart Overlay (Normalized %)</div>
+                <div id="commCorrChart" class="crypto-corr-chart"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="./lightweight-charts.js"></script>
     <script src="app.js?v=24005"></script>
 </body>
-                                                             </html>
+                                                  </html>
