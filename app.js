@@ -38,6 +38,7 @@ let indeksSearch = '';
 let indeksDetailChart = null;
 let indeksDetailSymbol = null;
 let indeksRenderToken = 0;
+
 // Crypto globals
 let cryptoData = [];
 let cryptoView = 'marketcap';
@@ -48,9 +49,11 @@ let cryptoCatView = 'all';
 let corrChartInstance = null;
 let stakingChartInstance = null;
 let dcaChartInstance = null;
+
 // Commodity globals (BARU)
 let commodityData = [];
 let commodityFilter = 'all';
+let commCorrChartInstance = null;
 
 // ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
@@ -538,8 +541,7 @@ function renderDCFMethods(eps, dcfValue) {
     methodsHtml += `<div class="dcf-method-item"><div class="dcf-method-name">📊 P/E Multiple</div><div class="dcf-method-desc">Rata-rata industri 15x-20x</div><div class="dcf-method-value">$${peAvgValue.toFixed(2)}</div><span class="dcf-method-verdict ${peCls}">${peLabel} (${peVerdict >= 0 ? '+' : ''}${peVerdict.toFixed(1)}%)</span></div>`;
     document.getElementById('dcfMethods').innerHTML = methodsHtml;
 }
-function closeDcf() { document.getElementById('dcfModal').classList.remove('active'); }
-// ============ 🪙 CRYPTO TAB ============
+function closeDcf() { document.getElementById('dcfModal').classList.remove('active'); }// ============ 🪙 CRYPTO TAB ============
 const CRYPTO_FALLBACK = [
     { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', current_price: 65000, market_cap: 1280000000000, market_cap_rank: 1, price_change_percentage_24h: 0, total_volume: 30000000000, circulating_supply: 19000000, total_supply: 21000000, ath: 73750, ath_change_percentage: -12 },
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
@@ -555,7 +557,7 @@ const CRYPTO_CATEGORY_MAP = {
     'ondo': 'rwa', 'polyx': 'rwa', 'mpl': 'rwa', 'cfg': 'rwa', 'gfi': 'rwa', 'rio': 'rwa', 'landx': 'rwa', 'tru': 'rwa', 'mkr': 'rwa'
 };
 
-// ============ 🆕 CRYPTO EVENTS DATA (UPDATED) ============
+// ============ 🆕 CRYPTO EVENTS DATA ============
 const CRYPTO_EVENTS_DATA = [
     { date: '2024-04-19', title: 'Bitcoin Halving 2024', desc: 'Block reward BTC turun dari 6.25 ke 3.125 BTC.', coin: 'BTC' },
     { date: '2026-11-15', title: 'Ethereum Pectra Upgrade', desc: 'Update jaringan Ethereum (Account Abstraction & Staking).', coin: 'ETH' },
@@ -1342,9 +1344,7 @@ function renderCryptoScorecardVerdict(result, verdict, coinData) {
     verdictEl.innerHTML = `<div class="scorecard-verdict-title">🧠 Kesimpulan Crypto</div><div class="scorecard-verdict-text">${summaryText}</div><div class="scorecard-stats-row"><div class="scorecard-stat-box"><span class="scorecard-stat-label">Lolos</span><span class="scorecard-stat-value excellent">${passCount}/10</span></div><div class="scorecard-stat-box"><span class="scorecard-stat-label">Skor</span><span class="scorecard-stat-value ${verdict.class}">${result.score}</span></div><div class="scorecard-stat-box"><span class="scorecard-stat-label">Rank</span><span class="scorecard-stat-value">#${rank}</span></div></div>`;
     verdictEl.style.display = 'block';
 }
-function closeCryptoScorecard() { document.getElementById('cryptoScorecardModal').classList.remove('active'); }
-
-// ============ 🥇 COMMODITY TAB ============
+function closeCryptoScorecard() { document.getElementById('cryptoScorecardModal').classList.remove('active'); }// ============ 🥇 COMMODITY TAB ============
 const COMMODITY_LIST = [
     { symbol: 'GC=F', name: 'Gold', icon: '🥇', category: 'metals', unit: 'Troy Ounce' },
     { symbol: 'SI=F', name: 'Silver', icon: '🥈', category: 'metals', unit: 'Troy Ounce' },
@@ -1363,6 +1363,7 @@ async function initCommodityTab() {
         await loadCommodityData();
     } else {
         renderCommoditySpotlight();
+        renderGoldSilverRatio();
         renderCommodityGrid();
     }
 }
@@ -1371,7 +1372,6 @@ async function loadCommodityData() {
     const grid = document.getElementById('commodityGrid'); if (!grid) return;
     grid.innerHTML = '<div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data komoditas...</p></div>';
     try {
-        // Fetch semua komoditas secara paralel
         const promises = COMMODITY_LIST.map(async (c) => {
             const priceData = await fetchPrice(c.symbol, 'commodity');
             return { ...c, priceData };
@@ -1381,6 +1381,7 @@ async function loadCommodityData() {
         commodityData = results.filter(r => r.priceData !== null);
 
         renderCommoditySpotlight();
+        renderGoldSilverRatio();
         renderCommodityGrid();
     } catch (error) {
         grid.innerHTML = '<div class="empty-state">❌ Gagal memuat data komoditas.</div>';
@@ -1398,7 +1399,6 @@ function renderCommoditySpotlight() {
 
     const priceOunce = gold.priceData.price;
     const change = gold.priceData.change;
-    // 1 Troy Ounce = 31.1034768 gram
     const priceGram = priceOunce / 31.1034768;
     
     const trend = change >= 0 ? 'up' : 'down';
@@ -1422,6 +1422,72 @@ function renderCommoditySpotlight() {
     `;
 }
 
+// 🆕 GOLD/SILVER RATIO
+function renderGoldSilverRatio() {
+    const container = document.getElementById('commodityRatioCard');
+    if (!container) return;
+    
+    const gold = commodityData.find(c => c.symbol === 'GC=F');
+    const silver = commodityData.find(c => c.symbol === 'SI=F');
+    
+    if (!gold?.priceData || !silver?.priceData) {
+        container.innerHTML = '<div class="empty-state">Data gold/silver tidak tersedia.</div>';
+        return;
+    }
+    
+    const ratio = gold.priceData.price / silver.priceData.price;
+    
+    let verdict, verdictIcon, verdictDesc, insight;
+    if (ratio >= 80) {
+        verdict = 'SILVER UNDERVALUED';
+        verdictIcon = '🥈';
+        verdictDesc = 'Rasio tinggi — historisnya silver lebih murah relatif terhadap gold.';
+        insight = 'Ratio di atas 80 menunjukkan perak relatif murah. Sejarah menunjukkan ratio cenderung mean-revert, potensi silver outperform.';
+    } else if (ratio >= 65) {
+        verdict = 'NORMAL (HIGH)';
+        verdictIcon = '⚖️';
+        verdictDesc = 'Rasio di zona atas normal — silver cenderung murah.';
+        insight = 'Ratio di zona atas normal (65-80). Kalau percaya mean reversion, silver bisa jadi opportunity.';
+    } else if (ratio >= 50) {
+        verdict = 'NORMAL';
+        verdictIcon = '⚖️';
+        verdictDesc = 'Rasio di zona normal sepanjang sejarah.';
+        insight = 'Ratio di zona normal (50-65). Tidak ada sinyal ekstrem dari ratio ini.';
+    } else if (ratio >= 40) {
+        verdict = 'NORMAL (LOW)';
+        verdictIcon = '⚖️';
+        verdictDesc = 'Rasio di zona bawah normal — gold cenderung murah.';
+        insight = 'Ratio di zona bawah normal (40-50). Gold relatif lebih murah dibanding silver.';
+    } else {
+        verdict = 'GOLD UNDERVALUED';
+        verdictIcon = '🥇';
+        verdictDesc = 'Rasio rendah — gold relatif murah dibanding silver.';
+        insight = 'Ratio di bawah 40 = gold murah historis. Hati-hati, ratio bisa stay rendah lama.';
+    }
+    
+    container.innerHTML = `
+        <div class="staking-result-main">
+            <div class="staking-result-label">Gold/Silver Ratio</div>
+            <div class="staking-result-big">${ratio.toFixed(1)}</div>
+            <div class="staking-result-sub">${verdictIcon} ${verdict} — ${verdictDesc}</div>
+        </div>
+        <div class="staking-result-grid">
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">🥇 Gold / oz</span>
+                <span class="staking-result-item-value gold">$${gold.priceData.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">🥈 Silver / oz</span>
+                <span class="staking-result-item-value gold">$${silver.priceData.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+        </div>
+        <div class="corr-insight-box good" style="margin-top:12px;">
+            <span style="font-size:14px;">💡</span>
+            <span>${insight}</span>
+        </div>
+    `;
+}
+
 function renderCommodityGrid() {
     const grid = document.getElementById('commodityGrid'); if (!grid) return;
     if (commodityData.length === 0) { grid.innerHTML = '<div class="empty-state">Belum ada data.</div>'; return; }
@@ -1439,9 +1505,8 @@ function renderCommodityGrid() {
         const sign = p.change >= 0 ? '+' : '';
         const color = p.change >= 0 ? 'var(--green)' : 'var(--red)';
         
-        // Format price
         let priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
-        if (p.price < 10) priceStr = '$' + p.price.toFixed(4); // Untuk gas/agri yang murah
+        if (p.price < 10) priceStr = '$' + p.price.toFixed(4);
 
         return `
             <div class="commodity-card ${trend}" onclick="openAssetDetail('${c.symbol}', '${c.name}', ${p.price}, ${p.change}, 'commodity')">
@@ -1465,6 +1530,217 @@ function renderCommodityGrid() {
     }
 }
 
+// 🆕 WEIGHT CONVERTER
+function calculateWeightConversion() {
+    const amount = parseFloat(document.getElementById('weightAmount').value) || 0;
+    const fromUnit = document.getElementById('weightFrom').value;
+    const toUnit = document.getElementById('weightTo').value;
+    
+    if (amount <= 0) {
+        alert('Jumlah harus lebih besar dari 0!');
+        return;
+    }
+    
+    const TO_GRAM = { 'g': 1, 'kg': 1000, 'toz': 31.1034768 };
+    const FROM_LABEL = { 'g': 'Gram', 'kg': 'Kilogram', 'toz': 'Troy Ounce' };
+    const UNIT_SYMBOL = { 'g': 'g', 'kg': 'kg', 'toz': 'oz t' };
+    
+    const inGrams = amount * TO_GRAM[fromUnit];
+    const result = inGrams / TO_GRAM[toUnit];
+    
+    let goldPriceInfo = '';
+    const gold = commodityData.find(c => c.symbol === 'GC=F');
+    if (gold?.priceData) {
+        const goldPerOunce = gold.priceData.price;
+        const goldPerGram = goldPerOunce / 31.1034768;
+        const goldPerKg = goldPerGram * 1000;
+        
+        let goldValue = 0;
+        if (toUnit === 'toz') goldValue = result * goldPerOunce;
+        else if (toUnit === 'g') goldValue = result * goldPerGram;
+        else if (toUnit === 'kg') goldValue = result * goldPerKg;
+        
+        if (goldValue > 0) {
+            goldPriceInfo = `<div class="staking-result-item" style="margin-top:8px; grid-column: 1/-1;"><span class="staking-result-item-label">💰 Estimasi Nilai Emas</span><span class="staking-result-item-value gold">$${goldValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>`;
+        }
+    }
+    
+    const resultEl = document.getElementById('weightResult');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = `
+        <div class="il-result-main">
+            <div class="il-result-label">Hasil Konversi</div>
+            <div class="il-result-big positive">${result.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${UNIT_SYMBOL[toUnit]}</div>
+            <div class="il-result-sub">${amount} ${FROM_LABEL[fromUnit]} = ${result.toFixed(6)} ${FROM_LABEL[toUnit]}</div>
+        </div>
+        <div class="il-result-grid">
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">Gram</span>
+                <span class="staking-result-item-value">${inGrams.toFixed(4)} g</span>
+            </div>
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">Troy Ounce</span>
+                <span class="staking-result-item-value">${(inGrams / 31.1034768).toFixed(4)} oz t</span>
+            </div>
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">Kilogram</span>
+                <span class="staking-result-item-value">${(inGrams / 1000).toFixed(6)} kg</span>
+            </div>
+            <div class="staking-result-item">
+                <span class="staking-result-item-label">Miligram</span>
+                <span class="staking-result-item-value">${(inGrams * 1000).toFixed(2)} mg</span>
+            </div>
+            ${goldPriceInfo}
+        </div>
+    `;
+}
+
+// 🆕 COMMODITY CORRELATION
+function populateCommodityCorrelationDropdowns() {
+    const selA = document.getElementById('commCorrA');
+    const selB = document.getElementById('commCorrB');
+    if (!selA || !selB) return;
+    if (selA.options.length > 0) return;
+    
+    const source = commodityData.length > 0 ? commodityData : COMMODITY_LIST;
+    const options = source.map(c => 
+        `<option value="${c.symbol}">${c.icon} ${c.symbol.replace('=F', '')} — ${c.name}</option>`
+    ).join('');
+    selA.innerHTML = options;
+    selB.innerHTML = options;
+    if (source.length >= 2) {
+        selA.value = source[0].symbol;
+        selB.value = source[1].symbol;
+    }
+}
+
+function openCommodityCorrelation() {
+    document.getElementById('commodityCorrelationModal').classList.add('active');
+    document.getElementById('commCorrResult').style.display = 'none';
+    document.getElementById('commCorrChartSection').style.display = 'none';
+    populateCommodityCorrelationDropdowns();
+}
+
+function closeCommodityCorrelation() {
+    document.getElementById('commodityCorrelationModal').classList.remove('active');
+    if (commCorrChartInstance) {
+        try { commCorrChartInstance.remove(); } catch(e) {}
+        commCorrChartInstance = null;
+    }
+}
+
+async function runCommodityCorrelation() {
+    const selA = document.getElementById('commCorrA');
+    const selB = document.getElementById('commCorrB');
+    const periodEl = document.getElementById('commCorrPeriod');
+    const btn = document.getElementById('commCorrCalcBtn');
+    const resultEl = document.getElementById('commCorrResult');
+    if (!selA || !selB || !periodEl || !btn || !resultEl) return;
+    
+    const symbolA = selA.value;
+    const symbolB = selB.value;
+    if (symbolA === symbolB) {
+        alert('Pilih 2 komoditas yang berbeda!');
+        return;
+    }
+    
+    const days = parseInt(periodEl.value) || 90;
+    let range = '3mo';
+    if (days === 30) range = '1mo';
+    else if (days === 90) range = '3mo';
+    else if (days === 365) range = '1y';
+    
+    const source = commodityData.length > 0 ? commodityData : COMMODITY_LIST;
+    const commodityA = source.find(c => c.symbol === symbolA);
+    const commodityB = source.find(c => c.symbol === symbolB);
+    const nameA = commodityA ? commodityA.name : symbolA;
+    const nameB = commodityB ? commodityB.name : symbolB;
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Menghitung...';
+    btn.disabled = true;
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
+    
+    try {
+        const [chartA, chartB] = await Promise.all([
+            fetchChartData(symbolA, 'commodity', '1d', range),
+            fetchChartData(symbolB, 'commodity', '1d', range)
+        ]);
+        
+        if (!chartA || chartA.length < 5 || !chartB || chartB.length < 5) {
+            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p></div>';
+            return;
+        }
+        
+        const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartA, chartB);
+        if (returnsA.length < 3) {
+            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>';
+            return;
+        }
+        
+        const coef = calculatePearsonCorrelation(returnsA, returnsB);
+        const verdict = getCorrelationVerdict(coef);
+        
+        resultEl.innerHTML = `
+            <div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div>
+            <div class="corr-coef-label">Pearson Correlation Coefficient</div>
+            <div class="corr-verdict-badge ${verdict.cls}">${verdict.icon} ${verdict.label}</div>
+            <div class="corr-interpretation"><strong>${nameA}</strong> vs <strong>${nameB}</strong> — ${days} hari terakhir (${returnsA.length} data point)</div>
+            <div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : verdict.insightCls === 'warn' ? '⚠️' : '🚨'}</span><span>${verdict.insight}</span></div>
+        `;
+        
+        document.getElementById('commCorrChartSection').style.display = 'block';
+        setTimeout(() => {
+            renderCommodityCorrelationChart(alignedA, alignedB, times, nameA, nameB);
+        }, 100);
+    } catch (err) {
+        resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`;
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+function renderCommodityCorrelationChart(alignedA, alignedB, times, nameA, nameB) {
+    const container = document.getElementById('commCorrChart');
+    if (!container) return;
+    container.innerHTML = '';
+    if (commCorrChartInstance) {
+        try { commCorrChartInstance.remove(); } catch(e) {}
+        commCorrChartInstance = null;
+    }
+    if (typeof LightweightCharts === 'undefined') {
+        container.innerHTML = '❌ Chart library tidak tersedia';
+        return;
+    }
+    if (!alignedA || alignedA.length < 2) {
+        container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:20px;text-align:center;font-size:12px;">Data tidak cukup</div>';
+        return;
+    }
+    
+    commCorrChartInstance = LightweightCharts.createChart(container, {
+        width: container.clientWidth, height: 260,
+        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
+        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+    });
+    
+    const baseA = alignedA[0];
+    const baseB = alignedB[0];
+    const seriesA = commCorrChartInstance.addLineSeries({ color: '#fbbf24', lineWidth: 2, title: nameA });
+    const seriesB = commCorrChartInstance.addLineSeries({ color: '#a855f7', lineWidth: 2, title: nameB });
+    
+    const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    seriesA.setData(dataA);
+    seriesB.setData(dataB);
+    commCorrChartInstance.timeScale().fitContent();
+}
+
 // Event listener filter commodity
 document.querySelectorAll('.commodity-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1474,6 +1750,7 @@ document.querySelectorAll('.commodity-filter-btn').forEach(btn => {
         renderCommodityGrid();
     });
 });
+
 // ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol; currentAlertName = name; currentAlertAssetType = type; currentAlertPrice = price;
@@ -2031,9 +2308,13 @@ document.getElementById('openCryptoScorecardBtn').addEventListener('click', open
 document.getElementById('closeCryptoScorecardModal').addEventListener('click', closeCryptoScorecard);
 document.getElementById('stakingCalcBtn').addEventListener('click', calculateStakingRewards);
 
-// Event Listeners Baru
+// Event Listeners Baru (Commodity)
 document.getElementById('ilCalcBtn').addEventListener('click', calculateIL);
 document.getElementById('dcaCalcBtn').addEventListener('click', calculateDCA);
+document.getElementById('weightCalcBtn').addEventListener('click', calculateWeightConversion);
+document.getElementById('openCommodityCorrelationBtn').addEventListener('click', openCommodityCorrelation);
+document.getElementById('closeCommodityCorrelationModal').addEventListener('click', closeCommodityCorrelation);
+document.getElementById('commCorrCalcBtn').addEventListener('click', runCommodityCorrelation);
 
 const holdingModal = document.getElementById('holdingModal');
 document.getElementById('addHolding').addEventListener('click', () => holdingModal.classList.add('active'));
