@@ -376,6 +376,26 @@
                     <div class="il-result" id="weightResult" style="display: none;"></div>
                 </div>
 
+                <!-- 🆕 SEASONALITY SECTION -->
+                <div class="commodity-seasonality-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
+                    <div class="staking-header">
+                        <div class="staking-section-title">🗓️ Gold Seasonality (10 Tahun)</div>
+                        <div class="staking-subtitle">Rata-rata performa bulanan Emas historis</div>
+                    </div>
+                    <div id="seasonalityChart" class="seasonality-chart" style="min-height: 200px;">
+                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Menghitung data historis...</p></div>
+                    </div>
+                </div>
+
+                <!-- 🆕 INFLATION SECTION -->
+                <div class="commodity-inflation-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
+                    <div class="staking-header">
+                        <div class="staking-section-title">💵 Harga Emas vs Inflasi</div>
+                        <div class="staking-subtitle">Perbandingan harga asli vs harga disesuaikan inflasi (10 Tahun)</div>
+                    </div>
+                    <div id="inflationChart" class="staking-chart" style="height: 250px;"></div>
+                </div>
+
                 <div class="commodity-filters" id="commodityFilters">
                     <button class="commodity-filter-btn active" data-cat="all">🌐 Semua</button>
                     <button class="commodity-filter-btn" data-cat="metals">💍 Logam</button>
