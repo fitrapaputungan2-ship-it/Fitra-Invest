@@ -282,6 +282,7 @@
                     <div class="commodity-banner-text"><strong>Commodity Market</strong><span>Pantau harga emas, minyak, dan komoditas dunia</span></div>
                     <div class="crypto-banner-actions">
                         <button class="crypto-correlation-btn" id="openCommodityCorrelationBtn" aria-label="Correlation">📊</button>
+                        <button class="crypto-correlation-btn" id="openDxyCorrelationBtn" aria-label="DXY Correlation" style="color: var(--green); font-size: 16px;">💵</button>
                     </div>
                 </div>
                 
@@ -298,6 +299,47 @@
                     <div class="commodity-ratio-card" id="commodityRatioCard">
                         <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat rasio...</p></div>
                     </div>
+                </div>
+
+                <!-- 🆕 COMMODITY HEATMAP -->
+                <div class="crypto-heatmap-section" id="commodityHeatmapSection">
+                    <div class="crypto-heatmap-header">
+                        <div class="crypto-section-title">🔥 Commodity Heatmap</div>
+                    </div>
+                    <div class="crypto-heatmap-grid" id="commodityHeatmapGrid">
+                        <div class="crypto-heatmap-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat heatmap...</p></div>
+                    </div>
+                </div>
+
+                <!-- 🆕 GOLD PRICE IN IDR -->
+                <div class="commodity-idr-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
+                    <div class="staking-header">
+                        <div class="staking-section-title">🇮🇩 Harga Emas (Rupiah)</div>
+                        <div class="staking-subtitle">Estimasi harga emas spot per gram dalam Rupiah</div>
+                    </div>
+                    <div class="il-result" id="idrResult" style="display: block; margin-top: 0;">
+                        <div class="il-result-main" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;">
+                            <div class="il-result-label">Harga Emas / Gram</div>
+                            <div class="il-result-big positive" id="goldIdrPrice">Rp 0</div>
+                            <div class="il-result-sub" id="goldIdrSub">Berdasarkan kurs USD/IDR saat ini</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🆕 ZAKAT CALCULATOR -->
+                <div class="commodity-zakat-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
+                    <div class="staking-header">
+                        <div class="staking-section-title">🕌 Kalkulator Zakat Emas</div>
+                        <div class="staking-subtitle">Hitung zakat mal emas (Nisab: 85 gram)</div>
+                    </div>
+                    <div class="staking-inputs">
+                        <div class="staking-input-group">
+                            <label>Total Berat Emas yang Dimiliki (Gram)</label>
+                            <input type="number" id="zakatGoldWeight" value="100" min="0" step="0.1">
+                        </div>
+                        <button class="staking-calc-btn" id="zakatCalcBtn" style="background: linear-gradient(135deg, var(--green), var(--gold)); color: #0a0a0f;">🕌 Hitung Zakat</button>
+                    </div>
+                    <div class="il-result" id="zakatResult" style="display: none;"></div>
                 </div>
 
                 <!-- 🆕 COMMODITY WEIGHT CONVERTER -->
@@ -752,7 +794,7 @@
         </div>
     </div>
 
-    <!-- 🆕 MODAL: COMMODITY CORRELATION -->
+    <!-- MODAL: COMMODITY CORRELATION -->
     <div class="crypto-correlation-modal" id="commodityCorrelationModal">
         <div class="crypto-correlation-content">
             <div class="crypto-correlation-header">
@@ -777,7 +819,29 @@
         </div>
     </div>
 
+    <!-- 🆕 MODAL: DXY CORRELATION -->
+    <div class="crypto-correlation-modal" id="dxyCorrelationModal">
+        <div class="crypto-correlation-content">
+            <div class="crypto-correlation-header">
+                <div><h3>💵 DXY vs Gold</h3><div class="crypto-correlation-subtitle">Korelasi Dolar AS (DXY) vs Emas</div></div>
+                <button class="analysis-close" id="closeDxyCorrelationModal">×</button>
+            </div>
+            <div class="crypto-correlation-card">
+                <div class="crypto-corr-input-group">
+                    <label>Period</label>
+                    <select id="dxyPeriod"><option value="30">30 Hari</option><option value="90" selected>90 Hari</option><option value="365">365 Hari</option></select>
+                </div>
+                <button class="crypto-corr-calc-btn" id="dxyCalcBtn" style="background: linear-gradient(135deg, var(--green), var(--cyan));">📊 Hitung Korelasi DXY</button>
+            </div>
+            <div class="crypto-correlation-result" id="dxyResult" style="display:none;"></div>
+            <div class="crypto-correlation-chart-section" id="dxyChartSection" style="display:none;">
+                <div class="crypto-corr-chart-title">📈 Chart Overlay DXY vs Gold (Normalized %)</div>
+                <div id="dxyChart" class="crypto-corr-chart"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="./lightweight-charts.js"></script>
     <script src="app.js?v=24005"></script>
 </body>
-                                                  </html>
+    </html>
