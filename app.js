@@ -47,7 +47,7 @@ let currentCryptoData = null;
 let cryptoCatView = 'all';
 let corrChartInstance = null;
 let stakingChartInstance = null;
-let dcaChartInstance = null; // Global baru untuk DCA
+let dcaChartInstance = null; // Global untuk DCA
 
 // ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
@@ -551,14 +551,13 @@ const CRYPTO_CATEGORY_MAP = {
     'ondo': 'rwa', 'polyx': 'rwa', 'mpl': 'rwa', 'cfg': 'rwa', 'gfi': 'rwa', 'rio': 'rwa', 'landx': 'rwa', 'tru': 'rwa', 'mkr': 'rwa'
 };
 
-// ============ 🆕 CRYPTO EVENTS DATA (STATIC) ============
+// ============ 🆕 CRYPTO EVENTS DATA (UPDATED) ============
 const CRYPTO_EVENTS_DATA = [
     { date: '2024-04-19', title: 'Bitcoin Halving 2024', desc: 'Block reward BTC turun dari 6.25 ke 3.125 BTC.', coin: 'BTC' },
-    { date: '2024-09-30', title: 'Ethereum Dencun Upgrade', desc: 'Update jaringan Ethereum (Proto-Danksharding).', coin: 'ETH' },
-    { date: '2024-11-15', title: 'Cardano Chang Hard Fork', desc: 'Upgrade besar Cardano menuju desentralisasi penuh.', coin: 'ADA' },
-    { date: '2025-03-01', title: 'Solana Firedancer Launch', desc: 'Validator client baru untuk jaringan Solana yang lebih cepat.', coin: 'SOL' },
-    { date: '2025-05-15', title: 'Bittensor Halving', desc: 'Halving pertama untuk jaringan AI Bittensor (TAO).', coin: 'TAO' },
-    { date: '2026-04-20', title: 'Bitcoin Halving 2026', desc: 'Block reward BTC turun dari 3.125 ke 1.5625 BTC.', coin: 'BTC' }
+    { date: '2026-11-15', title: 'Ethereum Pectra Upgrade', desc: 'Update jaringan Ethereum (Account Abstraction & Staking).', coin: 'ETH' },
+    { date: '2026-12-01', title: 'Cardano Voltaire Era', desc: 'Upgrade Cardano menuju governance penuh.', coin: 'ADA' },
+    { date: '2027-03-01', title: 'Solana Firedancer Launch', desc: 'Validator client baru untuk jaringan Solana yang lebih cepat.', coin: 'SOL' },
+    { date: '2028-04-20', title: 'Bitcoin Halving 2028', desc: 'Block reward BTC turun dari 3.125 ke 1.5625 BTC.', coin: 'BTC' }
 ];
 
 function getCoinCategory(symbol) {
@@ -602,7 +601,7 @@ function getCryptoHeatColor(change) {
 }
 async function initCryptoTab() {
     if (cryptoData.length === 0) { renderCryptoList(); renderCryptoHeatmap(); renderCryptoCategoryList(); }
-    renderCryptoEvents(); // 🆕 Render Events
+    renderCryptoEvents();
     if (!document.getElementById('cryptoGlobalStats').dataset.loaded) loadCryptoGlobalStats();
     if (!document.getElementById('cryptoFngSection').dataset.loaded) loadCryptoFNG();
     if (!document.getElementById('cryptoTrendingSection').dataset.loaded) loadCryptoTrending();
@@ -614,7 +613,7 @@ async function loadCryptoData() {
     try {
         const data = await fetchCryptoPrices(); cryptoData = data;
         renderCryptoList(); renderCryptoHeatmap(); renderCryptoCategoryList();
-        populateDcaDropdowns(); // 🆕 Isi dropdown DCA
+        populateDcaDropdowns();
         const now = new Date(); const el = document.getElementById('cryptoLastUpdated');
         if (el) el.textContent = 'Data dari CoinGecko · Terakhir diupdate: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     } catch (error) { list.innerHTML = '<div class="empty-state">❌ Gagal memuat data crypto.</div>'; }
@@ -701,24 +700,28 @@ function renderCryptoEvents() {
     let html = '';
     sortedEvents.forEach(ev => {
         const evDate = new Date(ev.date).getTime();
-        if (evDate > today - (7 * 24 * 60 * 60 * 1000)) { // Tampilin event yang belum lewat / baru lewat 7 hari
-            const dateObj = new Date(ev.date);
-            const day = dateObj.getDate();
-            const month = dateObj.toLocaleString('en-US', { month: 'short' });
-            const diffDays = Math.ceil((evDate - today) / (1000 * 60 * 60 * 24));
-            const countdown = diffDays > 0 ? `${diffDays} hari lagi` : (diffDays === 0 ? 'Hari ini!' : 'Baru lewat');
-            html += `<div class="event-card">
-                <div class="event-date-box">
-                    <span class="event-date-day">${day}</span>
-                    <span class="event-date-month">${month}</span>
-                </div>
-                <div class="event-info">
-                    <div class="event-title">${ev.title} <span class="crypto-symbol-badge" style="margin-left:6px;">${ev.coin}</span></div>
-                    <div class="event-desc">${ev.desc}</div>
-                    <div class="event-countdown">${countdown}</div>
-                </div>
-            </div>`;
-        }
+        const dateObj = new Date(ev.date);
+        const day = dateObj.getDate();
+        const month = dateObj.toLocaleString('en-US', { month: 'short' });
+        const year = dateObj.getFullYear();
+        const diffDays = Math.ceil((evDate - today) / (1000 * 60 * 60 * 24));
+        
+        let countdown = '';
+        if (diffDays > 0) countdown = `${diffDays} hari lagi`;
+        else if (diffDays === 0) countdown = 'Hari ini!';
+        else countdown = 'Selesai';
+
+        html += `<div class="event-card">
+            <div class="event-date-box">
+                <span class="event-date-day">${day}</span>
+                <span class="event-date-month">${month} '${String(year).slice(-2)}</span>
+            </div>
+            <div class="event-info">
+                <div class="event-title">${ev.title} <span class="crypto-symbol-badge" style="margin-left:6px;">${ev.coin}</span></div>
+                <div class="event-desc">${ev.desc}</div>
+                <div class="event-countdown" style="${diffDays < 0 ? 'color:var(--text-muted); background:rgba(255,255,255,0.05);' : ''}">${countdown}</div>
+            </div>
+        </div>`;
     });
     if (!html) html = '<div class="empty-state">Belum ada event terdekat.</div>';
     list.innerHTML = html;
@@ -894,12 +897,9 @@ function calculateIL() {
 
     if (initA <= 0 || initB <= 0 || finalA <= 0 || finalB <= 0) { alert('Harga harus lebih besar dari 0!'); return; }
 
-    // Price Ratio = (Harga Akhir A / Harga Awal A) / (Harga Akhir B / Harga Awal B)
     const priceRatioA = finalA / initA;
     const priceRatioB = finalB / initB;
     const k = priceRatioA / priceRatioB;
-
-    // Rumus Impermanent Loss: 2 * sqrt(k) / (1 + k) - 1
     const il = (2 * Math.sqrt(k)) / (1 + k) - 1;
     const ilPercent = il * 100;
 
@@ -945,8 +945,8 @@ function populateDcaDropdowns() {
 async function calculateDCA() {
     const coinId = document.getElementById('dcaCoin').value;
     const amount = parseFloat(document.getElementById('dcaAmount').value) || 100;
-    const freq = parseInt(document.getElementById('dcaFrequency').value) || 30; // Days
-    const duration = parseInt(document.getElementById('dcaDuration').value) || 365; // Days
+    const freq = parseInt(document.getElementById('dcaFrequency').value) || 30;
+    const duration = parseInt(document.getElementById('dcaDuration').value) || 365;
 
     if (!coinId) { alert('Pilih coin dulu!'); return; }
     if (amount <= 0) { alert('Jumlah harus > 0!'); return; }
@@ -970,7 +970,6 @@ async function calculateDCA() {
         const candles = await fetchChartData(symbol, 'crypto', '1d', range);
         if (!candles || candles.length === 0) throw new Error('Data historis gagal dimuat.');
 
-        // Logika Simulasi DCA
         let totalInvested = 0;
         let totalCoins = 0;
         let dcaDataChart = [];
@@ -983,13 +982,10 @@ async function calculateDCA() {
                 const coinsBought = amount / c.close;
                 totalCoins += coinsBought;
                 totalInvested += amount;
-                nextBuyTime += (freq * 24 * 60 * 60); // Maju ke jadwal beli berikutnya
+                nextBuyTime += (freq * 24 * 60 * 60);
             }
-            // Catat pertumbuhan nilai portfolio setiap hari
             const currentPortfolioValue = totalCoins * c.close;
-            if (totalInvested > 0) {
-                dcaDataChart.push({ time: c.time, value: currentPortfolioValue });
-            }
+            if (totalInvested > 0) { dcaDataChart.push({ time: c.time, value: currentPortfolioValue }); }
         });
 
         const currentPrice = candles[candles.length - 1].close;
@@ -1030,8 +1026,9 @@ async function calculateDCA() {
             </div>
         `;
 
-        renderDcaChart(dcaDataChart);
+        // 🔥 FIX: Tampilkan kotak chart dulu, jeda 150ms, baru gambar chart-nya
         chartSection.style.display = 'block';
+        setTimeout(() => { renderDcaChart(dcaDataChart); }, 150);
     } catch (err) {
         resultEl.innerHTML = `<div class="analysis-error"><p>❌ ${err.message}</p></div>`;
     }
@@ -1900,7 +1897,7 @@ document.getElementById('openCryptoScorecardBtn').addEventListener('click', open
 document.getElementById('closeCryptoScorecardModal').addEventListener('click', closeCryptoScorecard);
 document.getElementById('stakingCalcBtn').addEventListener('click', calculateStakingRewards);
 
-// 🆕 EVENT LISTENERS BARU
+// Event Listeners Baru
 document.getElementById('ilCalcBtn').addEventListener('click', calculateIL);
 document.getElementById('dcaCalcBtn').addEventListener('click', calculateDCA);
 
