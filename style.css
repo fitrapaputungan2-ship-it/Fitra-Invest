@@ -467,7 +467,7 @@ body.light-mode { --bg-deep: #f5f5f7; --bg-navy: #ffffff; --glass: rgba(0, 0, 0,
 body.light-mode .header { background: rgba(255, 255, 255, 0.95); }
 body.light-mode .tabs { background: rgba(255, 255, 255, 0.9); }
 body.light-mode .modal-content { background: var(--bg-navy); }
-body.light-mode .news-detail-modal, body.light-mode .currency-modal, body.light-mode .sector-detail-modal, body.light-mode .chart-modal, body.light-mode .indeks-detail-modal, body.light-mode .scorecard-modal, body.light-mode .dcf-modal, body.light-mode .crypto-converter-modal, body.light-mode .crypto-scorecard-modal, body.light-mode .crypto-correlation-modal, body.light-mode .commodityCorrelationModal { background: rgba(245, 245, 247, 0.98); }
+body.light-mode .news-detail-modal, body.light-mode .currency-modal, body.light-mode .sector-detail-modal, body.light-mode .chart-modal, body.light-mode .indeks-detail-modal, body.light-mode .scorecard-modal, body.light-mode .dcf-modal, body.light-mode .crypto-converter-modal, body.light-mode .crypto-scorecard-modal, body.light-mode .crypto-correlation-modal, body.light-mode .dxyCorrelationModal { background: rgba(245, 245, 247, 0.98); }
 body.light-mode .alert-toast { background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 245, 247, 0.98)); color: var(--text-primary); }
 
 .scorecard-btn { width: 100%; padding: 12px 16px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(251, 191, 36, 0.15)); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 12px; color: var(--violet); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
@@ -581,6 +581,7 @@ body.light-mode .alert-toast { background: linear-gradient(135deg, rgba(255, 255
 .crypto-banner-text { display: flex; flex-direction: column; gap: 3px; flex: 1; }
 .crypto-banner-text strong { font-size: 14px; font-weight: 800; color: var(--gold); }
 .crypto-banner-text span { font-size: 11px; color: var(--text-secondary); }
+.crypto-banner-actions { display: flex; gap: 6px; }
 .crypto-converter-btn { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-dark)); border: none; color: #0a0a0f; font-size: 18px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4); padding: 0; }
 .crypto-global-stats { margin-bottom: 14px; }
 .crypto-stat-loading { padding: 24px 20px; text-align: center; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; }
@@ -772,7 +773,7 @@ body.light-mode .alert-toast { background: linear-gradient(135deg, rgba(255, 255
 .crypto-corr-chart-title { font-size: 12px; font-weight: 700; color: var(--cyan); margin-bottom: 10px; }
 .crypto-corr-chart { width: 100%; height: 260px; }
 
-/* ============ CRYPTO SCORECARD (YANG KEPOTONG) ============ */
+/* ============ CRYPTO SCORECARD ============ */
 .crypto-scorecard-btn { width: 100%; padding: 12px 16px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 146, 60, 0.15)); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 12px; color: var(--gold); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
 .crypto-scorecard-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.98); z-index: 1600; display: none; flex-direction: column; }
 .crypto-scorecard-modal.active { display: flex; }
@@ -786,7 +787,7 @@ body.light-mode .alert-toast { background: linear-gradient(135deg, rgba(255, 255
 .crypto-scorecard-criteria-item { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
 .crypto-scorecard-verdict { background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(251, 146, 60, 0.08)); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 
-/* ============ CRYPTO EVENTS CALENDAR ============ */
+/* ============ CRYPTO EVENTS ============ */
 .crypto-events-section { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
 .crypto-events-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .event-card { display: flex; gap: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; align-items: flex-start; }
