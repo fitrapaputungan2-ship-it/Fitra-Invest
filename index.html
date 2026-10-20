@@ -33,6 +33,7 @@
             <button class="tab" data-tab="portfolio">Portfolio</button>
             <button class="tab" data-tab="news">News</button>
             <button class="tab" data-tab="crypto">🪙 Crypto</button>
+            <button class="tab" data-tab="commodity">🥇 Commodity</button>
             <button class="tab" data-tab="heatmap">🔥 Heatmap</button>
             <button class="tab" data-tab="compare">⚖️ Compare</button>
             <button class="tab" data-tab="indeks">🌍 Indeks</button>
@@ -127,16 +128,12 @@
                     <div class="crypto-section-title">🔥 Trending Sekarang</div>
                     <div class="crypto-trending-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat trending...</p></div>
                 </div>
-
-                <!-- CRYPTO EVENTS CALENDAR -->
                 <div class="crypto-events-section" id="cryptoEventsSection">
                     <div class="crypto-section-title">📅 Crypto Events Calendar</div>
                     <div class="crypto-events-list" id="cryptoEventsList">
                         <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat event...</p></div>
                     </div>
                 </div>
-
-                <!-- CRYPTO CATEGORIES -->
                 <div class="crypto-categories-section" id="cryptoCategoriesSection">
                     <div class="crypto-section-title">🎯 Categories</div>
                     <div class="crypto-cat-bar" id="cryptoCatBar">
@@ -152,8 +149,6 @@
                         <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat categories...</p></div>
                     </div>
                 </div>
-
-                <!-- CRYPTO HEATMAP -->
                 <div class="crypto-heatmap-section" id="cryptoHeatmapSection">
                     <div class="crypto-heatmap-header">
                         <div class="crypto-section-title">🔥 Crypto Heatmap</div>
@@ -169,8 +164,6 @@
                         <div class="crypto-heatmap-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat heatmap...</p></div>
                     </div>
                 </div>
-
-                <!-- STAKING CALCULATOR -->
                 <div class="staking-section" id="stakingSection">
                     <div class="staking-header">
                         <div class="staking-section-title">🥩 Staking Calculator</div>
@@ -232,8 +225,6 @@
                     </div>
                     <div class="staking-comparison" id="stakingComparison" style="display: none;"></div>
                 </div>
-
-                <!-- IMPERMANENT LOSS CALCULATOR -->
                 <div class="il-calculator-section">
                     <div class="staking-header">
                         <div class="staking-section-title">⚖️ Impermanent Loss Calculator</div>
@@ -241,61 +232,26 @@
                     </div>
                     <div class="staking-inputs">
                         <div class="il-input-grid">
-                            <div class="staking-input-group">
-                                <label>Harga Awal Coin A ($)</label>
-                                <input type="number" id="ilInitA" value="1" step="any">
-                            </div>
-                            <div class="staking-input-group">
-                                <label>Harga Akhir Coin A ($)</label>
-                                <input type="number" id="ilFinalA" value="2" step="any">
-                            </div>
-                            <div class="staking-input-group">
-                                <label>Harga Awal Coin B ($)</label>
-                                <input type="number" id="ilInitB" value="1" step="any">
-                            </div>
-                            <div class="staking-input-group">
-                                <label>Harga Akhir Coin B ($)</label>
-                                <input type="number" id="ilFinalB" value="1" step="any">
-                            </div>
+                            <div class="staking-input-group"><label>Harga Awal Coin A ($)</label><input type="number" id="ilInitA" value="1" step="any"></div>
+                            <div class="staking-input-group"><label>Harga Akhir Coin A ($)</label><input type="number" id="ilFinalA" value="2" step="any"></div>
+                            <div class="staking-input-group"><label>Harga Awal Coin B ($)</label><input type="number" id="ilInitB" value="1" step="any"></div>
+                            <div class="staking-input-group"><label>Harga Akhir Coin B ($)</label><input type="number" id="ilFinalB" value="1" step="any"></div>
                         </div>
                         <button class="staking-calc-btn" id="ilCalcBtn" style="background: linear-gradient(135deg, var(--red), var(--violet)); color: white;">📉 Hitung Impermanent Loss</button>
                     </div>
                     <div class="il-result" id="ilResult" style="display: none;"></div>
                 </div>
-
-                <!-- DCA CALCULATOR -->
                 <div class="dca-calculator-section">
                     <div class="staking-header">
                         <div class="staking-section-title">💰 DCA Calculator (Dollar-Cost Averaging)</div>
                         <div class="staking-subtitle">Simulasi nabung crypto rutin (Beli di harga rata-rata)</div>
                     </div>
                     <div class="staking-inputs">
-                        <div class="staking-input-group">
-                            <label>Pilih Coin</label>
-                            <select id="dcaCoin"></select>
-                        </div>
+                        <div class="staking-input-group"><label>Pilih Coin</label><select id="dcaCoin"></select></div>
                         <div class="il-input-grid">
-                            <div class="staking-input-group">
-                                <label>Nabung per Periode ($)</label>
-                                <input type="number" id="dcaAmount" value="100" min="1">
-                            </div>
-                            <div class="staking-input-group">
-                                <label>Frekuensi</label>
-                                <select id="dcaFrequency">
-                                    <option value="7">Mingguan</option>
-                                    <option value="30" selected>Bulanan</option>
-                                </select>
-                            </div>
-                            <div class="staking-input-group">
-                                <label>Durasi</label>
-                                <select id="dcaDuration">
-                                    <option value="30">1 Bulan</option>
-                                    <option value="90">3 Bulan</option>
-                                    <option value="180">6 Bulan</option>
-                                    <option value="365" selected>1 Tahun</option>
-                                    <option value="730">2 Tahun</option>
-                                </select>
-                            </div>
+                            <div class="staking-input-group"><label>Nabung per Periode ($)</label><input type="number" id="dcaAmount" value="100" min="1"></div>
+                            <div class="staking-input-group"><label>Frekuensi</label><select id="dcaFrequency"><option value="7">Mingguan</option><option value="30" selected>Bulanan</option></select></div>
+                            <div class="staking-input-group"><label>Durasi</label><select id="dcaDuration"><option value="30">1 Bulan</option><option value="90">3 Bulan</option><option value="180">6 Bulan</option><option value="365" selected>1 Tahun</option><option value="730">2 Tahun</option></select></div>
                         </div>
                         <button class="staking-calc-btn" id="dcaCalcBtn" style="background: linear-gradient(135deg, var(--gold), var(--green)); color: #0a0a0f;">💸 Hitung Hasil DCA</button>
                     </div>
@@ -305,7 +261,6 @@
                         <div id="dcaChart" class="staking-chart"></div>
                     </div>
                 </div>
-
                 <div class="crypto-top-section">
                     <div class="crypto-top-header">
                         <div class="crypto-section-title">💎 Top Crypto</div>
@@ -318,6 +273,32 @@
                     <div class="crypto-list" id="cryptoList"><div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data crypto...</p></div></div>
                 </div>
                 <div class="crypto-footer"><span class="crypto-update-info" id="cryptoLastUpdated">Data dari CoinGecko · Terakhir diupdate: --</span></div>
+            </div>
+
+            <!-- 🆕 COMMODITY TAB -->
+            <div class="tab-content" id="tab-commodity">
+                <div class="commodity-banner">
+                    <div class="commodity-banner-icon">🥇</div>
+                    <div class="commodity-banner-text"><strong>Commodity Market</strong><span>Pantau harga emas, minyak, dan komoditas dunia</span></div>
+                </div>
+                
+                <div class="commodity-spotlight-section">
+                    <div class="crypto-section-title">✨ Gold Spotlight</div>
+                    <div class="commodity-spotlight-card" id="goldSpotlight">
+                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data emas...</p></div>
+                    </div>
+                </div>
+
+                <div class="commodity-filters" id="commodityFilters">
+                    <button class="commodity-filter-btn active" data-cat="all">🌐 Semua</button>
+                    <button class="commodity-filter-btn" data-cat="metals">💍 Logam</button>
+                    <button class="commodity-filter-btn" data-cat="energy">🛢️ Energi</button>
+                    <button class="commodity-filter-btn" data-cat="agri">🌾 Pertanian</button>
+                </div>
+
+                <div class="commodity-grid" id="commodityGrid">
+                    <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat pasar komoditas...</p></div>
+                </div>
             </div>
 
             <!-- HEATMAP -->
@@ -709,22 +690,12 @@
                 <button class="analysis-close" id="closeCryptoCorrelationModal">×</button>
             </div>
             <div class="crypto-correlation-card">
-                <div class="crypto-corr-input-group">
-                    <label>Coin A</label>
-                    <select id="corrCoinA"></select>
-                </div>
+                <div class="crypto-corr-input-group"><label>Coin A</label><select id="corrCoinA"></select></div>
                 <div class="crypto-corr-vs">VS</div>
-                <div class="crypto-corr-input-group">
-                    <label>Coin B</label>
-                    <select id="corrCoinB"></select>
-                </div>
+                <div class="crypto-corr-input-group"><label>Coin B</label><select id="corrCoinB"></select></div>
                 <div class="crypto-corr-input-group">
                     <label>Period</label>
-                    <select id="corrPeriod">
-                        <option value="30">30 Hari</option>
-                        <option value="90" selected>90 Hari</option>
-                        <option value="365">365 Hari</option>
-                    </select>
+                    <select id="corrPeriod"><option value="30">30 Hari</option><option value="90" selected>90 Hari</option><option value="365">365 Hari</option></select>
                 </div>
                 <button class="crypto-corr-calc-btn" id="corrCalcBtn">📊 Hitung Korelasi</button>
             </div>
@@ -737,6 +708,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=24004"></script>
+    <script src="app.js?v=24005"></script>
 </body>
-                                    </html>
+                                                             </html>
