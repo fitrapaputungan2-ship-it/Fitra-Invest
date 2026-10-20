@@ -1,37 +1,50 @@
 name: Build Fitra Invest APK
+
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout code
+    - name: Checkout Source Code
       uses: actions/checkout@v4
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
-    - name: Install Cordova
+        node-version: '20'
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Install Cordova CLI
       run: npm install -g cordova
-    - name: Create Cordova project
+
+    - name: Create Cordova Project
+      run: cordova create fitra-invest-app com.fitra.invest "Fitra Invest"
+
+    - name: Copy Web Assets
       run: |
-        cordova create fitra-invest-app com.fitra.invest "Fitra Invest"
+        cp index.html fitra-invest-app/www/
+        cp style.css fitra-invest-app/www/
+        cp app.js fitra-invest-app/www/
+        cp lightweight-charts.js fitra-invest-app/www/
+
+    - name: Add Android Platform & Build APK
+      run: |
         cd fitra-invest-app
         cordova platform add android
-        cp ../index.html www/index.html
-        cp ../indeks.html www/indeks.html
-        cp ../style.css www/style.css
-        cp ../app.js www/app.js
-        cp ../indeks.js www/indeks.js
-        cp ../lightweight-charts.js www/lightweight-charts.js
-    - name: Build APK
-      run: |
-        cd fitra-invest-app
         cordova build android
-    - name: Upload APK
+
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: fitra-invest-apk
+        name: FitraInvest-Debug-APK
         path: fitra-invest-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
