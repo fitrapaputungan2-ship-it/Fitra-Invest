@@ -48,11 +48,13 @@ let cryptoCatView = 'all';
 let corrChartInstance = null;
 let stakingChartInstance = null;
 let dcaChartInstance = null;
-// Commodity globals
+// Commodity globals (BARU)
 let commodityData = [];
 let commodityFilter = 'all';
 let commCorrChartInstance = null;
 let dxyChartInstance = null;
+let seasonalityChartInstance = null;
+let inflationChartInstance = null;
 
 // ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
@@ -1366,6 +1368,9 @@ async function initCommodityTab() {
         renderCommodityHeatmap();
         renderCommodityGrid();
     }
+    // Render fitur baru secara async
+    renderSeasonalityChart();
+    renderInflationChart();
 }
 
 async function loadCommodityData() {
@@ -1384,7 +1389,7 @@ async function loadCommodityData() {
         renderGoldSilverRatio();
         renderCommodityHeatmap();
         renderCommodityGrid();
-        updateGoldIdrPrice(); // Init Gold IDR setelah data siap
+        updateGoldIdrPrice();
     } catch (error) {
         grid.innerHTML = '<div class="empty-state">❌ Gagal memuat data komoditas.</div>';
     }
@@ -1424,7 +1429,6 @@ function renderCommoditySpotlight() {
     `;
 }
 
-// 🆕 GOLD/SILVER RATIO
 function renderGoldSilverRatio() {
     const container = document.getElementById('commodityRatioCard');
     if (!container) return;
@@ -1441,30 +1445,15 @@ function renderGoldSilverRatio() {
     
     let verdict, verdictIcon, verdictDesc, insight;
     if (ratio >= 80) {
-        verdict = 'SILVER UNDERVALUED';
-        verdictIcon = '🥈';
-        verdictDesc = 'Rasio tinggi — historisnya silver lebih murah relatif terhadap gold.';
-        insight = 'Ratio di atas 80 menunjukkan perak relatif murah. Sejarah menunjukkan ratio cenderung mean-revert, potensi silver outperform.';
+        verdict = 'SILVER UNDERVALUED'; verdictIcon = '🥈'; verdictDesc = 'Rasio tinggi — historisnya silver lebih murah relatif terhadap gold.'; insight = 'Ratio di atas 80 menunjukkan perak relatif murah. Sejarah menunjukkan ratio cenderung mean-revert, potensi silver outperform.';
     } else if (ratio >= 65) {
-        verdict = 'NORMAL (HIGH)';
-        verdictIcon = '⚖️';
-        verdictDesc = 'Rasio di zona atas normal — silver cenderung murah.';
-        insight = 'Ratio di zona atas normal (65-80). Kalau percaya mean reversion, silver bisa jadi opportunity.';
+        verdict = 'NORMAL (HIGH)'; verdictIcon = '⚖️'; verdictDesc = 'Rasio di zona atas normal — silver cenderung murah.'; insight = 'Ratio di zona atas normal (65-80). Kalau percaya mean reversion, silver bisa jadi opportunity.';
     } else if (ratio >= 50) {
-        verdict = 'NORMAL';
-        verdictIcon = '⚖️';
-        verdictDesc = 'Rasio di zona normal sepanjang sejarah.';
-        insight = 'Ratio di zona normal (50-65). Tidak ada sinyal ekstrem dari ratio ini.';
+        verdict = 'NORMAL'; verdictIcon = '⚖️'; verdictDesc = 'Rasio di zona normal sepanjang sejarah.'; insight = 'Ratio di zona normal (50-65). Tidak ada sinyal ekstrem dari ratio ini.';
     } else if (ratio >= 40) {
-        verdict = 'NORMAL (LOW)';
-        verdictIcon = '⚖️';
-        verdictDesc = 'Rasio di zona bawah normal — gold cenderung murah.';
-        insight = 'Ratio di zona bawah normal (40-50). Gold relatif lebih murah dibanding silver.';
+        verdict = 'NORMAL (LOW)'; verdictIcon = '⚖️'; verdictDesc = 'Rasio di zona bawah normal — gold cenderung murah.'; insight = 'Ratio di zona bawah normal (40-50). Gold relatif lebih murah dibanding silver.';
     } else {
-        verdict = 'GOLD UNDERVALUED';
-        verdictIcon = '🥇';
-        verdictDesc = 'Rasio rendah — gold relatif murah dibanding silver.';
-        insight = 'Ratio di bawah 40 = gold murah historis. Hati-hati, ratio bisa stay rendah lama.';
+        verdict = 'GOLD UNDERVALUED'; verdictIcon = '🥇'; verdictDesc = 'Rasio rendah — gold relatif murah dibanding silver.'; insight = 'Ratio di bawah 40 = gold murah historis. Hati-hati, ratio bisa stay rendah lama.';
     }
     
     container.innerHTML = `
@@ -1474,38 +1463,25 @@ function renderGoldSilverRatio() {
             <div class="staking-result-sub">${verdictIcon} ${verdict} — ${verdictDesc}</div>
         </div>
         <div class="staking-result-grid">
-            <div class="staking-result-item">
-                <span class="staking-result-item-label">🥇 Gold / oz</span>
-                <span class="staking-result-item-value gold">$${gold.priceData.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div class="staking-result-item">
-                <span class="staking-result-item-label">🥈 Silver / oz</span>
-                <span class="staking-result-item-value gold">$${silver.priceData.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
+            <div class="staking-result-item"><span class="staking-result-item-label">🥇 Gold / oz</span><span class="staking-result-item-value gold">$${gold.priceData.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+            <div class="staking-result-item"><span class="staking-result-item-label">🥈 Silver / oz</span><span class="staking-result-item-value gold">$${silver.priceData.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
         </div>
-        <div class="corr-insight-box good" style="margin-top:12px;">
-            <span style="font-size:14px;">💡</span>
-            <span>${insight}</span>
-        </div>
+        <div class="corr-insight-box good" style="margin-top:12px;"><span style="font-size:14px;">💡</span><span>${insight}</span></div>
     `;
 }
 
-// 🆕 COMMODITY HEATMAP
 function renderCommodityHeatmap() {
     const grid = document.getElementById('commodityHeatmapGrid');
     if (!grid) return;
-
     if (commodityData.length === 0) {
         grid.innerHTML = '<div class="crypto-heatmap-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat heatmap...</p></div>';
         return;
     }
-
     grid.innerHTML = commodityData.map(c => {
         const p = c.priceData;
         if (!p) return '';
-        const color = getCryptoHeatColor(p.change); // Reuse crypto heat color
+        const color = getCryptoHeatColor(p.change);
         const sign = p.change >= 0 ? '+' : '';
-        
         return `<div class="crypto-heatmap-item" style="background: ${color.bg}; color: ${color.text}; cursor: pointer;" onclick="openAssetDetail('${c.symbol}', '${c.name}', ${p.price}, ${p.change}, 'commodity')">
             <div class="crypto-heatmap-symbol">${c.symbol.replace('=F', '')}</div>
             <div class="crypto-heatmap-change">${sign}${p.change.toFixed(2)}%</div>
@@ -1513,142 +1489,202 @@ function renderCommodityHeatmap() {
     }).join('');
 }
 
-// 🆕 GOLD PRICE IN IDR
 async function updateGoldIdrPrice() {
-    const priceEl = document.getElementById('goldIdrPrice');
-    const subEl = document.getElementById('goldIdrSub');
+    const priceEl = document.getElementById('goldIdrPrice'); const subEl = document.getElementById('goldIdrSub');
     if (!priceEl || !subEl) return;
-
     const gold = commodityData.find(c => c.symbol === 'GC=F');
     if (!gold?.priceData) return;
-
-    // Pastikan currency rates sudah ada
-    if (!currencyRates) {
-        await fetchCurrencyRates();
-    }
-
+    if (!currencyRates) { await fetchCurrencyRates(); }
     const usdIdrRate = currencyRates ? currencyRates['IDR'] : 0;
-    if (!usdIdrRate) {
-        priceEl.textContent = 'Rp -';
-        subEl.textContent = 'Kurs USD/IDR tidak tersedia';
-        return;
-    }
-
+    if (!usdIdrRate) { priceEl.textContent = 'Rp -'; subEl.textContent = 'Kurs USD/IDR tidak tersedia'; return; }
     const priceOunce = gold.priceData.price;
     const priceGramUsd = priceOunce / 31.1034768;
     const priceGramIdr = priceGramUsd * usdIdrRate;
-
     priceEl.textContent = formatCurrencyAmount(priceGramIdr, 'IDR');
     subEl.textContent = `Kurs: 1 USD = Rp ${usdIdrRate.toLocaleString('id-ID')} · Spot Dunia`;
 }
 
-// 🆕 ZAKAT CALCULATOR
 function calculateZakat() {
     const weight = parseFloat(document.getElementById('zakatGoldWeight').value) || 0;
-    if (weight <= 0) {
-        alert('Masukkan berat emas yang valid!');
-        return;
-    }
-
-    const NISAB_GRAM = 85;
-    const ZAKAT_RATE = 0.025;
-    const resultEl = document.getElementById('zakatResult');
-    resultEl.style.display = 'block';
+    if (weight <= 0) { alert('Masukkan berat emas yang valid!'); return; }
+    const NISAB_GRAM = 85; const ZAKAT_RATE = 0.025;
+    const resultEl = document.getElementById('zakatResult'); resultEl.style.display = 'block';
 
     if (weight < NISAB_GRAM) {
         resultEl.innerHTML = `
-            <div class="il-result-main">
-                <div class="il-result-label">Status Zakat</div>
-                <div class="il-result-big" style="color: var(--text-secondary); font-size: 24px;">Belum Wajib Zakat</div>
-                <div class="il-result-sub">Berat emas belum mencapai Nisab (${NISAB_GRAM} gram)</div>
-            </div>
-            <div class="corr-insight-box good" style="margin-top:12px;">
-                <span style="font-size:14px;">💡</span>
-                <span>Kamu masih kurang <strong>${(NISAB_GRAM - weight).toFixed(2)} gram</strong> lagi untuk mencapai Nisab zakat emas.</span>
-            </div>
+            <div class="il-result-main"><div class="il-result-label">Status Zakat</div><div class="il-result-big" style="color: var(--text-secondary); font-size: 24px;">Belum Wajib Zakat</div><div class="il-result-sub">Berat emas belum mencapai Nisab (${NISAB_GRAM} gram)</div></div>
+            <div class="corr-insight-box good" style="margin-top:12px;"><span style="font-size:14px;">💡</span><span>Kamu masih kurang <strong>${(NISAB_GRAM - weight).toFixed(2)} gram</strong> lagi untuk mencapai Nisab zakat emas.</span></div>
         `;
         return;
     }
 
     const zakatGram = weight * ZAKAT_RATE;
-    
-    // Hitung Rupiah
     let zakatIdr = 0;
     const goldIdrEl = document.getElementById('goldIdrPrice');
     if (goldIdrEl && goldIdrEl.textContent !== 'Rp -') {
-        // Ekstrak angka dari string "Rp 1.234.567"
         const idrString = goldIdrEl.textContent.replace(/[^0-9]/g, '');
         const pricePerGram = parseFloat(idrString);
-        if (!isNaN(pricePerGram)) {
-            zakatIdr = zakatGram * pricePerGram;
-        }
+        if (!isNaN(pricePerGram)) { zakatIdr = zakatGram * pricePerGram; }
     }
 
     const zakatIdrHtml = zakatIdr > 0 ? `<div class="staking-result-item" style="grid-column: 1/-1;"><span class="staking-result-item-label">Estimasi Zakat (Rupiah)</span><span class="staking-result-item-value green">${formatCurrencyAmount(zakatIdr, 'IDR')}</span></div>` : '';
-
     resultEl.innerHTML = `
-        <div class="il-result-main">
-            <div class="il-result-label">Zakat Emas yang Harus Dibayar</div>
-            <div class="il-result-big positive">${zakatGram.toFixed(2)} gram</div>
-            <div class="il-result-sub">2.5% dari ${weight} gram</div>
-        </div>
+        <div class="il-result-main"><div class="il-result-label">Zakat Emas yang Harus Dibayar</div><div class="il-result-big positive">${zakatGram.toFixed(2)} gram</div><div class="il-result-sub">2.5% dari ${weight} gram</div></div>
         <div class="il-result-grid">
-            <div class="staking-result-item">
-                <span class="staking-result-item-label">Total Emas</span>
-                <span class="staking-result-item-value">${weight} gram</span>
-            </div>
-            <div class="staking-result-item">
-                <span class="staking-result-item-label">Nisab</span>
-                <span class="staking-result-item-value">${NISAB_GRAM} gram</span>
-            </div>
+            <div class="staking-result-item"><span class="staking-result-item-label">Total Emas</span><span class="staking-result-item-value">${weight} gram</span></div>
+            <div class="staking-result-item"><span class="staking-result-item-label">Nisab</span><span class="staking-result-item-value">${NISAB_GRAM} gram</span></div>
             ${zakatIdrHtml}
         </div>
-        <div class="corr-insight-box good" style="margin-top:12px;">
-            <span style="font-size:14px;">✅</span>
-            <span>Emas kamu sudah mencapai nisab. Zakat wajib dikeluarkan jika sudah dimiliki selama 1 tahun (haul).</span>
-        </div>
+        <div class="corr-insight-box good" style="margin-top:12px;"><span style="font-size:14px;">✅</span><span>Emas kamu sudah mencapai nisab. Zakat wajib dikeluarkan jika sudah dimiliki selama 1 tahun (haul).</span></div>
     `;
 }
 
 function renderCommodityGrid() {
     const grid = document.getElementById('commodityGrid'); if (!grid) return;
     if (commodityData.length === 0) { grid.innerHTML = '<div class="empty-state">Belum ada data.</div>'; return; }
-
     let filtered = commodityData;
-    if (commodityFilter !== 'all') {
-        filtered = commodityData.filter(c => c.category === commodityFilter);
-    }
+    if (commodityFilter !== 'all') { filtered = commodityData.filter(c => c.category === commodityFilter); }
 
     grid.innerHTML = filtered.map(c => {
-        const p = c.priceData;
-        if (!p) return '';
-        
-        const trend = p.change >= 0 ? 'up' : 'down';
-        const sign = p.change >= 0 ? '+' : '';
-        const color = p.change >= 0 ? 'var(--green)' : 'var(--red)';
-        
+        const p = c.priceData; if (!p) return '';
+        const trend = p.change >= 0 ? 'up' : 'down'; const sign = p.change >= 0 ? '+' : ''; const color = p.change >= 0 ? 'var(--green)' : 'var(--red)';
         let priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
         if (p.price < 10) priceStr = '$' + p.price.toFixed(4);
-
         return `
             <div class="commodity-card ${trend}" onclick="openAssetDetail('${c.symbol}', '${c.name}', ${p.price}, ${p.change}, 'commodity')">
-                <div class="commodity-card-header">
-                    <span class="commodity-icon">${c.icon}</span>
-                    <div class="commodity-info">
-                        <span class="commodity-symbol">${c.symbol.replace('=F', '')}</span>
-                        <span class="commodity-name">${c.name}</span>
-                    </div>
-                </div>
-                <div class="commodity-price-wrap">
-                    <div class="commodity-price">${priceStr}</div>
-                    <div class="commodity-change" style="color: ${color};">${sign}${p.change.toFixed(2)}%</div>
-                </div>
+                <div class="commodity-card-header"><span class="commodity-icon">${c.icon}</span><div class="commodity-info"><span class="commodity-symbol">${c.symbol.replace('=F', '')}</span><span class="commodity-name">${c.name}</span></div></div>
+                <div class="commodity-price-wrap"><div class="commodity-price">${priceStr}</div><div class="commodity-change" style="color: ${color};">${sign}${p.change.toFixed(2)}%</div></div>
             </div>
         `;
     }).join('');
+    if (filtered.length === 0) { grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">Tidak ada komoditas di kategori ini.</div>'; }
+}
 
-    if (filtered.length === 0) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">Tidak ada komoditas di kategori ini.</div>';
+// 🆕 SEASONALITY CHART
+async function renderSeasonalityChart() {
+    const container = document.getElementById('seasonalityChart');
+    if (!container) return;
+    container.innerHTML = '<div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Menganalisis 10 tahun data...</p></div>';
+    try {
+        const candles = await fetchChartData('GC=F', 'commodity', '1mo', '10y');
+        if (!candles || candles.length < 24) { container.innerHTML = '<div class="empty-state">Data historis tidak cukup.</div>'; return; }
+        
+        const monthlyReturns = Array.from({ length: 12 }, () => []);
+        for (let i = 1; i < candles.length; i++) {
+            const prevClose = candles[i-1].close;
+            const currClose = candles[i].close;
+            const date = new Date(candles[i].time * 1000);
+            const month = date.getMonth(); // 0-11
+            if (prevClose > 0) {
+                const returnPct = ((currClose / prevClose) - 1) * 100;
+                monthlyReturns[month].push(returnPct);
+            }
+        }
+
+        const avgReturns = monthlyReturns.map(arr => arr.length > 0 ? (arr.reduce((a, b) => a + b, 0) / arr.length) : 0);
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        container.innerHTML = '';
+        if (seasonalityChartInstance) { try { seasonalityChartInstance.remove(); } catch(e) {} seasonalityChartInstance = null; }
+        if (typeof LightweightCharts === 'undefined') { container.innerHTML = '❌ Chart library tidak tersedia'; return; }
+
+        seasonalityChartInstance = LightweightCharts.createChart(container, {
+            width: container.clientWidth, height: 200,
+            layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+            grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+            rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+            handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+        });
+
+        const barSeries = seasonalityChartInstance.addHistogramSeries({
+            priceFormat: { type: 'custom', formatter: price => price.toFixed(2) + '%' },
+            priceLineVisible: false
+        });
+        
+        // Mapping 0-11 ke dummy year 2024 agar sumbu X muncul sebagai bulan
+        const data = avgReturns.map((val, idx) => ({
+            time: `2024-${String(idx + 1).padStart(2, '0')}-01`,
+            value: val,
+            color: val >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'
+        }));
+        
+        // LightweightCharts butuh urutan ascending time untuk string YYYY-MM-DD
+        barSeries.setData(data);
+        
+        seasonalityChartInstance.timeScale().fitContent();
+        
+        // Add legend
+        const positiveMonths = monthNames.filter((_, i) => avgReturns[i] > 0).join(', ');
+        const negativeMonths = monthNames.filter((_, i) => avgReturns[i] <= 0).join(', ');
+        const legendHtml = `<div style="margin-top:10px; font-size:11px; color:var(--text-secondary); text-align:center; line-height:1.5;">
+            <span style="color:var(--green); font-weight:700;">🟢 Bullish:</span> ${positiveMonths}<br>
+            <span style="color:var(--red); font-weight:700;">🔴 Bearish:</span> ${negativeMonths}
+        </div>`;
+        container.insertAdjacentHTML('beforeend', legendHtml);
+
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state">Gagal menganalisis musiman.</div>';
+    }
+}
+
+// 🆕 INFLATION CHART
+async function renderInflationChart() {
+    const container = document.getElementById('inflationChart');
+    if (!container) return;
+    container.innerHTML = '<div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Menganalisis data inflasi...</p></div>';
+    
+    try {
+        const candles = await fetchChartData('GC=F', 'commodity', '1mo', '10y');
+        if (!candles || candles.length === 0) { container.innerHTML = '<div class="empty-state">Data historis gagal dimuat.</div>'; return; }
+        
+        container.innerHTML = '';
+        if (inflationChartInstance) { try { inflationChartInstance.remove(); } catch(e) {} inflationChartInstance = null; }
+        if (typeof LightweightCharts === 'undefined') { container.innerHTML = '❌ Chart library tidak tersedia'; return; }
+
+        inflationChartInstance = LightweightCharts.createChart(container, {
+            width: container.clientWidth, height: 250,
+            layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
+            grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
+            rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
+            handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
+        });
+
+        const goldSeries = inflationChartInstance.addLineSeries({ color: '#fbbf24', lineWidth: 2, title: 'Gold Price' });
+        const inflationSeries = inflationChartInstance.addLineSeries({ color: '#ef4444', lineWidth: 2, lineStyle: 2, title: 'Inflation Adjusted' });
+
+        const startPrice = candles[0].close;
+        const startTime = candles[0].time;
+        const INFLATION_RATE = 0.03; // Asumsi inflasi 3% per tahun (standar global)
+        
+        const goldData = [];
+        const inflationData = [];
+        
+        candles.forEach(c => {
+            const yearsElapsed = (c.time - startTime) / (365.25 * 24 * 60 * 60);
+            const adjustedPrice = startPrice * Math.pow(1 + INFLATION_RATE, yearsElapsed);
+            
+            goldData.push({ time: c.time, value: c.close });
+            inflationData.push({ time: c.time, value: adjustedPrice });
+        });
+        
+        goldSeries.setData(goldData);
+        inflationSeries.setData(inflationData);
+        inflationChartInstance.timeScale().fitContent();
+        
+        const totalReturn = ((candles[candles.length - 1].close / startPrice) - 1) * 100;
+        const lastInflationAdj = inflationData[inflationData.length - 1].value;
+        const inflationReturn = ((lastInflationAdj / startPrice) - 1) * 100;
+        const beatInflation = totalReturn > inflationReturn;
+        
+        const legendHtml = `<div style="margin-top:10px; font-size:11px; color:var(--text-secondary); text-align:center; line-height:1.5; display:flex; justify-content:space-around;">
+            <div><span style="color:#fbbf24;">■</span> Gold: <strong>${totalReturn > 0 ? '+' : ''}${totalReturn.toFixed(1)}%</strong></div>
+            <div><span style="color:#ef4444;">■</span> Inflasi: <strong>${inflationReturn > 0 ? '+' : ''}${inflationReturn.toFixed(1)}%</strong></div>
+            <div>Status: <strong style="color:${beatInflation ? 'var(--green)' : 'var(--red)'}">${beatInflation ? '✅ Menang' : '❌ Kalah'}</strong></div>
+        </div>`;
+        container.insertAdjacentHTML('beforeend', legendHtml);
+
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state">Gagal menganalisis inflasi.</div>';
     }
 }
 
@@ -1657,61 +1693,28 @@ function calculateWeightConversion() {
     const amount = parseFloat(document.getElementById('weightAmount').value) || 0;
     const fromUnit = document.getElementById('weightFrom').value;
     const toUnit = document.getElementById('weightTo').value;
-    
-    if (amount <= 0) {
-        alert('Jumlah harus lebih besar dari 0!');
-        return;
-    }
-    
+    if (amount <= 0) { alert('Jumlah harus > 0!'); return; }
     const TO_GRAM = { 'g': 1, 'kg': 1000, 'toz': 31.1034768 };
     const FROM_LABEL = { 'g': 'Gram', 'kg': 'Kilogram', 'toz': 'Troy Ounce' };
     const UNIT_SYMBOL = { 'g': 'g', 'kg': 'kg', 'toz': 'oz t' };
-    
     const inGrams = amount * TO_GRAM[fromUnit];
     const result = inGrams / TO_GRAM[toUnit];
-    
     let goldPriceInfo = '';
     const gold = commodityData.find(c => c.symbol === 'GC=F');
     if (gold?.priceData) {
-        const goldPerOunce = gold.priceData.price;
-        const goldPerGram = goldPerOunce / 31.1034768;
-        const goldPerKg = goldPerGram * 1000;
-        
+        const goldPerOunce = gold.priceData.price; const goldPerGram = goldPerOunce / 31.1034768; const goldPerKg = goldPerGram * 1000;
         let goldValue = 0;
-        if (toUnit === 'toz') goldValue = result * goldPerOunce;
-        else if (toUnit === 'g') goldValue = result * goldPerGram;
-        else if (toUnit === 'kg') goldValue = result * goldPerKg;
-        
-        if (goldValue > 0) {
-            goldPriceInfo = `<div class="staking-result-item" style="margin-top:8px; grid-column: 1/-1;"><span class="staking-result-item-label">💰 Estimasi Nilai Emas</span><span class="staking-result-item-value gold">$${goldValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>`;
-        }
+        if (toUnit === 'toz') goldValue = result * goldPerOunce; else if (toUnit === 'g') goldValue = result * goldPerGram; else if (toUnit === 'kg') goldValue = result * goldPerKg;
+        if (goldValue > 0) { goldPriceInfo = `<div class="staking-result-item" style="margin-top:8px; grid-column: 1/-1;"><span class="staking-result-item-label">💰 Estimasi Nilai Emas</span><span class="staking-result-item-value gold">$${goldValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>`; }
     }
-    
-    const resultEl = document.getElementById('weightResult');
-    resultEl.style.display = 'block';
+    const resultEl = document.getElementById('weightResult'); resultEl.style.display = 'block';
     resultEl.innerHTML = `
-        <div class="il-result-main">
-            <div class="il-result-label">Hasil Konversi</div>
-            <div class="il-result-big positive">${result.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${UNIT_SYMBOL[toUnit]}</div>
-            <div class="il-result-sub">${amount} ${FROM_LABEL[fromUnit]} = ${result.toFixed(6)} ${FROM_LABEL[toUnit]}</div>
-        </div>
+        <div class="il-result-main"><div class="il-result-label">Hasil Konversi</div><div class="il-result-big positive">${result.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${UNIT_SYMBOL[toUnit]}</div><div class="il-result-sub">${amount} ${FROM_LABEL[fromUnit]} = ${result.toFixed(6)} ${FROM_LABEL[toUnit]}</div></div>
         <div class="il-result-grid">
-            <div class="staking-result-item">
-                <span class="staking-result-item-label">Gram</span>
-                <span class="staking-result-item-value">${inGrams.toFixed(4)} g</span>
-            </div>
-            <div class="staking-result-item">
-                <span class="staking-result-item-label">Troy Ounce</span>
-                <span class="staking-result-item-value">${(inGrams / 31.1034768).toFixed(4)} oz t</span>
-            </div>
-            <div class="staking-result-item">
-                <span class="staking-result-item-label">Kilogram</span>
-                <span class="staking-result-item-value">${(inGrams / 1000).toFixed(6)} kg</span>
-            </div>
-            <div class="staking-result-item">
-                <span class="staking-result-item-label">Miligram</span>
-                <span class="staking-result-item-value">${(inGrams * 1000).toFixed(2)} mg</span>
-            </div>
+            <div class="staking-result-item"><span class="staking-result-item-label">Gram</span><span class="staking-result-item-value">${inGrams.toFixed(4)} g</span></div>
+            <div class="staking-result-item"><span class="staking-result-item-label">Troy Ounce</span><span class="staking-result-item-value">${(inGrams / 31.1034768).toFixed(4)} oz t</span></div>
+            <div class="staking-result-item"><span class="staking-result-item-label">Kilogram</span><span class="staking-result-item-value">${(inGrams / 1000).toFixed(6)} kg</span></div>
+            <div class="staking-result-item"><span class="staking-result-item-label">Miligram</span><span class="staking-result-item-value">${(inGrams * 1000).toFixed(2)} mg</span></div>
             ${goldPriceInfo}
         </div>
     `;
@@ -1719,91 +1722,42 @@ function calculateWeightConversion() {
 
 // 🆕 COMMODITY CORRELATION
 function populateCommodityCorrelationDropdowns() {
-    const selA = document.getElementById('commCorrA');
-    const selB = document.getElementById('commCorrB');
-    if (!selA || !selB) return;
-    if (selA.options.length > 0) return;
-    
+    const selA = document.getElementById('commCorrA'); const selB = document.getElementById('commCorrB');
+    if (!selA || !selB) return; if (selA.options.length > 0) return;
     const source = commodityData.length > 0 ? commodityData : COMMODITY_LIST;
-    const options = source.map(c => 
-        `<option value="${c.symbol}">${c.icon} ${c.symbol.replace('=F', '')} — ${c.name}</option>`
-    ).join('');
-    selA.innerHTML = options;
-    selB.innerHTML = options;
-    if (source.length >= 2) {
-        selA.value = source[0].symbol;
-        selB.value = source[1].symbol;
-    }
+    const options = source.map(c => `<option value="${c.symbol}">${c.icon} ${c.symbol.replace('=F', '')} — ${c.name}</option>`).join('');
+    selA.innerHTML = options; selB.innerHTML = options;
+    if (source.length >= 2) { selA.value = source[0].symbol; selB.value = source[1].symbol; }
 }
-
 function openCommodityCorrelation() {
     document.getElementById('commodityCorrelationModal').classList.add('active');
     document.getElementById('commCorrResult').style.display = 'none';
     document.getElementById('commCorrChartSection').style.display = 'none';
     populateCommodityCorrelationDropdowns();
 }
-
 function closeCommodityCorrelation() {
     document.getElementById('commodityCorrelationModal').classList.remove('active');
-    if (commCorrChartInstance) {
-        try { commCorrChartInstance.remove(); } catch(e) {}
-        commCorrChartInstance = null;
-    }
+    if (commCorrChartInstance) { try { commCorrChartInstance.remove(); } catch(e) {} commCorrChartInstance = null; }
 }
-
 async function runCommodityCorrelation() {
-    const selA = document.getElementById('commCorrA');
-    const selB = document.getElementById('commCorrB');
-    const periodEl = document.getElementById('commCorrPeriod');
-    const btn = document.getElementById('commCorrCalcBtn');
-    const resultEl = document.getElementById('commCorrResult');
+    const selA = document.getElementById('commCorrA'); const selB = document.getElementById('commCorrB');
+    const periodEl = document.getElementById('commCorrPeriod'); const btn = document.getElementById('commCorrCalcBtn'); const resultEl = document.getElementById('commCorrResult');
     if (!selA || !selB || !periodEl || !btn || !resultEl) return;
-    
-    const symbolA = selA.value;
-    const symbolB = selB.value;
-    if (symbolA === symbolB) {
-        alert('Pilih 2 komoditas yang berbeda!');
-        return;
-    }
-    
+    const symbolA = selA.value; const symbolB = selB.value;
+    if (symbolA === symbolB) { alert('Pilih 2 komoditas yang berbeda!'); return; }
     const days = parseInt(periodEl.value) || 90;
-    let range = '3mo';
-    if (days === 30) range = '1mo';
-    else if (days === 90) range = '3mo';
-    else if (days === 365) range = '1y';
-    
+    let range = '3mo'; if (days === 30) range = '1mo'; else if (days === 90) range = '3mo'; else if (days === 365) range = '1y';
     const source = commodityData.length > 0 ? commodityData : COMMODITY_LIST;
-    const commodityA = source.find(c => c.symbol === symbolA);
-    const commodityB = source.find(c => c.symbol === symbolB);
-    const nameA = commodityA ? commodityA.name : symbolA;
-    const nameB = commodityB ? commodityB.name : symbolB;
-    
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Menghitung...';
-    btn.disabled = true;
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
-    
+    const commodityA = source.find(c => c.symbol === symbolA); const commodityB = source.find(c => c.symbol === symbolB);
+    const nameA = commodityA ? commodityA.name : symbolA; const nameB = commodityB ? commodityB.name : symbolB;
+    const originalText = btn.innerHTML; btn.innerHTML = '⏳ Menghitung...'; btn.disabled = true;
+    resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
     try {
-        const [chartA, chartB] = await Promise.all([
-            fetchChartData(symbolA, 'commodity', '1d', range),
-            fetchChartData(symbolB, 'commodity', '1d', range)
-        ]);
-        
-        if (!chartA || chartA.length < 5 || !chartB || chartB.length < 5) {
-            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p></div>';
-            return;
-        }
-        
+        const [chartA, chartB] = await Promise.all([ fetchChartData(symbolA, 'commodity', '1d', range), fetchChartData(symbolB, 'commodity', '1d', range) ]);
+        if (!chartA || chartA.length < 5 || !chartB || chartB.length < 5) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p></div>'; return; }
         const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartA, chartB);
-        if (returnsA.length < 3) {
-            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>';
-            return;
-        }
-        
-        const coef = calculatePearsonCorrelation(returnsA, returnsB);
-        const verdict = getCorrelationVerdict(coef);
-        
+        if (returnsA.length < 3) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>'; return; }
+        const coef = calculatePearsonCorrelation(returnsA, returnsB); const verdict = getCorrelationVerdict(coef);
         resultEl.innerHTML = `
             <div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div>
             <div class="corr-coef-label">Pearson Correlation Coefficient</div>
@@ -1811,112 +1765,47 @@ async function runCommodityCorrelation() {
             <div class="corr-interpretation"><strong>${nameA}</strong> vs <strong>${nameB}</strong> — ${days} hari terakhir (${returnsA.length} data point)</div>
             <div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : verdict.insightCls === 'warn' ? '⚠️' : '🚨'}</span><span>${verdict.insight}</span></div>
         `;
-        
         document.getElementById('commCorrChartSection').style.display = 'block';
-        setTimeout(() => {
-            renderCommodityCorrelationChart(alignedA, alignedB, times, nameA, nameB);
-        }, 100);
-    } catch (err) {
-        resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`;
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
+        setTimeout(() => { renderCommodityCorrelationChart(alignedA, alignedB, times, nameA, nameB); }, 100);
+    } catch (err) { resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`; }
+    finally { btn.innerHTML = originalText; btn.disabled = false; }
 }
-
 function renderCommodityCorrelationChart(alignedA, alignedB, times, nameA, nameB) {
-    const container = document.getElementById('commCorrChart');
-    if (!container) return;
+    const container = document.getElementById('commCorrChart'); if (!container) return;
     container.innerHTML = '';
-    if (commCorrChartInstance) {
-        try { commCorrChartInstance.remove(); } catch(e) {}
-        commCorrChartInstance = null;
-    }
-    if (typeof LightweightCharts === 'undefined') {
-        container.innerHTML = '❌ Chart library tidak tersedia';
-        return;
-    }
-    if (!alignedA || alignedA.length < 2) {
-        container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:20px;text-align:center;font-size:12px;">Data tidak cukup</div>';
-        return;
-    }
-    
-    commCorrChartInstance = LightweightCharts.createChart(container, {
-        width: container.clientWidth, height: 260,
-        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
-        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
-        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
-        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false },
-        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
-        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true }
-    });
-    
-    const baseA = alignedA[0];
-    const baseB = alignedB[0];
-    const seriesA = commCorrChartInstance.addLineSeries({ color: '#fbbf24', lineWidth: 2, title: nameA });
-    const seriesB = commCorrChartInstance.addLineSeries({ color: '#a855f7', lineWidth: 2, title: nameB });
-    
+    if (commCorrChartInstance) { try { commCorrChartInstance.remove(); } catch(e) {} commCorrChartInstance = null; }
+    if (typeof LightweightCharts === 'undefined') return;
+    if (!alignedA || alignedA.length < 2) return;
+    commCorrChartInstance = LightweightCharts.createChart(container, { width: container.clientWidth, height: 260, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false } });
+    const baseA = alignedA[0]; const baseB = alignedB[0];
+    const seriesA = commCorrChartInstance.addLineSeries({ color: '#fbbf24', lineWidth: 2, title: nameA }); const seriesB = commCorrChartInstance.addLineSeries({ color: '#a855f7', lineWidth: 2, title: nameB });
     const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
     const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
-    seriesA.setData(dataA);
-    seriesB.setData(dataB);
-    commCorrChartInstance.timeScale().fitContent();
+    seriesA.setData(dataA); seriesB.setData(dataB); commCorrChartInstance.timeScale().fitContent();
 }
 
-// 🆕 DXY CORRELATION (USD vs GOLD)
+// 🆕 DXY CORRELATION
 function openDxyCorrelation() {
     document.getElementById('dxyCorrelationModal').classList.add('active');
-    document.getElementById('dxyResult').style.display = 'none';
-    document.getElementById('dxyChartSection').style.display = 'none';
+    document.getElementById('dxyResult').style.display = 'none'; document.getElementById('dxyChartSection').style.display = 'none';
 }
-
 function closeDxyCorrelation() {
     document.getElementById('dxyCorrelationModal').classList.remove('active');
-    if (dxyChartInstance) {
-        try { dxyChartInstance.remove(); } catch(e) {}
-        dxyChartInstance = null;
-    }
+    if (dxyChartInstance) { try { dxyChartInstance.remove(); } catch(e) {} dxyChartInstance = null; }
 }
-
 async function runDxyCorrelation() {
-    const periodEl = document.getElementById('dxyPeriod');
-    const btn = document.getElementById('dxyCalcBtn');
-    const resultEl = document.getElementById('dxyResult');
+    const periodEl = document.getElementById('dxyPeriod'); const btn = document.getElementById('dxyCalcBtn'); const resultEl = document.getElementById('dxyResult');
     if (!periodEl || !btn || !resultEl) return;
-    
     const days = parseInt(periodEl.value) || 90;
-    let range = '3mo';
-    if (days === 30) range = '1mo';
-    else if (days === 90) range = '3mo';
-    else if (days === 365) range = '1y';
-    
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Menghitung...';
-    btn.disabled = true;
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data DXY & Gold...</p>';
-    
+    let range = '3mo'; if (days === 30) range = '1mo'; else if (days === 90) range = '3mo'; else if (days === 365) range = '1y';
+    const originalText = btn.innerHTML; btn.innerHTML = '⏳ Menghitung...'; btn.disabled = true;
+    resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data DXY & Gold...</p>';
     try {
-        // DXY ticker: DX-Y.NYB
-        const [chartDxy, chartGold] = await Promise.all([
-            fetchChartData('DX-Y.NYB', 'stock', '1d', range),
-            fetchChartData('GC=F', 'commodity', '1d', range)
-        ]);
-        
-        if (!chartDxy || chartDxy.length < 5 || !chartGold || chartGold.length < 5) {
-            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p></div>';
-            return;
-        }
-        
+        const [chartDxy, chartGold] = await Promise.all([ fetchChartData('DX-Y.NYB', 'stock', '1d', range), fetchChartData('GC=F', 'commodity', '1d', range) ]);
+        if (!chartDxy || chartDxy.length < 5 || !chartGold || chartGold.length < 5) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p></div>'; return; }
         const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartDxy, chartGold);
-        if (returnsA.length < 3) {
-            resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>';
-            return;
-        }
-        
-        const coef = calculatePearsonCorrelation(returnsA, returnsB);
-        const verdict = getCorrelationVerdict(coef);
-        
+        if (returnsA.length < 3) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>'; return; }
+        const coef = calculatePearsonCorrelation(returnsA, returnsB); const verdict = getCorrelationVerdict(coef);
         resultEl.innerHTML = `
             <div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div>
             <div class="corr-coef-label">DXY vs Gold Correlation</div>
@@ -1924,61 +1813,34 @@ async function runDxyCorrelation() {
             <div class="corr-interpretation"><strong>DXY (Dolar AS)</strong> vs <strong>Gold</strong> — ${days} hari terakhir (${returnsA.length} data point)</div>
             <div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : verdict.insightCls === 'warn' ? '⚠️' : '🚨'}</span><span>${verdict.insight}</span></div>
         `;
-        
         document.getElementById('dxyChartSection').style.display = 'block';
-        setTimeout(() => {
-            renderDxyChart(alignedA, alignedB, times);
-        }, 100);
-    } catch (err) {
-        resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`;
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
+        setTimeout(() => { renderDxyChart(alignedA, alignedB, times); }, 100);
+    } catch (err) { resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`; }
+    finally { btn.innerHTML = originalText; btn.disabled = false; }
 }
-
 function renderDxyChart(alignedA, alignedB, times) {
-    const container = document.getElementById('dxyChart');
-    if (!container) return;
+    const container = document.getElementById('dxyChart'); if (!container) return;
     container.innerHTML = '';
-    if (dxyChartInstance) {
-        try { dxyChartInstance.remove(); } catch(e) {}
-        dxyChartInstance = null;
-    }
-    if (typeof LightweightCharts === 'undefined') return;
-    if (!alignedA || alignedA.length < 2) return;
-    
-    dxyChartInstance = LightweightCharts.createChart(container, {
-        width: container.clientWidth, height: 260,
-        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' },
-        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } },
-        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' },
-        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false }
-    });
-    
-    const baseA = alignedA[0];
-    const baseB = alignedB[0];
-    const seriesA = dxyChartInstance.addLineSeries({ color: '#10b981', lineWidth: 2, title: 'DXY' });
-    const seriesB = dxyChartInstance.addLineSeries({ color: '#fbbf24', lineWidth: 2, title: 'Gold' });
-    
+    if (dxyChartInstance) { try { dxyChartInstance.remove(); } catch(e) {} dxyChartInstance = null; }
+    if (typeof LightweightCharts === 'undefined') return; if (!alignedA || alignedA.length < 2) return;
+    dxyChartInstance = LightweightCharts.createChart(container, { width: container.clientWidth, height: 260, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false } });
+    const baseA = alignedA[0]; const baseB = alignedB[0];
+    const seriesA = dxyChartInstance.addLineSeries({ color: '#10b981', lineWidth: 2, title: 'DXY' }); const seriesB = dxyChartInstance.addLineSeries({ color: '#fbbf24', lineWidth: 2, title: 'Gold' });
     const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
     const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
-    seriesA.setData(dataA);
-    seriesB.setData(dataB);
-    dxyChartInstance.timeScale().fitContent();
+    seriesA.setData(dataA); seriesB.setData(dataB); dxyChartInstance.timeScale().fitContent();
 }
 
 // Event listener filter commodity
 document.querySelectorAll('.commodity-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.commodity-filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        commodityFilter = btn.dataset.cat;
-        renderCommodityGrid();
+        btn.classList.add('active'); commodityFilter = btn.dataset.cat; renderCommodityGrid();
     });
 });
 
 // ============ SMART ALERT MODAL ============
+// ... (sisa code alert, chart, news, dll lanjut di bawah)// ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol; currentAlertName = name; currentAlertAssetType = type; currentAlertPrice = price;
     currentAlertType = 'price'; currentAlertDirection = 'above';
@@ -2535,7 +2397,7 @@ document.getElementById('openCryptoScorecardBtn').addEventListener('click', open
 document.getElementById('closeCryptoScorecardModal').addEventListener('click', closeCryptoScorecard);
 document.getElementById('stakingCalcBtn').addEventListener('click', calculateStakingRewards);
 
-// Event Listeners Baru (Commodity)
+// Event Listeners Commodity Baru
 document.getElementById('ilCalcBtn').addEventListener('click', calculateIL);
 document.getElementById('dcaCalcBtn').addEventListener('click', calculateDCA);
 document.getElementById('weightCalcBtn').addEventListener('click', calculateWeightConversion);
