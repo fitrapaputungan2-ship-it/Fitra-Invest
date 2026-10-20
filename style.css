@@ -648,7 +648,6 @@ body.light-mode .alert-toast { background: linear-gradient(135deg, rgba(255, 255
 .crypto-heatmap-item.large .crypto-heatmap-symbol { font-size: 16px; }
 .crypto-heatmap-item.large .crypto-heatmap-change { font-size: 14px; }
 
-/* STAKING CALCULATOR */
 .staking-section { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
 .staking-header { margin-bottom: 14px; }
 .staking-section-title { font-size: 13px; font-weight: 700; background: linear-gradient(90deg, var(--cyan), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
@@ -816,9 +815,44 @@ body.light-mode .crypto-corr-chart { background: rgba(0, 0, 0, 0.03); }
 .il-result-grid, .dca-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .dca-chart-section { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
 
+/* ============ COMMODITY TAB ============ */
+.commodity-banner { display: flex; align-items: center; gap: 12px; padding: 14px 16px; margin-bottom: 14px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(217, 119, 6, 0.1)); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 14px; }
+.commodity-banner-icon { font-size: 30px; animation: coinSpin 3s ease-in-out infinite; }
+.commodity-banner-text { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.commodity-banner-text strong { font-size: 14px; font-weight: 800; color: var(--gold); }
+.commodity-banner-text span { font-size: 11px; color: var(--text-secondary); }
+.commodity-spotlight-section { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.commodity-spotlight-card { background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(0,0,0,0.3)); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 12px; padding: 16px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.1); }
+.commodity-spotlight-left { display: flex; align-items: center; gap: 12px; }
+.commodity-spotlight-icon { font-size: 36px; }
+.commodity-spotlight-info { display: flex; flex-direction: column; gap: 4px; }
+.commodity-spotlight-name { font-size: 16px; font-weight: 800; color: var(--gold); }
+.commodity-spotlight-price { font-size: 20px; font-weight: 900; color: var(--text-primary); }
+.commodity-spotlight-change { font-size: 12px; font-weight: 700; }
+.commodity-spotlight-gram { font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
+.commodity-filters { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
+.commodity-filters::-webkit-scrollbar { height: 0; }
+.commodity-filter-btn { background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-secondary); font-size: 11px; font-weight: 700; padding: 8px 14px; border-radius: 16px; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; transition: 0.2s; }
+.commodity-filter-btn.active { background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 146, 60, 0.2)); color: var(--gold); border-color: rgba(251, 191, 36, 0.4); }
+.commodity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.commodity-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+.commodity-card:active { transform: scale(0.97); border-color: rgba(251, 191, 36, 0.3); }
+.commodity-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.commodity-card.up::before { background: var(--green); }
+.commodity-card.down::before { background: var(--red); }
+.commodity-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.commodity-icon { font-size: 24px; }
+.commodity-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.commodity-symbol { font-size: 12px; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.commodity-name { font-size: 9px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.commodity-price-wrap { text-align: right; margin-top: 4px; }
+.commodity-price { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+.commodity-change { font-size: 11px; font-weight: 700; }
+
 @media (min-width: 400px) {
     .crypto-banner-actions { gap: 10px; }
     .corr-coef-big { font-size: 64px; }
+    .commodity-spotlight-price { font-size: 24px; }
 }
 
 @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
