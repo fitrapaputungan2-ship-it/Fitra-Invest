@@ -47,7 +47,10 @@ let currentCryptoData = null;
 let cryptoCatView = 'all';
 let corrChartInstance = null;
 let stakingChartInstance = null;
-let dcaChartInstance = null; // Global untuk DCA
+let dcaChartInstance = null;
+// Commodity globals (BARU)
+let commodityData = [];
+let commodityFilter = 'all';
 
 // ============ 🌐 TRANSLATION CACHE ============
 let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
@@ -266,6 +269,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'compare') populateCompareDropdowns();
         if (tab.dataset.tab === 'indeks') renderIndices();
         if (tab.dataset.tab === 'crypto') initCryptoTab();
+        if (tab.dataset.tab === 'commodity') initCommodityTab();
     });
 });
 
@@ -1026,7 +1030,6 @@ async function calculateDCA() {
             </div>
         `;
 
-        // 🔥 FIX: Tampilkan kotak chart dulu, jeda 150ms, baru gambar chart-nya
         chartSection.style.display = 'block';
         setTimeout(() => { renderDcaChart(dcaDataChart); }, 150);
     } catch (err) {
@@ -1340,6 +1343,137 @@ function renderCryptoScorecardVerdict(result, verdict, coinData) {
     verdictEl.style.display = 'block';
 }
 function closeCryptoScorecard() { document.getElementById('cryptoScorecardModal').classList.remove('active'); }
+
+// ============ 🥇 COMMODITY TAB ============
+const COMMODITY_LIST = [
+    { symbol: 'GC=F', name: 'Gold', icon: '🥇', category: 'metals', unit: 'Troy Ounce' },
+    { symbol: 'SI=F', name: 'Silver', icon: '🥈', category: 'metals', unit: 'Troy Ounce' },
+    { symbol: 'PL=F', name: 'Platinum', icon: '💍', category: 'metals', unit: 'Troy Ounce' },
+    { symbol: 'HG=F', name: 'Copper', icon: '🔌', category: 'metals', unit: 'Pound' },
+    { symbol: 'CL=F', name: 'Crude Oil WTI', icon: '🛢️', category: 'energy', unit: 'Barrel' },
+    { symbol: 'NG=F', name: 'Natural Gas', icon: '🔥', category: 'energy', unit: 'MMBtu' },
+    { symbol: 'ZC=F', name: 'Corn', icon: '🌽', category: 'agri', unit: 'Bushel' },
+    { symbol: 'ZW=F', name: 'Wheat', icon: '🌾', category: 'agri', unit: 'Bushel' },
+    { symbol: 'KC=F', name: 'Coffee', icon: '☕', category: 'agri', unit: 'Pound' },
+    { symbol: 'SB=F', name: 'Sugar', icon: '🍬', category: 'agri', unit: 'Pound' }
+];
+
+async function initCommodityTab() {
+    if (commodityData.length === 0) {
+        await loadCommodityData();
+    } else {
+        renderCommoditySpotlight();
+        renderCommodityGrid();
+    }
+}
+
+async function loadCommodityData() {
+    const grid = document.getElementById('commodityGrid'); if (!grid) return;
+    grid.innerHTML = '<div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data komoditas...</p></div>';
+    try {
+        // Fetch semua komoditas secara paralel
+        const promises = COMMODITY_LIST.map(async (c) => {
+            const priceData = await fetchPrice(c.symbol, 'commodity');
+            return { ...c, priceData };
+        });
+        
+        const results = await Promise.all(promises);
+        commodityData = results.filter(r => r.priceData !== null);
+
+        renderCommoditySpotlight();
+        renderCommodityGrid();
+    } catch (error) {
+        grid.innerHTML = '<div class="empty-state">❌ Gagal memuat data komoditas.</div>';
+    }
+}
+
+function renderCommoditySpotlight() {
+    const container = document.getElementById('goldSpotlight'); if (!container) return;
+    const gold = commodityData.find(c => c.symbol === 'GC=F');
+    
+    if (!gold || !gold.priceData) {
+        container.innerHTML = '<div class="empty-state">Data emas tidak tersedia.</div>';
+        return;
+    }
+
+    const priceOunce = gold.priceData.price;
+    const change = gold.priceData.change;
+    // 1 Troy Ounce = 31.1034768 gram
+    const priceGram = priceOunce / 31.1034768;
+    
+    const trend = change >= 0 ? 'up' : 'down';
+    const sign = change >= 0 ? '+' : '';
+    const color = change >= 0 ? 'var(--green)' : 'var(--red)';
+
+    container.innerHTML = `
+        <div class="commodity-spotlight-left">
+            <div class="commodity-spotlight-icon">🥇</div>
+            <div class="commodity-spotlight-info">
+                <span class="commodity-spotlight-name">Gold (Emas)</span>
+                <span class="commodity-spotlight-price">$${priceOunce.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span class="commodity-spotlight-change" style="color: ${color};">${sign}${change.toFixed(2)}%</span>
+                <span class="commodity-spotlight-gram">≈ $${priceGram.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / gram</span>
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Satuan</div>
+            <div style="font-size: 12px; font-weight: 700; color: var(--gold);">Troy Ounce</div>
+        </div>
+    `;
+}
+
+function renderCommodityGrid() {
+    const grid = document.getElementById('commodityGrid'); if (!grid) return;
+    if (commodityData.length === 0) { grid.innerHTML = '<div class="empty-state">Belum ada data.</div>'; return; }
+
+    let filtered = commodityData;
+    if (commodityFilter !== 'all') {
+        filtered = commodityData.filter(c => c.category === commodityFilter);
+    }
+
+    grid.innerHTML = filtered.map(c => {
+        const p = c.priceData;
+        if (!p) return '';
+        
+        const trend = p.change >= 0 ? 'up' : 'down';
+        const sign = p.change >= 0 ? '+' : '';
+        const color = p.change >= 0 ? 'var(--green)' : 'var(--red)';
+        
+        // Format price
+        let priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        if (p.price < 10) priceStr = '$' + p.price.toFixed(4); // Untuk gas/agri yang murah
+
+        return `
+            <div class="commodity-card ${trend}" onclick="openAssetDetail('${c.symbol}', '${c.name}', ${p.price}, ${p.change}, 'commodity')">
+                <div class="commodity-card-header">
+                    <span class="commodity-icon">${c.icon}</span>
+                    <div class="commodity-info">
+                        <span class="commodity-symbol">${c.symbol.replace('=F', '')}</span>
+                        <span class="commodity-name">${c.name}</span>
+                    </div>
+                </div>
+                <div class="commodity-price-wrap">
+                    <div class="commodity-price">${priceStr}</div>
+                    <div class="commodity-change" style="color: ${color};">${sign}${p.change.toFixed(2)}%</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    if (filtered.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">Tidak ada komoditas di kategori ini.</div>';
+    }
+}
+
+// Event listener filter commodity
+document.querySelectorAll('.commodity-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.commodity-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        commodityFilter = btn.dataset.cat;
+        renderCommodityGrid();
+    });
+});
 // ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol; currentAlertName = name; currentAlertAssetType = type; currentAlertPrice = price;
