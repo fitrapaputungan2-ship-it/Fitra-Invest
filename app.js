@@ -366,14 +366,13 @@ function openMoveFolderModal(symbol) {
     
     let opts = '<option value="">— Keluarkan dari Folder —</option>';
     groups.forEach(g => {
-        // Filter folder berdasarkan sektor. Kalau folder 'all', semua saham bisa masuk.
         if (g.sector === 'all' || g.sector === assetInfo.category) {
             opts += `<option value="${g.id}">${g.icon} ${g.name}</option>`;
         }
     });
     
     sel.innerHTML = opts;
-    sel.value = asset.group || ''; // Set current folder
+    sel.value = asset.group || '';
     document.getElementById('moveFolderModal').classList.add('active');
 }
 function closeMoveFolderModal() { document.getElementById('moveFolderModal').classList.remove('active'); }
@@ -398,10 +397,9 @@ function applySort(mode) {
     renderWatchlist();
 }
 
-// ============ 🎯 RENDER WATCHLIST (NEO QUANTUM) ============
+// ============ 🎯 RENDER WATCHLIST (PROGRESSIVE) ============
 async function renderWatchlist() {
     const container = document.getElementById('watchlist'); if (!container) return;
-    container.innerHTML = '<div class="empty-state">Memuat data...</div>';
     
     let filteredWatchlist = watchlist; 
     if (activeGroup === 'favorites') filteredWatchlist = watchlist.filter(w => isFavorite(w.symbol)); 
@@ -412,38 +410,29 @@ async function renderWatchlist() {
         container.innerHTML = `<div class="empty-state">${msg}</div>`; 
         return; 
     }
-    
-    // Fetch data harga
-    const results = await Promise.all(filteredWatchlist.map(async (asset) => { 
-        const priceData = await fetchPrice(asset.symbol, asset.type); 
-        return { ...asset, priceData }; 
-    }));
 
-    // Sorting Logic
-    if (currentSortMode === 'az') {
-        results.sort((a, b) => a.symbol.localeCompare(b.symbol));
-    } else if (currentSortMode === 'price-desc') {
-        results.sort((a, b) => (b.priceData?.price || 0) - (a.priceData?.price || 0));
-    } else if (currentSortMode === 'price-asc') {
-        results.sort((a, b) => (a.priceData?.price || 0) - (b.priceData?.price || 0));
-    } else if (currentSortMode === 'change-desc') {
-        results.sort((a, b) => (b.priceData?.change || 0) - (a.priceData?.change || 0));
-    } else if (currentSortMode === 'change-asc') {
-        results.sort((a, b) => (a.priceData?.change || 0) - (b.priceData?.change || 0));
-    } else if (currentSortMode === 'favorites') {
-        results.sort((a, b) => (isFavorite(b.symbol) ? 1 : 0) - (isFavorite(a.symbol) ? 1 : 0));
-    }
+    // 1. Render Skeleton Langsung (Biar UI Ga Freeze)
+    let skeletonHtml = '';
+    filteredWatchlist.forEach((asset) => {
+        skeletonHtml += `
+        <div class="watchlist-card-wrapper" id="skeleton-${asset.symbol}">
+            <div class="asset-card-new neutral" style="opacity: 0.6;">
+                <div class="asset-info-new"><span class="asset-symbol-new">${asset.symbol}</span><span class="asset-name-new">${asset.name}</span></div>
+                <div class="asset-price-wrap-new"><span class="asset-price-new">...</span><span class="asset-change-new" style="color:var(--text-muted)">Loading</span></div>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = `<div class="watchlist-section">${skeletonHtml}</div>`;
 
-    if (activeGroup === 'all' && currentSortMode === 'default') {
-        const favAssets = results.filter(a => isFavorite(a.symbol)); 
-        const otherAssets = results.filter(a => !isFavorite(a.symbol));
-        let html = '';
-        if (favAssets.length > 0) html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">⭐ Favorites</span><span class="watchlist-section-count">${favAssets.length}</span></div>${favAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('')}</div>`;
-        html += `<div class="watchlist-section"><div class="watchlist-section-header"><span class="watchlist-section-title">📊 ${favAssets.length > 0 ? 'Semua Aset' : 'Watchlist'}</span><span class="watchlist-section-count">${otherAssets.length}</span></div>${otherAssets.length > 0 ? otherAssets.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('') : '<div class="empty-state" style="padding:20px;font-size:12px;">Semua saham udah favorite ⭐</div>'}</div>`;
-        container.innerHTML = html;
-    } else { 
-        container.innerHTML = `<div class="watchlist-section">${results.map(a => { const idx = watchlist.findIndex(w => w.symbol === a.symbol); return renderAssetCard(a, a.priceData, idx); }).join('')}</div>`; 
-    }
+    // 2. Fetch Data Satu per Satu & Update Kartu
+    filteredWatchlist.forEach(async (asset) => {
+        const priceData = await fetchPrice(asset.symbol, asset.type);
+        const el = document.getElementById(`skeleton-${asset.symbol}`);
+        if (el) {
+            const idx = watchlist.findIndex(w => w.symbol === asset.symbol);
+            el.outerHTML = renderAssetCard({...asset, priceData}, priceData, idx);
+        }
+    });
 }
 
 function renderAssetCard(asset, priceData, index) {
@@ -466,7 +455,6 @@ function renderAssetCard(asset, priceData, index) {
     const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%'; 
     const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
     
-    // Sparkline Visual (Pseudo)
     const sparkPath = trend === 'up' ? "M0,15 L10,12 L20,8 L30,10 L40,2" : "M0,5 L10,8 L20,12 L30,10 L40,18";
     const sparkColor = trend === 'up' ? 'var(--green)' : 'var(--red)';
 
@@ -2178,34 +2166,6 @@ async function loadIndeksChart(symbol) {
     series.setData(formattedData); indeksDetailChart.timeScale().fitContent();
 }
 function closeIndeksDetail() { document.getElementById('indeksDetailModal').classList.remove('active'); if (indeksDetailChart) { try { indeksDetailChart.remove(); } catch(e) {} indeksDetailChart = null; } document.getElementById('indeksChartContainer').innerHTML = ''; indeksDetailSymbol = null; }
-
-// ============ SCORECARD & DCF ============
-// (Fungsi-fungsi ini sudah ada di Part 1, kita butuh declare ulang biar ga error saat dipanggil)
-async function openScorecard() {
-    if (!currentSymbol) return;
-    const modal = document.getElementById('scorecardModal'); if (!modal) return;
-    modal.classList.add('active'); document.getElementById('scorecardTitle').textContent = currentSymbol + ' — ' + currentName;
-    const heroEl = document.getElementById('scorecardHero'); const breakdownEl = document.getElementById('scorecardBreakdown'); const verdictEl = document.getElementById('scorecardVerdict');
-    heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Menghitung skor...</p></div>'; breakdownEl.innerHTML = ''; verdictEl.style.display = 'none';
-    try { const [fundamental, chartData] = await Promise.all([fetchFundamental(currentSymbol, currentType), fetchChartData(currentSymbol, currentType, '1mo', '1y')]); const result = calculateValueScore(fundamental, { price: currentPrice }, chartData); const verdict = getScoreVerdict(result.score); renderScorecardHero(result.score, verdict); renderScorecardBreakdown(result.criteria); renderScorecardVerdict(result, verdict, fundamental); } catch (error) { heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung skor</p><p class="error-detail">${error.message}</p></div>`; }
-}
-async function openDcf() {
-    if (!currentSymbol) return;
-    const modal = document.getElementById('dcfModal'); if (!modal) return;
-    modal.classList.add('active'); document.getElementById('dcfTitle').textContent = currentSymbol + ' — ' + currentName;
-    const heroEl = document.getElementById('dcfHero'); heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Mengambil data fundamental...</p></div>';
-    document.getElementById('dcfResult').style.display = 'none'; document.getElementById('dcfSensitivity').style.display = 'none'; document.getElementById('dcfMethods').style.display = 'none'; document.getElementById('dcfInputsSection').style.display = 'block';
-    try { const fundamental = await fetchFundamental(currentSymbol, currentType); let eps = fundamental.eps || fundamental.eps_forward || 0; if (!eps && fundamental.pe_ratio > 0 && currentPrice > 0) eps = currentPrice / fundamental.pe_ratio; document.getElementById('dcfEps').value = eps > 0 ? eps.toFixed(2) : ''; if (fundamental.eps_growth && fundamental.eps_growth > 0) { const g = Math.min(fundamental.eps_growth * 100, 30); document.getElementById('dcfGrowth1').value = g.toFixed(1); } dcfState.eps = eps; dcfState.currentPrice = currentPrice; dcfState.symbol = currentSymbol; dcfState.name = currentName; heroEl.innerHTML = `<div class="dcf-intrinsic-label">Harga Saham Sekarang</div><div class="dcf-intrinsic-value fair">$${currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div><div class="dcf-current-price">EPS: <strong>$${eps > 0 ? eps.toFixed(2) : 'N/A'}</strong> | P/E: <strong>${fundamental.pe_ratio ? fundamental.pe_ratio.toFixed(1) : 'N/A'}</strong></div><div class="dcf-hero-desc">Sesuaikan asumsi, lalu tap "Hitung Valuasi".</div>`; if (eps > 0) calculateDCF(); } catch (error) { heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal</p><p class="error-detail">${error.message}</p></div>`; }
-}
-function calculateDCF() {
-    const eps = parseFloat(document.getElementById('dcfEps').value) || 0; const growth1 = (parseFloat(document.getElementById('dcfGrowth1').value) || 10) / 100; const growth2 = (parseFloat(document.getElementById('dcfGrowth2').value) || 5) / 100; const terminal = (parseFloat(document.getElementById('dcfTerminal').value) || 2.5) / 100; const discount = (parseFloat(document.getElementById('dcfDiscount').value) || 10) / 100;
-    if (eps <= 0) { alert('EPS harus > 0!'); return; } if (discount <= terminal) { alert('Discount rate harus > terminal growth!'); return; }
-    dcfState.eps = eps; dcfState.growth1 = growth1 * 100; dcfState.growth2 = growth2 * 100; dcfState.terminal = terminal * 100; dcfState.discount = discount * 100;
-    let pv = 0; let currentEps = eps; for (let year = 1; year <= 5; year++) { currentEps = currentEps * (1 + growth1); pv += currentEps / Math.pow(1 + discount, year); } for (let year = 6; year <= 10; year++) { currentEps = currentEps * (1 + growth2); pv += currentEps / Math.pow(1 + discount, year); }
-    const terminalEps = currentEps * (1 + terminal); const terminalValue = terminalEps / (discount - terminal); const pvTerminal = terminalValue / Math.pow(1 + discount, 10); const intrinsicValue = pv + pvTerminal;
-    renderDCFResult(intrinsicValue, pv, pvTerminal, terminalValue); renderDCFSensitivity(eps, growth1, growth2, terminal, discount); renderDCFMethods(eps, intrinsicValue);
-    document.getElementById('dcfResult').style.display = 'block'; document.getElementById('dcfSensitivity').style.display = 'block'; document.getElementById('dcfMethods').style.display = 'block';
-}
 
 // ============ EVENT LISTENERS & INIT ============
 document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
