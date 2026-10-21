@@ -2,8 +2,19 @@
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
+// ============ 🛡️ SAFE JSON PARSER (Mencegah Crash) ============
+function safeParse(key, fallback) {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+    } catch (e) {
+        console.warn("Data localStorage korup, mereset ke default:", key);
+        return fallback;
+    }
+}
+
 // ============ ⏱️ FETCH WITH TIMEOUT ============
-function fetchWithTimeout(url, options = {}, timeout = 12000) {
+function fetchWithTimeout(url, options = {}, timeout = 15000) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
     const opts = { ...options, signal: controller.signal };
@@ -11,7 +22,7 @@ function fetchWithTimeout(url, options = {}, timeout = 12000) {
         .then(res => { clearTimeout(timer); return res; })
         .catch(err => {
             clearTimeout(timer);
-            if (err.name === 'AbortError') throw new Error('Request timeout (' + timeout + 'ms)');
+            if (err.name === 'AbortError') throw new Error('Request timeout');
             throw err;
         });
 }
@@ -60,15 +71,45 @@ let dxyChartInstance = null;
 let seasonalityChartInstance = null;
 let inflationChartInstance = null;
 
+// ============ DATA & LOCALSTORAGE ============
+let watchlist = safeParse('fitraWatchlist', [
+    { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', group: '' }, 
+    { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', group: '' },
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock', group: '' }, 
+    { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', group: '' }
+]);
+function saveWatchlist() { localStorage.setItem('fitraWatchlist', JSON.stringify(watchlist)); }
+
+let favorites = safeParse('fitraFavorites', []);
+function saveFavorites() { localStorage.setItem('fitraFavorites', JSON.stringify(favorites)); }
+function isFavorite(symbol) { return favorites.includes(symbol); }
+function toggleFavorite(symbol, event) {
+    if (event) event.stopPropagation();
+    const idx = favorites.indexOf(symbol);
+    if (idx >= 0) favorites.splice(idx, 1); else favorites.push(symbol);
+    saveFavorites(); renderWatchlist();
+}
+
+let alerts = safeParse('fitraAlerts', []);
+function saveAlerts() { localStorage.setItem('fitraAlerts', JSON.stringify(alerts)); }
+function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol && !a.triggered); }
+
+let portfolio = safeParse('fitraPortfolio', []);
+function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
+
+let groups = safeParse('fitraGroups', []);
+let activeGroup = 'all';
+function saveGroups() { localStorage.setItem('fitraGroups', JSON.stringify(groups)); }
+
 // ============ 🌐 TRANSLATION CACHE ============
-let translationCache = JSON.parse(localStorage.getItem('fitraTranslationCache') || '{}');
+let translationCache = safeParse('fitraTranslationCache', {});
 function saveTranslationCache() { try { localStorage.setItem('fitraTranslationCache', JSON.stringify(translationCache)); } catch (e) { translationCache = {}; } }
 async function translateText(text) {
     if (!text || text.trim() === '') return text;
     if (translationCache[text]) return translationCache[text];
     try {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=id&dt=t&q=${encodeURIComponent(text)}`;
-        const response = await fetchWithTimeout(url, {}, 10000);
+        const response = await fetchWithTimeout(url, {}, 8000);
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         const translated = data[0].map(item => item[0]).filter(Boolean).join('');
@@ -77,7 +118,7 @@ async function translateText(text) {
 }
 
 // ============ 💱 CURRENCY CONVERTER ============
-let currencyRates = JSON.parse(localStorage.getItem('fitraCurrencyRates') || 'null');
+let currencyRates = safeParse('fitraCurrencyRates', null);
 let currencyLastFetch = parseInt(localStorage.getItem('fitraCurrencyLastFetch') || '0');
 const CURRENCY_CACHE_TTL = 60 * 60 * 1000;
 const QUICK_TARGETS = ['IDR', 'EUR', 'JPY', 'GBP', 'SGD', 'MYR', 'CNY', 'AUD', 'KRW', 'THB'];
@@ -209,62 +250,6 @@ const STOCK_UNIVERSE = [
 const MOVERS_UNIVERSE = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'INTC', 'NFLX', 'AVGO', 'ADBE', 'JPM', 'BAC', 'V', 'MA', 'GS', 'WFC', 'WMT', 'DIS', 'MCD', 'NKE', 'SBUX', 'KO', 'PEP', 'JNJ', 'PFE', 'UNH', 'LLY', 'BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
 let marketMoversData = { gainers: [], losers: [] };
 
-const SECTOR_CONFIG = [
-    { key: 'us-tech', name: 'Technology', icon: '💻' }, { key: 'us-finance', name: 'Finance', icon: '🏦' },
-    { key: 'us-healthcare', name: 'Healthcare', icon: '💊' }, { key: 'us-consumer', name: 'Consumer', icon: '🛒' },
-    { key: 'us-industrial', name: 'Industrial', icon: '🏭' }, { key: 'us-energy', name: 'Energy', icon: '⚡' },
-    { key: 'international', name: 'International', icon: '🌍' }, { key: 'crypto', name: 'Crypto', icon: '₿' },
-    { key: 'commodity', name: 'Commodity', icon: '🥇' }, { key: 'index', name: 'Index', icon: '📊' }
-];
-
-const GLOBAL_INDICES = [
-    { symbol: '^GSPC', name: 'S&P 500', country: 'United States', region: 'americas', flag: '🇺🇸',
-      sectors: [ { name: 'Technology', pct: 29.5, color: '#50E4F2' }, { name: 'Financials', pct: 13.2, color: '#E9B949' }, { name: 'Healthcare', pct: 12.8, color: '#43D6A2' }, { name: 'Consumer Disc.', pct: 10.5, color: '#B9A0FF' }, { name: 'Communication', pct: 9.4, color: '#ec4899' }, { name: 'Others', pct: 24.6, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'AAPL', name: 'Apple Inc.' }, { symbol: 'MSFT', name: 'Microsoft Corp.' }, { symbol: 'NVDA', name: 'NVIDIA Corp.' }, { symbol: 'AMZN', name: 'Amazon.com Inc.' }, { symbol: 'META', name: 'Meta Platforms Inc.' } ] },
-    { symbol: '^DJI', name: 'Dow Jones', country: 'United States', region: 'americas', flag: '🇺🇸',
-      sectors: [ { name: 'Technology', pct: 22.1, color: '#50E4F2' }, { name: 'Financials', pct: 17.4, color: '#E9B949' }, { name: 'Healthcare', pct: 15.2, color: '#43D6A2' }, { name: 'Industrials', pct: 14.8, color: '#f97316' }, { name: 'Consumer Disc.', pct: 12.3, color: '#B9A0FF' }, { name: 'Others', pct: 18.2, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'UNH', name: 'UnitedHealth' }, { symbol: 'GS', name: 'Goldman Sachs' }, { symbol: 'MSFT', name: 'Microsoft' }, { symbol: 'HD', name: 'Home Depot' }, { symbol: 'MCD', name: "McDonald's" } ] },
-    { symbol: '^IXIC', name: 'NASDAQ Composite', country: 'United States', region: 'americas', flag: '🇺🇸',
-      sectors: [ { name: 'Technology', pct: 51.2, color: '#50E4F2' }, { name: 'Communication', pct: 15.6, color: '#ec4899' }, { name: 'Consumer Disc.', pct: 12.4, color: '#B9A0FF' }, { name: 'Healthcare', pct: 7.8, color: '#43D6A2' }, { name: 'Financials', pct: 6.2, color: '#E9B949' }, { name: 'Others', pct: 6.8, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'AAPL', name: 'Apple' }, { symbol: 'MSFT', name: 'Microsoft' }, { symbol: 'NVDA', name: 'NVIDIA' }, { symbol: 'AMZN', name: 'Amazon' }, { symbol: 'AVGO', name: 'Broadcom' } ] },
-    { symbol: '^RUT', name: 'Russell 2000', country: 'United States', region: 'americas', flag: '🇺🇸',
-      sectors: [ { name: 'Financials', pct: 18.4, color: '#E9B949' }, { name: 'Healthcare', pct: 17.2, color: '#43D6A2' }, { name: 'Industrials', pct: 15.8, color: '#f97316' }, { name: 'Technology', pct: 14.6, color: '#50E4F2' }, { name: 'Consumer Disc.', pct: 12.1, color: '#B9A0FF' }, { name: 'Others', pct: 21.9, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'SMCI', name: 'Super Micro Computer' }, { symbol: 'INSM', name: 'Insmed Inc.' }, { symbol: 'FN', name: 'Fabrinet' }, { symbol: 'ONTO', name: 'Onto Innovation' }, { symbol: 'MSTR', name: 'MicroStrategy' } ] },
-    { symbol: '^BVSP', name: 'Bovespa', country: 'Brazil', region: 'americas', flag: '🇧🇷',
-      sectors: [ { name: 'Financials', pct: 24.8, color: '#E9B949' }, { name: 'Materials', pct: 18.2, color: '#f97316' }, { name: 'Energy', pct: 14.5, color: '#FF7387' }, { name: 'Consumer Staples', pct: 11.6, color: '#43D6A2' }, { name: 'Utilities', pct: 8.4, color: '#50E4F2' }, { name: 'Others', pct: 22.5, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'VALE3.SA', name: 'Vale S.A.' }, { symbol: 'PETR4.SA', name: 'Petrobras' }, { symbol: 'ITUB4.SA', name: 'Itaú Unibanco' }, { symbol: 'BBDC4.SA', name: 'Banco Bradesco' }, { symbol: 'ABEV3.SA', name: 'Ambev' } ] },
-    { symbol: '^GSPTSE', name: 'S&P/TSX', country: 'Canada', region: 'americas', flag: '🇨🇦',
-      sectors: [ { name: 'Financials', pct: 32.4, color: '#E9B949' }, { name: 'Energy', pct: 17.8, color: '#FF7387' }, { name: 'Industrials', pct: 12.6, color: '#f97316' }, { name: 'Materials', pct: 11.2, color: '#B9A0FF' }, { name: 'Technology', pct: 7.8, color: '#50E4F2' }, { name: 'Others', pct: 18.2, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'RY.TO', name: 'Royal Bank of Canada' }, { symbol: 'TD.TO', name: 'Toronto-Dominion Bank' }, { symbol: 'SHOP.TO', name: 'Shopify Inc.' }, { symbol: 'ENB.TO', name: 'Enbridge Inc.' }, { symbol: 'CNR.TO', name: 'Canadian National Railway' } ] },
-    { symbol: '^FTSE', name: 'FTSE 100', country: 'United Kingdom', region: 'europe', flag: '🇬🇧',
-      sectors: [ { name: 'Financials', pct: 20.5, color: '#E9B949' }, { name: 'Consumer Staples', pct: 16.4, color: '#43D6A2' }, { name: 'Energy', pct: 13.8, color: '#FF7387' }, { name: 'Healthcare', pct: 12.2, color: '#50E4F2' }, { name: 'Industrials', pct: 11.6, color: '#f97316' }, { name: 'Others', pct: 25.5, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'SHEL.L', name: 'Shell plc' }, { symbol: 'AZN.L', name: 'AstraZeneca' }, { symbol: 'HSBA.L', name: 'HSBC Holdings' }, { symbol: 'ULVR.L', name: 'Unilever' }, { symbol: 'BP.L', name: 'BP plc' } ] },
-    { symbol: '^GDAXI', name: 'DAX', country: 'Germany', region: 'europe', flag: '🇩🇪',
-      sectors: [ { name: 'Industrials', pct: 22.4, color: '#f97316' }, { name: 'Technology', pct: 18.6, color: '#50E4F2' }, { name: 'Financials', pct: 16.8, color: '#E9B949' }, { name: 'Consumer Disc.', pct: 14.2, color: '#B9A0FF' }, { name: 'Healthcare', pct: 12.1, color: '#43D6A2' }, { name: 'Others', pct: 15.9, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'SAP.DE', name: 'SAP SE' }, { symbol: 'SIE.DE', name: 'Siemens AG' }, { symbol: 'ALV.DE', name: 'Allianz SE' }, { symbol: 'DTE.DE', name: 'Deutsche Telekom' }, { symbol: 'AIR.DE', name: 'Airbus SE' } ] },
-    { symbol: '^FCHI', name: 'CAC 40', country: 'France', region: 'europe', flag: '🇫🇷',
-      sectors: [ { name: 'Consumer Disc.', pct: 20.8, color: '#B9A0FF' }, { name: 'Industrials', pct: 18.2, color: '#f97316' }, { name: 'Financials', pct: 15.6, color: '#E9B949' }, { name: 'Consumer Staples', pct: 14.4, color: '#43D6A2' }, { name: 'Healthcare', pct: 11.8, color: '#50E4F2' }, { name: 'Others', pct: 19.2, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'MC.PA', name: 'LVMH' }, { symbol: 'OR.PA', name: "L'Oréal" }, { symbol: 'TTE.PA', name: 'TotalEnergies' }, { symbol: 'RMS.PA', name: 'Hermès' }, { symbol: 'SAN.PA', name: 'Sanofi' } ] },
-    { symbol: '^STOXX50E', name: 'Euro Stoxx 50', country: 'Eurozone', region: 'europe', flag: '🇪🇺',
-      sectors: [ { name: 'Financials', pct: 21.2, color: '#E9B949' }, { name: 'Industrials', pct: 17.4, color: '#f97316' }, { name: 'Consumer Disc.', pct: 15.8, color: '#B9A0FF' }, { name: 'Technology', pct: 14.6, color: '#50E4F2' }, { name: 'Healthcare', pct: 12.2, color: '#43D6A2' }, { name: 'Others', pct: 18.8, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'ASML.AS', name: 'ASML Holding' }, { symbol: 'MC.PA', name: 'LVMH' }, { symbol: 'SAP.DE', name: 'SAP SE' }, { symbol: 'NESN.SW', name: 'Nestlé' }, { symbol: 'SIE.DE', name: 'Siemens' } ] },
-    { symbol: '^N225', name: 'Nikkei 225', country: 'Japan', region: 'asia', flag: '🇯🇵',
-      sectors: [ { name: 'Technology', pct: 24.5, color: '#50E4F2' }, { name: 'Industrials', pct: 18.4, color: '#f97316' }, { name: 'Consumer Disc.', pct: 16.2, color: '#B9A0FF' }, { name: 'Financials', pct: 13.8, color: '#E9B949' }, { name: 'Healthcare', pct: 10.4, color: '#43D6A2' }, { name: 'Others', pct: 16.7, color: '#64748b' } ],
-      topHoldings: [ { symbol: '7203.T', name: 'Toyota Motor' }, { symbol: '6758.T', name: 'Sony Group' }, { symbol: '6861.T', name: 'Keyence' }, { symbol: '9984.T', name: 'SoftBank Group' }, { symbol: '8306.T', name: 'Mitsubishi UFJ' } ] },
-    { symbol: '^HSI', name: 'Hang Seng', country: 'Hong Kong', region: 'asia', flag: '🇭🇰',
-      sectors: [ { name: 'Financials', pct: 32.6, color: '#E9B949' }, { name: 'Technology', pct: 21.4, color: '#50E4F2' }, { name: 'Consumer Disc.', pct: 15.2, color: '#B9A0FF' }, { name: 'Real Estate', pct: 11.8, color: '#FF7387' }, { name: 'Telecom', pct: 8.4, color: '#43D6A2' }, { name: 'Others', pct: 10.6, color: '#64748b' } ],
-      topHoldings: [ { symbol: '0700.HK', name: 'Tencent Holdings' }, { symbol: '0005.HK', name: 'HSBC Holdings' }, { symbol: '9988.HK', name: 'Alibaba Group' }, { symbol: '1299.HK', name: 'AIA Group' }, { symbol: '3690.HK', name: 'Meituan' } ] },
-    { symbol: '000001.SS', name: 'Shanghai Composite', country: 'China', region: 'asia', flag: '🇨🇳',
-      sectors: [ { name: 'Financials', pct: 28.4, color: '#E9B949' }, { name: 'Industrials', pct: 18.6, color: '#f97316' }, { name: 'Consumer Staples', pct: 14.2, color: '#43D6A2' }, { name: 'Materials', pct: 12.8, color: '#B9A0FF' }, { name: 'Technology', pct: 10.4, color: '#50E4F2' }, { name: 'Others', pct: 15.6, color: '#64748b' } ],
-      topHoldings: [ { symbol: '601398.SS', name: 'ICBC' }, { symbol: '600519.SS', name: 'Kweichow Moutai' }, { symbol: '601857.SS', name: 'PetroChina' }, { symbol: '601288.SS', name: 'Agricultural Bank' }, { symbol: '600036.SS', name: 'China Merchants Bank' } ] },
-    { symbol: '^NSEI', name: 'NIFTY 50', country: 'India', region: 'asia', flag: '🇮🇳',
-      sectors: [ { name: 'Financials', pct: 34.8, color: '#E9B949' }, { name: 'Technology', pct: 16.4, color: '#50E4F2' }, { name: 'Energy', pct: 12.6, color: '#FF7387' }, { name: 'Consumer Goods', pct: 11.2, color: '#43D6A2' }, { name: 'Auto', pct: 8.4, color: '#B9A0FF' }, { name: 'Others', pct: 16.6, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'RELIANCE.NS', name: 'Reliance Industries' }, { symbol: 'TCS.NS', name: 'Tata Consultancy' }, { symbol: 'HDFCBANK.NS', name: 'HDFC Bank' }, { symbol: 'INFY.NS', name: 'Infosys' }, { symbol: 'ICICIBANK.NS', name: 'ICICI Bank' } ] },
-    { symbol: '^AXJO', name: 'ASX 200', country: 'Australia', region: 'oceania', flag: '🇦🇺',
-      sectors: [ { name: 'Financials', pct: 30.2, color: '#E9B949' }, { name: 'Materials', pct: 19.4, color: '#B9A0FF' }, { name: 'Healthcare', pct: 11.8, color: '#43D6A2' }, { name: 'Consumer Disc.', pct: 10.4, color: '#50E4F2' }, { name: 'Industrials', pct: 9.6, color: '#f97316' }, { name: 'Others', pct: 18.6, color: '#64748b' } ],
-      topHoldings: [ { symbol: 'BHP.AX', name: 'BHP Group' }, { symbol: 'CBA.AX', name: 'Commonwealth Bank' }, { symbol: 'CSL.AX', name: 'CSL Limited' }, { symbol: 'NAB.AX', name: 'National Australia Bank' }, { symbol: 'WBC.AX', name: 'Westpac Banking' } ] }
-];
-
 // ============ TAB NAV ============
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -280,34 +265,6 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'commodity') initCommodityTab();
     });
 });
-
-// ============ DATA & LOCALSTORAGE ============
-let watchlist = JSON.parse(localStorage.getItem('fitraWatchlist')) || [
-    { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock' }, { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock' },
-    { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock' }, { symbol: 'BTC', name: 'Bitcoin', type: 'crypto' }
-];
-function saveWatchlist() { localStorage.setItem('fitraWatchlist', JSON.stringify(watchlist)); }
-
-let favorites = JSON.parse(localStorage.getItem('fitraFavorites')) || [];
-function saveFavorites() { localStorage.setItem('fitraFavorites', JSON.stringify(favorites)); }
-function isFavorite(symbol) { return favorites.includes(symbol); }
-function toggleFavorite(symbol, event) {
-    if (event) event.stopPropagation();
-    const idx = favorites.indexOf(symbol);
-    if (idx >= 0) favorites.splice(idx, 1); else favorites.push(symbol);
-    saveFavorites(); renderWatchlist();
-}
-
-let alerts = JSON.parse(localStorage.getItem('fitraAlerts')) || [];
-function saveAlerts() { localStorage.setItem('fitraAlerts', JSON.stringify(alerts)); }
-function hasAlert(symbol) { return alerts.some(a => a.symbol === symbol && !a.triggered); }
-
-let portfolio = JSON.parse(localStorage.getItem('fitraPortfolio')) || [];
-function savePortfolio() { localStorage.setItem('fitraPortfolio', JSON.stringify(portfolio)); }
-
-let groups = JSON.parse(localStorage.getItem('fitraGroups')) || [];
-let activeGroup = 'all';
-function saveGroups() { localStorage.setItem('fitraGroups', JSON.stringify(groups)); }
 
 // ============ 📁 WATCHLIST FOLDERS & SORTING ============
 function renderGroupsBar() {
@@ -328,7 +285,6 @@ function renderGroupsBar() {
         }); 
     });
 }
-
 function deleteGroup(groupId) {
     if (!confirm('Hapus folder ini?')) return;
     groups = groups.filter(g => g.id !== groupId);
@@ -336,7 +292,6 @@ function deleteGroup(groupId) {
     saveGroups(); saveWatchlist(); if (activeGroup === groupId) activeGroup = 'all';
     renderGroupsBar(); renderWatchlist();
 }
-
 function openGroupModal() { 
     document.getElementById('groupName').value = ''; 
     document.getElementById('groupIcon').value = '📁'; 
@@ -344,7 +299,6 @@ function openGroupModal() {
     document.getElementById('groupModal').classList.add('active'); 
 }
 function closeGroupModal() { document.getElementById('groupModal').classList.remove('active'); }
-
 function saveGroup() { 
     const name = document.getElementById('groupName').value.trim(); 
     const icon = document.getElementById('groupIcon').value.trim() || '📁'; 
@@ -354,23 +308,19 @@ function saveGroup() {
     groups.push({ id, name, icon, sector }); 
     saveGroups(); closeGroupModal(); renderGroupsBar(); 
 }
-
 function openMoveFolderModal(symbol) {
     const asset = watchlist.find(w => w.symbol === symbol);
     if (!asset) return;
     currentMoveAssetSymbol = symbol;
     document.getElementById('moveAssetSymbol').textContent = symbol;
-    
     const assetInfo = STOCK_UNIVERSE.find(s => s.symbol === symbol) || { category: asset.type };
     const sel = document.getElementById('moveAssetGroupSelect');
-    
     let opts = '<option value="">— Keluarkan dari Folder —</option>';
     groups.forEach(g => {
         if (g.sector === 'all' || g.sector === assetInfo.category) {
             opts += `<option value="${g.id}">${g.icon} ${g.name}</option>`;
         }
     });
-    
     sel.innerHTML = opts;
     sel.value = asset.group || '';
     document.getElementById('moveFolderModal').classList.add('active');
@@ -387,17 +337,15 @@ function saveMoveFolder() {
         renderGroupsBar();
     }
 }
-
 function openSortModal() { document.getElementById('sortModal').classList.add('active'); }
 function closeSortModal() { document.getElementById('sortModal').classList.remove('active'); }
-
 function applySort(mode) {
     currentSortMode = mode;
     closeSortModal();
     renderWatchlist();
 }
 
-// ============ 🎯 RENDER WATCHLIST (PROGRESSIVE) ============
+// ============ 🎯 RENDER WATCHLIST ============
 async function renderWatchlist() {
     const container = document.getElementById('watchlist'); if (!container) return;
     
@@ -411,7 +359,6 @@ async function renderWatchlist() {
         return; 
     }
 
-    // 1. Render Skeleton Langsung (Biar UI Ga Freeze)
     let skeletonHtml = '';
     filteredWatchlist.forEach((asset) => {
         skeletonHtml += `
@@ -424,7 +371,6 @@ async function renderWatchlist() {
     });
     container.innerHTML = `<div class="watchlist-section">${skeletonHtml}</div>`;
 
-    // 2. Fetch Data Satu per Satu & Update Kartu
     filteredWatchlist.forEach(async (asset) => {
         const priceData = await fetchPrice(asset.symbol, asset.type);
         const el = document.getElementById(`skeleton-${asset.symbol}`);
@@ -466,9 +412,7 @@ function renderAssetCard(asset, priceData, index) {
                 <span class="asset-name-new">${asset.name}</span>
             </div>
             <div class="asset-sparkline">
-                <svg width="40" height="20" viewBox="0 0 40 20">
-                    <path d="${sparkPath}" fill="none" stroke="${sparkColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <svg width="40" height="20" viewBox="0 0 40 20"><path d="${sparkPath}" fill="none" stroke="${sparkColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div class="asset-price-wrap-new">
                 <span class="asset-price-new">${priceStr}</span>
@@ -530,7 +474,7 @@ function renderMarketMovers() {
 // ============ FETCH HELPERS ============
 async function fetchPrice(symbol, type) {
     try {
-        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-price`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type }) }, 12000);
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-price`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type }) }, 10000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
         if (type === 'crypto' && data.price) return { price: data.price, currency: 'USD', change: data.change || 0, name: data.name || symbol };
         if (type !== 'crypto' && data.chart && data.chart.result) { const meta = data.chart.result[0].meta; return { price: meta.regularMarketPrice, currency: meta.currency, change: meta.regularMarketChangePercent || 0, name: meta.longName || meta.shortName }; }
@@ -538,11 +482,11 @@ async function fetchPrice(symbol, type) {
     } catch (error) { return null; }
 }
 async function fetchFundamental(symbol, type) {
-    try { const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-fundamental`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type }) }, 12000); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return data.fundamental || {}; } catch (error) { return {}; }
+    try { const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-fundamental`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type }) }, 10000); if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json(); return data.fundamental || {}; } catch (error) { return {}; }
 }
 async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
     try {
-        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-chart`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type, interval, range }) }, 15000);
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-chart`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, type, interval, range }) }, 10000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
         if (data.data && Array.isArray(data.data)) return data.data.map(c => ({ time: c.time, open: parseFloat(c.open), high: parseFloat(c.high), low: parseFloat(c.low), close: parseFloat(c.close), volume: parseFloat(c.volume || 0) })).filter(c => !isNaN(c.open) && !isNaN(c.close));
         if (data.chart && data.chart.result && data.chart.result[0]) {
@@ -551,7 +495,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
             for (let i = 0; i < timestamps.length; i++) { if (opens[i] == null || closes[i] == null) continue; candles.push({ time: timestamps[i], open: opens[i], high: highs[i], low: lows[i], close: closes[i], volume: volumes[i] || 0 }); } return candles;
         } return [];
     } catch (error) { return []; }
-        }// ============ 🪙 CRYPTO TAB ============
+     }// ============ 🪙 CRYPTO TAB ============
 const CRYPTO_FALLBACK = [
     { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', current_price: 65000, market_cap: 1280000000000, market_cap_rank: 1, price_change_percentage_24h: 0, total_volume: 30000000000, circulating_supply: 19000000, total_supply: 21000000, ath: 73750, ath_change_percentage: -12 },
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
@@ -2188,14 +2132,6 @@ document.getElementById('alertVolumeMultiplier').addEventListener('input', updat
 document.getElementById('alertToastClose').addEventListener('click', closeAlertToast);
 document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
 document.getElementById('runScreener').addEventListener('click', runScreener);
-document.getElementById('openScorecardBtn').addEventListener('click', openScorecard);
-document.getElementById('closeScorecardModal').addEventListener('click', closeScorecard);
-document.getElementById('openDcfBtn').addEventListener('click', openDcf);
-document.getElementById('closeDcfModal').addEventListener('click', closeDcf);
-document.getElementById('dcfCalcBtn').addEventListener('click', calculateDCF);
-document.getElementById('openCryptoScorecardBtn').addEventListener('click', openCryptoScorecard);
-document.getElementById('closeCryptoScorecardModal').addEventListener('click', closeCryptoScorecard);
-document.getElementById('stakingCalcBtn').addEventListener('click', calculateStakingRewards);
 
 // Event Listeners Watchlist Baru
 document.getElementById('sortWatchlistBtn').addEventListener('click', openSortModal);
