@@ -30,6 +30,24 @@ jobs:
     - name: Create Cordova Project
       run: cordova create fitra-invest-app com.fitra.invest "Fitra Invest"
 
+    # 🚀 INJEKSI CONFIG.XML UNTUK HARDWARE ACCELERATION
+    - name: Inject Optimized Config.xml
+      run: |
+        cat << 'EOF' > fitra-invest-app/config.xml
+        <?xml version='1.0' encoding='utf-8'?>
+        <widget id="com.fitra.invest" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+            <name>Fitra Invest</name>
+            <content src="index.html" />
+            <allow-navigation href="*" />
+            <access origin="*" />
+            <preference name="android-hardware-acceleration" value="true" />
+            <preference name="android-allow-mixed-content" value="true" />
+            <preference name="MixedContentMode" value="0" />
+            <preference name="android-targetSdkVersion" value="34" />
+            <preference name="ScrollEnabled" value="true" />
+        </widget>
+        EOF
+
     - name: Copy Web Assets
       run: |
         cp index.html fitra-invest-app/www/
