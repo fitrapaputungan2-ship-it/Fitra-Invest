@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0a0a0f">
+    <meta name="theme-color" content="#08111E">
     <title>Fitra Invest — AI Trading App</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,7 @@
                 </div>
             </div>
             <div class="header-right-actions">
-                <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle theme">🌙</button>
+                <!-- Theme Toggle Dihapus -->
                 <button class="currency-open-btn" id="currencyOpenBtn" aria-label="Currency">💱</button>
                 <button class="browse-btn" id="browseStockBtn">+ Browse</button>
             </div>
@@ -41,28 +41,45 @@
 
         <main class="content">
 
-            <!-- WATCHLIST -->
+            <!-- WATCHLIST REDESIGN -->
             <div class="tab-content active" id="tab-watchlist">
-                <div class="section-header"><h2>Market Movers</h2></div>
-                <div class="market-movers" id="marketMovers"><div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat...</p></div></div>
-                <div class="section-header" style="margin-top: 24px;"><h2>Price Alerts</h2></div>
-                <div class="price-alerts-section" id="priceAlertsSection" style="display: none;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-size:12px; color:var(--text-secondary);">Active Alerts</span><span class="watchlist-section-count" id="alertsCount">0</span></div>
-                    <div class="price-alerts-list" id="priceAlertsList"></div>
-                </div>
-                <div class="section-header" style="margin-top: 24px;">
+                <!-- Header Baru -->
+                <div class="watchlist-header-new">
                     <h2>My Watchlist</h2>
-                    <div style="display:flex; gap:8px;">
-                        <button class="sort-ai-btn" id="sortAiBtn">🤖 Sort AI</button>
-                        <button class="add-group-btn" id="addGroupBtn" title="Tambah Group">📁</button>
-                        <button class="add-btn" id="addAssetBtn">+</button>
+                    <p class="subtitle-new">Track your assets. Understand the market.</p>
+                    <div class="watchlist-actions-new">
+                        <button class="sort-btn-new" id="sortWatchlistBtn">
+                            <span class="icon">⇅</span> Sort
+                        </button>
+                        <button class="add-group-btn-new" id="addGroupBtn" title="Tambah Folder">📁</button>
+                        <button class="add-asset-btn-new" id="addAssetBtn">+</button>
                     </div>
                 </div>
-                <div class="watchlist-groups-bar" id="watchlistGroupsBar"><button class="group-chip active" data-group="all">📊 Semua</button><button class="group-chip" data-group="favorites">⭐ Favorites</button></div>
-                <div class="watchlist" id="watchlist"><div class="empty-state">Memuat watchlist...</div></div>
+
+                <!-- Market Movers -->
+                <div class="section-header"><h3>Market Movers</h3></div>
+                <div class="market-movers" id="marketMovers"><div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data...</p></div></div>
+                
+                <!-- Price Alerts -->
+                <div class="section-header" style="margin-top: 24px;"><h3>Price Alerts</h3></div>
+                <div class="price-alerts-section" id="priceAlertsSection" style="display: none;">
+                    <div class="alerts-header-new"><span>Active Alerts</span><span class="count-badge" id="alertsCount">0</span></div>
+                    <div class="price-alerts-list" id="priceAlertsList"></div>
+                </div>
+
+                <!-- Filter Groups (Chips) -->
+                <div class="watchlist-groups-bar" id="watchlistGroupsBar">
+                    <button class="group-chip active" data-group="all">🌐 Semua Aset</button>
+                    <button class="group-chip" data-group="favorites">⭐ Favorites</button>
+                </div>
+
+                <!-- Daftar Saham -->
+                <div class="watchlist" id="watchlist">
+                    <div class="empty-state">Memuat watchlist...</div>
+                </div>
             </div>
 
-            <!-- SCREENER -->
+            <!-- SCREENER (Unchanged) -->
             <div class="tab-content" id="tab-screener">
                 <div class="section-header"><h2>Value Screener</h2></div>
                 <p class="description">Cari saham undervalued dengan fundamental kuat ala Warren Buffett.</p>
@@ -77,7 +94,7 @@
                 <div id="screenerResults"></div>
             </div>
 
-            <!-- PORTFOLIO -->
+            <!-- PORTFOLIO (Unchanged) -->
             <div class="tab-content" id="tab-portfolio">
                 <div class="section-header"><h2>My Portfolio</h2><button class="add-btn" id="addHolding">+</button></div>
                 <div class="portfolio-summary">
@@ -103,13 +120,13 @@
                 <div class="holdings" id="holdings"><div class="empty-state">Belum ada holding.</div></div>
             </div>
 
-            <!-- NEWS -->
+            <!-- NEWS (Unchanged) -->
             <div class="tab-content" id="tab-news">
                 <div class="section-header"><h2>Market News</h2></div>
                 <div class="news-list" id="newsList"><div class="empty-state">Memuat berita...</div></div>
             </div>
 
-            <!-- CRYPTO -->
+            <!-- CRYPTO (Unchanged) -->
             <div class="tab-content" id="tab-crypto">
                 <div class="crypto-banner">
                     <div class="crypto-banner-icon">🪙</div>
@@ -275,7 +292,7 @@
                 <div class="crypto-footer"><span class="crypto-update-info" id="cryptoLastUpdated">Data dari CoinGecko · Terakhir diupdate: --</span></div>
             </div>
 
-            <!-- COMMODITY TAB -->
+            <!-- COMMODITY (Unchanged) -->
             <div class="tab-content" id="tab-commodity">
                 <div class="commodity-banner">
                     <div class="commodity-banner-icon">🥇</div>
@@ -293,7 +310,6 @@
                     </div>
                 </div>
 
-                <!-- 🆕 GOLD/SILVER RATIO -->
                 <div class="commodity-ratio-section" id="commodityRatioSection">
                     <div class="crypto-section-title">⚖️ Gold/Silver Ratio</div>
                     <div class="commodity-ratio-card" id="commodityRatioCard">
@@ -301,7 +317,6 @@
                     </div>
                 </div>
 
-                <!-- 🆕 COMMODITY HEATMAP -->
                 <div class="crypto-heatmap-section" id="commodityHeatmapSection">
                     <div class="crypto-heatmap-header">
                         <div class="crypto-section-title">🔥 Commodity Heatmap</div>
@@ -311,7 +326,6 @@
                     </div>
                 </div>
 
-                <!-- 🆕 GOLD PRICE IN IDR -->
                 <div class="commodity-idr-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
                     <div class="staking-header">
                         <div class="staking-section-title">🇮🇩 Harga Emas (Rupiah)</div>
@@ -326,7 +340,6 @@
                     </div>
                 </div>
 
-                <!-- 🆕 ZAKAT CALCULATOR -->
                 <div class="commodity-zakat-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
                     <div class="staking-header">
                         <div class="staking-section-title">🕌 Kalkulator Zakat Emas</div>
@@ -342,7 +355,6 @@
                     <div class="il-result" id="zakatResult" style="display: none;"></div>
                 </div>
 
-                <!-- 🆕 COMMODITY WEIGHT CONVERTER -->
                 <div class="commodity-weight-section">
                     <div class="staking-header">
                         <div class="staking-section-title">🧮 Weight Converter (Konversi Berat)</div>
@@ -376,7 +388,6 @@
                     <div class="il-result" id="weightResult" style="display: none;"></div>
                 </div>
 
-                <!-- 🆕 SEASONALITY SECTION -->
                 <div class="commodity-seasonality-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
                     <div class="staking-header">
                         <div class="staking-section-title">🗓️ Gold Seasonality (10 Tahun)</div>
@@ -387,7 +398,6 @@
                     </div>
                 </div>
 
-                <!-- 🆕 INFLATION SECTION -->
                 <div class="commodity-inflation-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
                     <div class="staking-header">
                         <div class="staking-section-title">💵 Harga Emas vs Inflasi</div>
@@ -408,7 +418,7 @@
                 </div>
             </div>
 
-            <!-- HEATMAP -->
+            <!-- HEATMAP (Unchanged) -->
             <div class="tab-content" id="tab-heatmap">
                 <div class="section-header"><h2>🔥 Sector Heatmap</h2></div>
                 <p class="description">Visualisasi performa tiap sektor pasar saham hari ini.</p>
@@ -427,7 +437,7 @@
                 </div>
             </div>
 
-            <!-- COMPARE -->
+            <!-- COMPARE (Unchanged) -->
             <div class="tab-content" id="tab-compare">
                 <div class="section-header"><h2>⚖️ Compare Stocks</h2></div>
                 <p class="description">Bandingin 2 saham head-to-head.</p>
@@ -440,7 +450,7 @@
                 <div id="compareResult"><div class="empty-state">Pilih 2 saham terus tap "Compare Now"</div></div>
             </div>
 
-            <!-- INDEKS -->
+            <!-- INDEKS (Unchanged) -->
             <div class="tab-content" id="tab-indeks">
                 <div class="indeks-banner">
                     <div class="indeks-banner-icon">🌍</div>
@@ -475,19 +485,62 @@
         </div>
     </div>
 
-    <!-- MODAL: ADD GROUP -->
+    <!-- MODAL: ADD GROUP (UPDATED WITH SECTOR) -->
     <div class="modal-overlay" id="groupModal">
         <div class="modal-content">
-            <div class="modal-header"><h3>Buat Group Baru</h3><button class="modal-close" id="closeGroupModal">×</button></div>
+            <div class="modal-header"><h3>Buat Folder Baru</h3><button class="modal-close" id="closeGroupModal">×</button></div>
             <div class="modal-body">
-                <div class="form-group"><label>Nama Group</label><input type="text" id="groupName" placeholder="Contoh: Tech Stocks"></div>
+                <div class="form-group"><label>Nama Folder</label><input type="text" id="groupName" placeholder="Contoh: Finance US Stocks"></div>
                 <div class="form-group"><label>Icon (Emoji)</label><input type="text" id="groupIcon" placeholder="📁" maxlength="2" value="📁"></div>
+                <div class="form-group">
+                    <label>Sektor Folder (Mencegah Aset Nyasar)</label>
+                    <select id="groupSector">
+                        <option value="all">🌐 Campuran (Semua Sektor)</option>
+                        <option value="us-tech">💻 Teknologi (Tech)</option>
+                        <option value="us-finance">🏦 Keuangan (Finance)</option>
+                        <option value="us-healthcare">💊 Kesehatan (Healthcare)</option>
+                        <option value="us-consumer">🛒 Konsumen (Consumer)</option>
+                        <option value="us-industrial">🏭 Industri (Industrial)</option>
+                        <option value="us-energy">⚡ Energi (Energy)</option>
+                        <option value="crypto">🪙 Crypto</option>
+                        <option value="commodity">🥇 Komoditas</option>
+                    </select>
+                </div>
             </div>
-            <div class="modal-footer"><button class="btn-cancel" id="cancelGroup">Batal</button><button class="btn-save" id="saveGroup">Buat Group</button></div>
+            <div class="modal-footer"><button class="btn-cancel" id="cancelGroup">Batal</button><button class="btn-save" id="saveGroup">Buat Folder</button></div>
         </div>
     </div>
 
-    <!-- MODAL: BROWSE -->
+    <!-- MODAL: SORT WATCHLIST (BARU) -->
+    <div class="modal-overlay" id="sortModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Urutkan Watchlist</h3><button class="modal-close" id="closeSortModal">×</button></div>
+            <div class="modal-body" style="gap: 10px;">
+                <button class="sort-option-btn" onclick="applySort('az')">🔤 Abjad (A - Z)</button>
+                <button class="sort-option-btn" onclick="applySort('price-desc')">💰 Harga (Mahal ke Murah)</button>
+                <button class="sort-option-btn" onclick="applySort('price-asc')">💵 Harga (Murah ke Mahal)</button>
+                <button class="sort-option-btn" onclick="applySort('change-desc')">📈 Gainers (Naik Tertinggi)</button>
+                <button class="sort-option-btn" onclick="applySort('change-asc')">📉 Losers (Turun Terendah)</button>
+                <button class="sort-option-btn" onclick="applySort('favorites')">⭐ Favorites First</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: MOVE TO FOLDER (BARU) -->
+    <div class="modal-overlay" id="moveFolderModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Pindahkan ke Folder</h3><button class="modal-close" id="closeMoveFolderModal">×</button></div>
+            <div class="modal-body">
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Pilih folder untuk <strong id="moveAssetSymbol">AAPL</strong>:</p>
+                <div class="form-group">
+                    <select id="moveAssetGroupSelect"></select>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn-cancel" id="cancelMoveFolder">Batal</button><button class="btn-save" id="saveMoveFolder">Pindahkan</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL: BROWSE (Unchanged) -->
     <div class="modal-overlay" id="browseModal">
         <div class="modal-content browse-content">
             <div class="modal-header"><h3>Browse Market</h3><button class="modal-close" id="closeBrowseModal">×</button></div>
@@ -509,7 +562,7 @@
         </div>
     </div>
 
-    <!-- MODAL: ADD HOLDING -->
+    <!-- MODAL: ADD HOLDING (Unchanged) -->
     <div class="modal-overlay" id="holdingModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Tambah Holding</h3><button class="modal-close" id="closeHoldingModal">×</button></div>
@@ -524,7 +577,7 @@
         </div>
     </div>
 
-    <!-- MODAL: CHART & AI -->
+    <!-- MODAL: CHART & AI (Unchanged) -->
     <div class="chart-modal" id="chartModal">
         <div class="chart-content">
             <div class="chart-header">
@@ -584,7 +637,7 @@
         </div>
     </div>
 
-    <!-- MODAL: ALERT -->
+    <!-- MODAL: ALERT (Unchanged) -->
     <div class="modal-overlay" id="alertModal">
         <div class="modal-content alert-modal-content">
             <div class="modal-header"><h3>Set Smart Alert</h3><button class="modal-close" id="closeAlertModal">×</button></div>
@@ -622,7 +675,7 @@
         </div>
     </div>
 
-    <!-- MODAL: NEWS DETAIL -->
+    <!-- MODAL: NEWS DETAIL (Unchanged) -->
     <div class="news-detail-modal" id="newsDetailModal">
         <div class="news-detail-content">
             <div class="news-detail-header">
@@ -642,7 +695,7 @@
         </div>
     </div>
 
-    <!-- MODAL: CURRENCY -->
+    <!-- MODAL: CURRENCY (Unchanged) -->
     <div class="currency-modal" id="currencyModal">
         <div class="currency-content">
             <div class="currency-header"><h3>💱 Currency Converter</h3><button class="modal-close" id="closeCurrencyModal">×</button></div>
@@ -675,7 +728,7 @@
         </div>
     </div>
 
-    <!-- MODAL: SECTOR DETAIL -->
+    <!-- MODAL: SECTOR DETAIL (Unchanged) -->
     <div class="sector-detail-modal" id="sectorDetailModal">
         <div class="sector-detail-content">
             <div class="sector-detail-header">
@@ -691,7 +744,7 @@
         </div>
     </div>
 
-    <!-- MODAL: INDEKS DETAIL -->
+    <!-- MODAL: INDEKS DETAIL (Unchanged) -->
     <div class="indeks-detail-modal" id="indeksDetailModal">
         <div class="indeks-detail-content">
             <div class="indeks-detail-header">
@@ -711,7 +764,7 @@
         </div>
     </div>
 
-    <!-- TOAST: ALERT -->
+    <!-- TOAST: ALERT (Unchanged) -->
     <div class="alert-toast" id="alertToast">
         <div class="alert-toast-icon">🔔</div>
         <div class="alert-toast-content">
@@ -721,7 +774,7 @@
         <button class="alert-toast-close" id="alertToastClose">×</button>
     </div>
 
-    <!-- MODAL: SCORECARD SAHAM -->
+    <!-- MODAL: SCORECARD SAHAM (Unchanged) -->
     <div class="scorecard-modal" id="scorecardModal">
         <div class="scorecard-content">
             <div class="scorecard-header">
@@ -734,7 +787,7 @@
         </div>
     </div>
 
-    <!-- MODAL: DCF -->
+    <!-- MODAL: DCF (Unchanged) -->
     <div class="dcf-modal" id="dcfModal">
         <div class="dcf-content">
             <div class="dcf-header">
@@ -757,7 +810,7 @@
         </div>
     </div>
 
-    <!-- MODAL: CRYPTO CONVERTER -->
+    <!-- MODAL: CRYPTO CONVERTER (Unchanged) -->
     <div class="crypto-converter-modal" id="cryptoConverterModal">
         <div class="crypto-converter-content">
             <div class="crypto-converter-header">
@@ -776,7 +829,7 @@
         </div>
     </div>
 
-    <!-- MODAL: CRYPTO SCORECARD -->
+    <!-- MODAL: CRYPTO SCORECARD (Unchanged) -->
     <div class="crypto-scorecard-modal" id="cryptoScorecardModal">
         <div class="crypto-scorecard-content">
             <div class="crypto-scorecard-header">
@@ -789,7 +842,7 @@
         </div>
     </div>
 
-    <!-- MODAL: CRYPTO CORRELATION -->
+    <!-- MODAL: CRYPTO CORRELATION (Unchanged) -->
     <div class="crypto-correlation-modal" id="cryptoCorrelationModal">
         <div class="crypto-correlation-content">
             <div class="crypto-correlation-header">
@@ -814,7 +867,7 @@
         </div>
     </div>
 
-    <!-- MODAL: COMMODITY CORRELATION -->
+    <!-- MODAL: COMMODITY CORRELATION (Unchanged) -->
     <div class="crypto-correlation-modal" id="commodityCorrelationModal">
         <div class="crypto-correlation-content">
             <div class="crypto-correlation-header">
@@ -839,7 +892,7 @@
         </div>
     </div>
 
-    <!-- 🆕 MODAL: DXY CORRELATION -->
+    <!-- MODAL: DXY CORRELATION (Unchanged) -->
     <div class="crypto-correlation-modal" id="dxyCorrelationModal">
         <div class="crypto-correlation-content">
             <div class="crypto-correlation-header">
@@ -862,6 +915,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=24005"></script>
+    <script src="app.js?v=24006"></script>
 </body>
-    </html>
+                </html>
