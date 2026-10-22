@@ -885,19 +885,18 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
 .currency-refresh-btn { padding: 14px 20px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; margin-bottom: 20px; }
 
 /* =========================================
-   FUTURISTIC BROWSE (ANTI-GLITCH LAYOUT)
+   FUTURISTIC BROWSE (ANTI-GLITCH APK)
    ========================================= */
 .browse-content { 
     width: 100% !important;
-    max-width: 100vw !important;
-    height: 92vh !important;
-    max-height: 92vh !important;
+    height: 90% !important; /* Ganti vh jadi % biar aman di APK */
     display: flex !important;
     flex-direction: column !important;
-    background: var(--bg-navy) !important; /* Hapus gradient yang bikin glitch */
+    background: var(--bg-navy) !important; 
     border-radius: 24px 24px 0 0 !important;
+    position: absolute !important;
+    bottom: 0 !important;
     overflow: hidden !important;
-    box-sizing: border-box !important;
 }
 
 .browse-content .modal-header { 
@@ -913,12 +912,12 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
     color: var(--cyan); 
     margin: 0;
 }
-.browse-content .modal-close svg { width: 20px; height: 20px; stroke: var(--text-secondary); transition: 0.3s; }
+.browse-content .modal-close svg { width: 20px; height: 20px; stroke: var(--text-secondary); }
 .browse-content .modal-close:active svg { stroke: var(--red); transform: rotate(90deg); }
 
 /* Search Bar */
-.browse-search-bar { padding: 8px 20px 12px; flex-shrink: 0; box-sizing: border-box; width: 100%; }
-.browse-search-wrapper { position: relative; display: flex; align-items: center; width: 100%; box-sizing: border-box; }
+.browse-search-bar { padding: 8px 20px 12px; flex-shrink: 0; width: 100%; box-sizing: border-box; }
+.browse-search-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
 .browse-search-wrapper svg { position: absolute; left: 14px; width: 18px; height: 18px; stroke: var(--cyan); opacity: 0.7; }
 .browse-search-wrapper input { 
     width: 100%; padding: 12px 16px 12px 42px; 
@@ -926,13 +925,9 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
     border: 1px solid var(--glass-border); 
     border-radius: 12px; color: var(--text-primary); 
     font-size: 14px; outline: none; font-family: inherit; 
-    transition: 0.3s;
     box-sizing: border-box;
 }
-.browse-search-wrapper input:focus { 
-    border-color: var(--cyan); 
-    box-shadow: 0 0 10px rgba(80, 228, 242, 0.2); 
-}
+.browse-search-wrapper input:focus { border-color: var(--cyan); box-shadow: 0 0 10px rgba(80, 228, 242, 0.2); }
 
 /* Categories Chips */
 .browse-categories { 
@@ -953,44 +948,38 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
     color: var(--cyan); border-color: var(--cyan); 
 }
 
-/* List Body (Kunci Utama Biar Rapi) */
+/* List Body */
 .browse-body { 
     flex: 1; 
     overflow-y: auto; 
-    overflow-x: hidden; /* Cegah geser ke samping */
     padding: 16px 20px; 
     box-sizing: border-box; 
-    width: 100%;
-    display: block; /* Pakai block, jangan flex, biar gak melar */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-/* Item Card */
+/* =========================================
+   ITEM CARD (KUNCI TINGGI BIAR GAK MELAR)
+   ========================================= */
 .browse-item { 
     width: 100%;
-    box-sizing: border-box;
+    height: 68px !important; /* <--- KUNCI MATI TINGGINYA */
+    min-height: 68px !important; 
+    flex-shrink: 0 !important; /* <--- BIAR GAK DITARIK MELAR */
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
     background: var(--card-bg); 
     border: 1px solid var(--glass-border); 
     border-radius: 12px; 
-    padding: 14px 16px; 
+    padding: 0 16px; /* Hapus padding atas bawah, biar center */
     cursor: pointer; 
     position: relative; 
-    
-    /* Jarak antar item */
-    margin-bottom: 10px; 
-    
-    /* Animasi ringan */
-    animation: slideUpFade 0.3s ease-out;
+    box-sizing: border-box;
 }
 
-@keyframes slideUpFade {
-    from { transform: translateY(5px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.browse-item:active { transform: scale(0.98); background: var(--card-elevated); }
+.browse-item:active { background: var(--card-elevated); }
 .browse-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: 0.3s; border-radius: 12px 0 0 12px; }
 .browse-item:hover::before { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
 
@@ -1001,7 +990,7 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
 .browse-item.in-watchlist::before { background: var(--green); box-shadow: 0 0 10px var(--green); }
 
 /* Info Text */
-.browse-item-info { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow: hidden; }
+.browse-item-info { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow: hidden; }
 .browse-symbol-wrap { display: flex; align-items: center; gap: 8px; }
 .browse-symbol { font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px; white-space: nowrap; }
 .browse-name { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1020,17 +1009,8 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
     flex-shrink: 0; margin-left: 10px;
 }
 .browse-badge svg { width: 12px; height: 12px; stroke-width: 3; }
-
-.browse-badge.add { 
-    background: rgba(80, 228, 242, 0.1); color: var(--cyan); 
-    border: 1px solid rgba(80, 228, 242, 0.3); 
-}
-.browse-badge.added { 
-    background: rgba(67, 214, 162, 0.1); color: var(--green); 
-    border: 1px solid rgba(67, 214, 162, 0.3); 
-}
-.browse-badge svg { width: 14px; height: 14px; stroke-width: 3; transition: 0.3s; }
-
+.browse-badge.add { background: rgba(80, 228, 242, 0.1); color: var(--cyan); border: 1px solid rgba(80, 228, 242, 0.3); }
+.browse-badge.added { background: rgba(67, 214, 162, 0.1); color: var(--green); border: 1px solid rgba(67, 214, 162, 0.3); }
 /* Tombol ADD (Neon Pulse Animation) */
 .browse-badge.add { 
     background: rgba(80, 228, 242, 0.1); color: var(--cyan); 
