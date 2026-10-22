@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1008">
+    <link rel="stylesheet" href="style.css?v=1009">
 </head>
 <body>
     <div class="app">
@@ -481,22 +481,6 @@
             <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
             <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
             <button class="crypto-scorecard-btn" id="openCryptoScorecardBtn" style="display:none;">🪙 Crypto Value Scorecard</button>
-
-            <!-- COMPANY PROFILE -->
-            <div class="company-profile-section" id="companyProfileSection" style="display: none;"></div>
-
-            <!-- AI TERMINAL -->
-            <div class="ai-terminal-section">
-                <div class="terminal-header">
-                    <div class="terminal-dots"><span></span><span></span><span></span></div>
-                    <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
-                    <div class="terminal-status" id="terminalStatus">SYS.READY</div>
-                </div>
-                <div class="analysis-body-inline" id="analysisBody">
-                    <div class="loading-spinner"></div>
-                    <p class="loading-text">Menginisialisasi AI Neural Network...</p>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -672,7 +656,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT PAMUNGKAS: FULL METRICS + COMPANY INTEL -->
+    <!-- 🔥 SCRIPT DEWA: FULL METRICS + COMPANY INTEL (ANTI GAGAL) -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
@@ -685,69 +669,45 @@
                 'AMZN': { story: 'Didirikan pada 1994 oleh Jeff Bezos sebagai toko buku online. Berkat obsesinya pada pelanggan, Amazon menjadi raksasa e-commerce dan Cloud (AWS).', gen: 'Generasi ke-2 (Andy Jassy)', sector: 'Consumer Cyclical (E-commerce)', ceo: 'Andy Jassy', owner: 'Jeff Bezos & Public' }
             };
 
-            function renderCompanyProfile(symbol) {
-                const section = document.getElementById('companyProfileSection');
-                if (!section) return;
-                const profile = COMPANY_PROFILES[symbol] || {
-                    story: `${symbol} merupakan perusahaan publik yang terdaftar di bursa saham global. Perusahaan ini terus beradaptasi dengan dinamika pasar untuk memberikan nilai tambah bagi para pemegang saham.`,
-                    gen: 'Generasi ke-1', sector: 'Diversified', ceo: 'TBA', owner: 'Public'
-                };
-                
-                section.style.display = 'block';
-                section.innerHTML = `
-                    <div class="company-profile-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
-                        Company Intel
-                    </div>
-                    <div class="company-story-text">"${profile.story}"</div>
-                    <div class="company-meta-grid">
-                        <div class="company-meta-item"><span class="company-meta-label">Sektor</span><span class="company-meta-value">${profile.sector}</span></div>
-                        <div class="company-meta-item"><span class="company-meta-label">Generasi</span><span class="company-meta-value">${profile.gen}</span></div>
-                        <div class="company-meta-item"><span class="company-meta-label">CEO</span><span class="company-meta-value">${profile.ceo}</span></div>
-                        <div class="company-meta-item"><span class="company-meta-label">Owner Utama</span><span class="company-meta-value">${profile.owner}</span></div>
-                    </div>
-                `;
-            }
-
             window.loadAnalysis = async function(symbol, name, price, type) {
-                if (type === 'stock') {
-                    renderCompanyProfile(symbol);
-                } else {
-                    const cp = document.getElementById('companyProfileSection');
-                    if (cp) cp.style.display = 'none';
-                }
-
-                const oldBox = document.getElementById('forced-ai-box');
-                if (oldBox) oldBox.remove();
-
+                document.querySelectorAll('.ai-terminal-section, #forced-ai-box, .company-profile-section').forEach(el => el.remove());
                 const chartContent = document.querySelector('.chart-content');
                 if (!chartContent) return;
 
-                const aiBox = document.createElement('div');
-                aiBox.id = 'forced-ai-box';
-                aiBox.className = 'ai-terminal-section';
-                aiBox.innerHTML = `
-                    <div class="terminal-header">
-                        <div class="terminal-dots"><span></span><span></span><span></span></div>
-                        <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
-                        <div class="terminal-status" id="terminalStatus">SYS.ANALYZING...</div>
-                    </div>
-                    <div class="analysis-body-inline" id="analysisBody">
-                        <div style="text-align:center; padding: 20px; font-family:monospace; color:#50E4F2;">
-                            <div class="loading-spinner"></div>
-                            <p style="margin-top:10px;">> Menganalisis ${symbol}...</p>
+                if (type === 'stock') {
+                    const profile = COMPANY_PROFILES[symbol] || { story: `${symbol} merupakan perusahaan publik yang terdaftar di bursa saham global.`, gen: 'Generasi ke-1', sector: 'Diversified', ceo: 'TBA', owner: 'Public' };
+                    const cpBox = document.createElement('div');
+                    cpBox.className = 'company-profile-section';
+                    cpBox.style.cssText = "background: linear-gradient(135deg, rgba(20,36,56,0.8), rgba(13,24,39,0.95)); border: 1px solid #E9B949; border-left: 4px solid #E9B949; border-radius: 12px; padding: 16px; margin-bottom: 16px; width: 100%; box-sizing: border-box;";
+                    cpBox.innerHTML = `
+                        <div style="font-size: 14px; font-weight: 800; color: #E9B949; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">⚙️ COMPANY INTEL</div>
+                        <div style="font-size: 12px; line-height: 1.6; color: rgba(244,247,251,0.85); margin-bottom: 14px; font-style: italic; border-left: 2px solid rgba(233,185,73,0.3); padding-left: 8px;">"${profile.story}"</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;"><div style="font-size: 9px; color: #91A8BB; font-weight: bold;">SEKTOR</div><div style="font-size: 12px; font-weight: bold; color: #50E4F2;">${profile.sector}</div></div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;"><div style="font-size: 9px; color: #91A8BB; font-weight: bold;">GENERASI</div><div style="font-size: 12px; font-weight: bold; color: #50E4F2;">${profile.gen}</div></div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;"><div style="font-size: 9px; color: #91A8BB; font-weight: bold;">CEO</div><div style="font-size: 12px; font-weight: bold; color: #50E4F2;">${profile.ceo}</div></div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;"><div style="font-size: 9px; color: #91A8BB; font-weight: bold;">OWNER</div><div style="font-size: 12px; font-weight: bold; color: #50E4F2;">${profile.owner}</div></div>
                         </div>
-                    </div>
-                `;
-                
-                const cpSection = document.getElementById('companyProfileSection');
-                if (cpSection && cpSection.parentNode) {
-                    cpSection.parentNode.insertBefore(aiBox, cpSection.nextSibling);
-                } else {
-                    chartContent.appendChild(aiBox);
+                    `;
+                    chartContent.appendChild(cpBox);
                 }
 
-                const body = document.getElementById('analysisBody');
+                const aiBox = document.createElement('div');
+                aiBox.id = 'forced-ai-box';
+                aiBox.style.cssText = "background: #050a14; border: 1px solid #50E4F2; border-radius: 12px; margin-top: 16px; overflow: hidden; width: 100%; box-sizing: border-box; display: block !important; z-index: 99; position: relative;";
+                aiBox.innerHTML = `
+                    <div style="background: rgba(80,228,242,0.1); border-bottom: 1px solid rgba(80,228,242,0.2); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="color: #50E4F2; font-family: monospace; font-size: 11px; font-weight: bold;">AI_WARREN_BUFFETT.exe</div>
+                        <div style="color: #43D6A2; font-family: monospace; font-size: 10px;" id="terminalStatus">SYS.ANALYZING...</div>
+                    </div>
+                    <div id="forced-ai-body" style="padding: 16px; text-align: center; font-family: monospace; color: #50E4F2;">
+                        <div class="loading-spinner" style="margin: 20px auto;"></div>
+                        <p>> Menganalisis fundamental ${symbol} secara mendalam...</p>
+                    </div>
+                `;
+                chartContent.appendChild(aiBox);
+
+                const body = document.getElementById('forced-ai-body');
                 const status = document.getElementById('terminalStatus');
 
                 try {
@@ -770,52 +730,46 @@
                     
                     status.textContent = 'SYS.ONLINE';
                     
-                    // UI FULL METRICS & AI
-                    const signal = data.ai_signal ? data.ai_signal.toUpperCase() : 'HOLD';
-                    let color = signal.includes('BUY') ? '#43D6A2' : signal.includes('SELL') ? '#FF7387' : '#E9B949';
-                    let icon = signal.includes('BUY') ? '🚀' : signal.includes('SELL') ? '⚠️' : '⏸️';
-                    let conf = data.confidence || 50;
-
                     const pe = fundamental.pe_ratio || 0;
                     const roe = fundamental.roe || 0;
                     const der = fundamental.debt_to_equity || 0;
                     const margin = fundamental.profit_margin || 0;
 
-                    const getMetricClass = (val, good, warn, isLowerBetter = false) => {
-                        if (val === 'N/A') return 'warn';
+                    const getMetricColor = (val, good, warn, isLowerBetter = false) => {
+                        if (val === 'N/A' || val === 0) return '#91A8BB';
                         const num = parseFloat(val);
-                        if (isLowerBetter) { if (num <= good) return 'good'; if (num <= warn) return 'warn'; return 'bad'; } 
-                        else { if (num >= good) return 'good'; if (num >= warn) return 'warn'; return 'bad'; }
+                        if (isLowerBetter) { if (num <= good) return '#43D6A2'; if (num <= warn) return '#E9B949'; return '#FF7387'; } 
+                        else { if (num >= good) return '#43D6A2'; if (num >= warn) return '#E9B949'; return '#FF7387'; }
                     };
 
-                    const metricsHtml = `
-                        <div class="ai-metrics-title">📊 Health Matrix</div>
-                        <div class="ai-metrics-grid">
-                            <div class="ai-metric-item"><span class="ai-metric-label">P/E Ratio</span><span class="ai-metric-value ${getMetricClass(pe, 15, 25, true)}">${pe > 0 ? pe.toFixed(1) : 'N/A'}</span></div>
-                            <div class="ai-metric-item"><span class="ai-metric-label">ROE</span><span class="ai-metric-value ${getMetricClass(roe*100, 15, 10)}">${(roe*100).toFixed(1)}%</span></div>
-                            <div class="ai-metric-item"><span class="ai-metric-label">DER (Debt)</span><span class="ai-metric-value ${getMetricClass(der, 0.5, 1.5, true)}">${der > 0 ? der.toFixed(2) : 'N/A'}</span></div>
-                            <div class="ai-metric-item"><span class="ai-metric-label">Margin</span><span class="ai-metric-value ${getMetricClass(margin*100, 15, 5)}">${(margin*100).toFixed(1)}%</span></div>
-                        </div>
-                    `;
+                    const signal = data.ai_signal ? data.ai_signal.toUpperCase() : 'HOLD';
+                    let color = signal.includes('BUY') ? '#43D6A2' : signal.includes('SELL') ? '#FF7387' : '#E9B949';
+                    let icon = signal.includes('BUY') ? '🚀' : signal.includes('SELL') ? '⚠️' : '⏸️';
+                    let conf = data.confidence || 50;
 
                     body.innerHTML = `
-                        ${metricsHtml}
-                        <div class="ai-verdict-box">
-                            <div class="ai-verdict-signal" style="border: 2px solid ${color}; color: ${color}; box-shadow: 0 0 15px ${color}40;">${icon} ${signal}</div>
-                            <div class="ai-confidence-wrap" style="width: 100%; margin-top: 15px;">
-                                <div class="ai-confidence-header"><span>Confidence Score</span><span style="color: ${color};">${conf}/100</span></div>
-                                <div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: ${conf}%; background: ${color};"></div></div>
+                        <div style="text-align: left; margin-bottom: 16px;">
+                            <div style="font-size: 11px; font-weight: bold; color: #E9B949; margin-bottom: 8px;">📊 HEALTH MATRIX</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border-left: 3px solid ${getMetricColor(pe, 15, 25, true)};"><div style="font-size: 9px; color: #91A8BB; font-weight: bold;">P/E RATIO</div><div style="font-size: 14px; font-weight: bold; color: ${getMetricColor(pe, 15, 25, true)};">${pe > 0 ? pe.toFixed(1) : 'N/A'}</div></div>
+                                <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border-left: 3px solid ${getMetricColor(roe*100, 15, 10)};"><div style="font-size: 9px; color: #91A8BB; font-weight: bold;">ROE</div><div style="font-size: 14px; font-weight: bold; color: ${getMetricColor(roe*100, 15, 10)};">${(roe*100).toFixed(1)}%</div></div>
+                                <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border-left: 3px solid ${getMetricColor(der, 0.5, 1.5, true)};"><div style="font-size: 9px; color: #91A8BB; font-weight: bold;">DER (DEBT)</div><div style="font-size: 14px; font-weight: bold; color: ${getMetricColor(der, 0.5, 1.5, true)};">${der > 0 ? der.toFixed(2) : 'N/A'}</div></div>
+                                <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border-left: 3px solid ${getMetricColor(margin*100, 15, 5)};"><div style="font-size: 9px; color: #91A8BB; font-weight: bold;">PROFIT MARGIN</div><div style="font-size: 14px; font-weight: bold; color: ${getMetricColor(margin*100, 15, 5)};">${(margin*100).toFixed(1)}%</div></div>
                             </div>
                         </div>
-                        <div class="ai-metrics-title">🧠 CRITICAL INSIGHTS</div>
+                        <div style="text-align: center; padding: 15px 0; border-top: 1px dashed #26394C; border-bottom: 1px dashed #26394C; margin-bottom: 16px;">
+                            <div style="display: inline-block; padding: 10px 24px; border-radius: 8px; border: 2px solid ${color}; color: ${color}; font-weight: 900; font-size: 18px; box-shadow: 0 0 20px ${color}40; margin-bottom: 10px;">${icon} ${signal}</div>
+                            <div style="font-size: 10px; color: #91A8BB; margin-bottom: 4px;">AI Confidence Score</div>
+                            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;"><div style="width: ${conf}%; height: 100%; background: ${color};"></div></div>
+                        </div>
+                        <div style="text-align: left; font-size: 11px; font-weight: bold; color: #E9B949; margin-bottom: 8px;">🧠 CRITICAL INSIGHTS</div>
                         ${(data.reasons || []).map(r => {
-                            let cls = 'ai-insight-box';
-                            let rIcon = '💡';
-                            if (r.toLowerCase().includes('risk') || r.toLowerCase().includes('debt')) { cls += ' risk'; rIcon = '🚨'; }
-                            else if (r.toLowerCase().includes('growth') || r.toLowerCase().includes('profit')) { cls += ' opportunity'; rIcon = '📈'; }
-                            return `<div class="${cls}"><strong>${rIcon} Analisis:</strong> ${r}</div>`;
+                            let bColor = '#B9A0FF'; let rIcon = '💡';
+                            if (r.toLowerCase().includes('risk') || r.toLowerCase().includes('debt')) { bColor = '#FF7387'; rIcon = '🚨'; }
+                            else if (r.toLowerCase().includes('growth') || r.toLowerCase().includes('profit')) { bColor = '#43D6A2'; rIcon = '📈'; }
+                            return `<div style="background: rgba(0,0,0,0.3); border-left: 3px solid ${bColor}; padding: 10px; margin-bottom: 8px; border-radius: 0 8px 8px 0; font-size: 11px; text-align: left; color: #F4F7FB; line-height: 1.4;"><strong>${rIcon}</strong> ${r}</div>`;
                         }).join('')}
-                        <div class="ai-summary-text"><strong style="color: var(--cyan);">> EXECUTIVE SUMMARY:</strong><br>${data.analysis || "Tidak ada ringkasan."}</div>
+                        <div style="text-align: left; font-size: 11px; line-height: 1.5; color: #91A8BB; margin-top: 12px;"><strong style="color: #50E4F2;">> EXECUTIVE SUMMARY:</strong><br>${data.analysis || "Tidak ada ringkasan."}</div>
                     `;
 
                 } catch (err) {
@@ -823,11 +777,11 @@
                     body.innerHTML = `<div style="color: #FF7387; padding: 20px; text-align: center; font-family: monospace;">❌ SYS.ERROR: Gagal terhubung ke AI.<br><span style="font-size: 10px;">${err.message}</span></div>`;
                 }
             };
-        }, 1000);
+        }, 1500); 
     });
     </script>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=1008"></script>
+    <script src="app.js?v=1009"></script>
 </body>
-                                                                 </html>
+            </html>
