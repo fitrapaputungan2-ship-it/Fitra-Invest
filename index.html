@@ -21,8 +21,14 @@
                 </div>
             </div>
             <div class="header-right-actions">
-                <button class="currency-open-btn" id="currencyOpenBtn" aria-label="Currency">💱</button>
-                <button class="browse-btn" id="browseStockBtn">+ Browse</button>
+                <!-- Ganti Emoji jadi SVG Icon -->
+                <button class="currency-open-btn" id="currencyOpenBtn" aria-label="Currency">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </button>
+                <button class="browse-btn" id="browseStockBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    Browse
+                </button>
             </div>
         </header>
 
@@ -40,17 +46,19 @@
 
         <main class="content">
 
-            <!-- WATCHLIST REDESIGN -->
+            <!-- WATCHLIST REDESIGN FUTURISTIC -->
             <div class="tab-content active" id="tab-watchlist">
                 <div class="watchlist-header-new">
                     <h2>My Watchlist</h2>
                     <p class="subtitle-new">Track your assets. Understand the market.</p>
                     <div class="watchlist-actions-new">
                         <button class="sort-btn-new" id="sortWatchlistBtn">
-                            <span class="icon">⇅</span> Sort
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="14" y2="12"></line><line x1="4" y1="18" x2="8" y2="18"></line></svg>
+                            Sort
                         </button>
-                        <button class="add-group-btn-new" id="addGroupBtn" title="Tambah Folder">📁</button>
-                        <!-- TOMBOL + MANUAL DAN MODALNYA UDAH DIHAPUS TOTAL -->
+                        <button class="add-group-btn-new" id="addGroupBtn" title="Tambah Folder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+                        </button>
                     </div>
                 </div>
 
@@ -603,6 +611,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=24010"></script> <!-- Naikin versi cache biar update -->
+    <script src="app.js?v=24011"></script> <!-- Naikin versi cache -->
 </body>
-    </html>
+                    </html>
