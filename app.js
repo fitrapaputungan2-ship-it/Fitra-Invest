@@ -2772,3 +2772,77 @@ function renderAdvancedAIUI(data, fundamental, container) {
         if (fillBar) fillBar.style.width = confidence + '%'; 
     }, 100);
 }
+// ==========================================
+// 🥷 NINJA PATCH: AUTO-INJECT AI TERMINAL
+// ==========================================
+
+async function loadAnalysis(symbol, name, price, type) {
+    if (type === 'stock') {
+        renderCompanyProfile(symbol);
+    } else {
+        const cp = document.getElementById('companyProfileSection');
+        if(cp) cp.style.display = 'none';
+    }
+
+    let container = document.getElementById('analysisBody');
+    
+    // JIKA KOTAK AI HILANG DARI HTML, KITA BIKIN OTOMATIS DARI JS!
+    if (!container) {
+        const chartContent = document.querySelector('.chart-content');
+        const cpSection = document.getElementById('companyProfileSection');
+        
+        if (chartContent) {
+            const terminalDiv = document.createElement('div');
+            terminalDiv.className = 'ai-terminal-section';
+            terminalDiv.innerHTML = `
+                <div class="terminal-header">
+                    <div class="terminal-dots"><span></span><span></span><span></span></div>
+                    <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
+                    <div class="terminal-status" id="terminalStatus">SYS.READY</div>
+                </div>
+                <div class="analysis-body-inline" id="analysisBody">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Menginisialisasi AI Neural Network...</p>
+                </div>
+            `;
+            
+            // Selipkan tepat setelah Company Intel
+            if (cpSection && cpSection.parentNode) {
+                cpSection.parentNode.insertBefore(terminalDiv, cpSection.nextSibling);
+            } else {
+                chartContent.appendChild(terminalDiv);
+            }
+            container = document.getElementById('analysisBody');
+        }
+    }
+
+    const statusEl = document.getElementById('terminalStatus');
+    if(!container) return; // Kalo masih gagal, berhenti.
+    
+    if(statusEl) statusEl.textContent = 'SYS.LOADING...';
+    container.innerHTML = `<div style="text-align:center; padding: 30px 0; font-family: monospace; color: var(--cyan);">
+        <div class="loading-spinner"></div>
+        <p class="loading-text" style="margin-top:10px;">> Menghubungkan ke Neural Network...</p>
+        <p class="loading-text" style="color: var(--gold);">> Menganalisis fundamental ${symbol} secara mendalam...</p>
+    </div>`;
+
+    try {
+        const fundamental = await fetchFundamental(symbol, type);
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/analyze-stock`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, name, price, fundamental }) }, 25000);
+        
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        
+        if(statusEl) statusEl.textContent = 'SYS.ONLINE';
+        
+        if (data && data.ai_signal && data.confidence !== undefined) {
+            renderAdvancedAIUI(data, fundamental, container);
+        } else {
+            const fallbackText = data && data.analysis ? data.analysis : "AI gagal memberikan sinyal. Fundamental mungkin terlalu kompleks atau data dari server tidak tersedia.";
+            container.innerHTML = `<div class="ai-analysis-text" style="color: var(--text-secondary); padding: 20px; text-align: center;">${formatAnalysis(fallbackText)}</div>`;
+        }
+    } catch (error) { 
+        if(statusEl) statusEl.textContent = 'SYS.ERROR';
+        container.innerHTML = `<div class="analysis-error"><p style="color:var(--red); font-weight:bold;">❌ Koneksi ke Neural Network Terputus</p><p class="error-detail" style="color:var(--text-secondary); font-size:12px; margin-top:8px;">${error.message}</p></div>`; 
+    }
+}
