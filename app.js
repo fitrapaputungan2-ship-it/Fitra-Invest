@@ -2613,3 +2613,162 @@ renderPriceAlerts();
 fetchMarketMovers();
 setTimeout(() => checkAlerts(), 5000);
 alertCheckInterval = setInterval(checkAlerts, 60000);
+// ==========================================
+// 🔥 OVERRIDE FUNCTIONS: PASTE DI PALING BAWAH
+// ==========================================
+
+// 1. DATABASE PERUSAHAAN (LOKAL)
+const COMPANY_PROFILES = {
+    'AAPL': { story: 'Didirikan pada 1976 oleh Steve Jobs, Steve Wozniak, dan Ronald Wayne. Berawal dari garasi, Apple kini jadi raksasa teknologi global. Perusahaan ini berhasil melewati berbagai krisis dan revolusi produk (Mac, iPod, iPhone).', gen: 'Generasi ke-2 (Tim Cook)', sector: 'Technology (Consumer Electronics)', ceo: 'Tim Cook', owner: 'Institutional Investors & Public' },
+    'MSFT': { story: 'Didirikan pada 1975 oleh Bill Gates dan Paul Allen. Berfokus pada software (Windows & Office) sebelum berevolusi menjadi raksasa Cloud (Azure) dan AI di bawah kepemimpinan Satya Nadella.', gen: 'Generasi ke-3 (Satya Nadella)', sector: 'Technology (Software & Cloud)', ceo: 'Satya Nadella', owner: 'Institutional Investors & Public' },
+    'NVDA': { story: 'Didirikan pada 1993 oleh Jensen Huang, Chris Malachowsky, dan Curtis Priem. Berawal dari GPU untuk gaming, NVIDIA kini mendominasi pasar chip AI global.', gen: 'Generasi ke-1 (Jensen Huang)', sector: 'Technology (Semiconductors)', ceo: 'Jensen Huang', owner: 'Institutional Investors & Public' },
+    'TSLA': { story: 'Didirikan pada 2003 oleh Martin Eberhard dan Marc Tarpenning. Elon Musk bergabung tak lama setelahnya. Misi utamanya adalah mempercepat transisi dunia menuju energi berkelanjutan.', gen: 'Generasi ke-1 (Elon Musk)', sector: 'Consumer Cyclical (Automotive)', ceo: 'Elon Musk', owner: 'Elon Musk & Public' },
+    'GOOGL': { story: 'Didirikan pada 1998 oleh Larry Page dan Sergey Brin saat mereka masih mahasiswa Stanford. Berevolusi dari mesin pencari menjadi raksasa iklan digital dan AI (Alphabet).', gen: 'Generasi ke-2 (Sundar Pichai)', sector: 'Technology (Internet Content)', ceo: 'Sundar Pichai', owner: 'Founders & Public' },
+    'AMZN': { story: 'Didirikan pada 1994 oleh Jeff Bezos sebagai toko buku online. Berkat obsesinya pada pelanggan, Amazon menjadi raksasa e-commerce dan Cloud (AWS).', gen: 'Generasi ke-2 (Andy Jassy)', sector: 'Consumer Cyclical (E-commerce)', ceo: 'Andy Jassy', owner: 'Jeff Bezos & Public' }
+};
+
+function renderCompanyProfile(symbol) {
+    const section = document.getElementById('companyProfileSection');
+    if (!section) return;
+    
+    const profile = COMPANY_PROFILES[symbol] || {
+        story: `${symbol} merupakan perusahaan publik yang terdaftar di bursa saham global. Perusahaan ini terus beradaptasi dengan dinamika pasar untuk memberikan nilai tambah bagi para pemegang saham.`,
+        gen: 'Generasi ke-1', sector: 'Diversified', ceo: 'TBA', owner: 'Public'
+    };
+
+    section.style.display = 'block';
+    section.innerHTML = `
+        <div class="company-profile-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+            Company Intel
+        </div>
+        <div class="company-story-text">"${profile.story}"</div>
+        <div class="company-meta-grid">
+            <div class="company-meta-item"><span class="company-meta-label">Sektor</span><span class="company-meta-value">${profile.sector}</span></div>
+            <div class="company-meta-item"><span class="company-meta-label">Generasi</span><span class="company-meta-value">${profile.gen}</span></div>
+            <div class="company-meta-item"><span class="company-meta-label">CEO</span><span class="company-meta-value">${profile.ceo}</span></div>
+            <div class="company-meta-item"><span class="company-meta-label">Owner Utama</span><span class="company-meta-value">${profile.owner}</span></div>
+        </div>
+    `;
+}
+
+// 2. UPGRADE AI ANALYSIS (Menimpa function lama)
+async function loadAnalysis(symbol, name, price, type) {
+    if (type === 'stock') {
+        renderCompanyProfile(symbol);
+    } else {
+        const cp = document.getElementById('companyProfileSection');
+        if(cp) cp.style.display = 'none';
+    }
+
+    const container = document.getElementById('analysisBody');
+    const statusEl = document.getElementById('terminalStatus');
+    if(!container) return;
+    
+    if(statusEl) statusEl.textContent = 'SYS.LOADING...';
+    container.innerHTML = `<div style="text-align:center; padding: 30px 0; font-family: monospace; color: var(--cyan);">
+        <div class="loading-spinner"></div>
+        <p class="loading-text" style="margin-top:10px;">> Menghubungkan ke Neural Network...</p>
+        <p class="loading-text" style="color: var(--gold);">> Menganalisis fundamental ${symbol} secara mendalam...</p>
+    </div>`;
+
+    try {
+        const fundamental = await fetchFundamental(symbol, type);
+        const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/analyze-stock`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ symbol, name, price, fundamental }) }, 25000);
+        if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
+        
+        if(statusEl) statusEl.textContent = 'SYS.ONLINE';
+        if (data.ai_signal && data.confidence !== undefined) {
+            renderAdvancedAIUI(data, fundamental, container);
+        } else {
+            container.innerHTML = `<div class="ai-analysis-text">${formatAnalysis(data.analysis || 'Gagal memuat analisis.')}</div>`;
+        }
+    } catch (error) { 
+        if(statusEl) statusEl.textContent = 'SYS.ERROR';
+        container.innerHTML = `<div class="analysis-error"><p>❌ Koneksi AI Terputus</p><p class="error-detail">${error.message}</p></div>`; 
+    }
+}
+
+// 3. RENDER UI AI BARU
+function renderAdvancedAIUI(data, fundamental, container) {
+    const signal = data.ai_signal.toUpperCase(); 
+    const confidence = data.confidence; 
+    const reasons = data.reasons || [];
+    
+    let signalClass = 'hold'; let signalIcon = '⏸️'; let barColor = 'var(--gold)';
+    if (signal.includes('BUY')) { signalClass = 'buy'; signalIcon = '🚀'; barColor = 'var(--green)'; } 
+    else if (signal.includes('SELL') || signal.includes('AVOID')) { signalClass = 'sell'; signalIcon = '⚠️'; barColor = 'var(--red)'; }
+
+    const pe = fundamental.pe_ratio || 0;
+    const pb = fundamental.pb_ratio || 0;
+    const roe = fundamental.roe || 0;
+    const der = fundamental.debt_to_equity || 0;
+    const margin = fundamental.profit_margin || 0;
+    const div = fundamental.dividend_yield || 0;
+    const peg = pe > 0 && fundamental.eps_growth > 0 ? (pe / (fundamental.eps_growth * 100)).toFixed(2) : 'N/A';
+    const fcfYield = fundamental.fcf_yield ? (fundamental.fcf_yield * 100).toFixed(1) + '%' : 'N/A';
+
+    const getMetricClass = (val, good, warn, isLowerBetter = false) => {
+        if (val === 'N/A') return 'warn';
+        const num = parseFloat(val);
+        if (isLowerBetter) {
+            if (num <= good) return 'good';
+            if (num <= warn) return 'warn';
+            return 'bad';
+        } else {
+            if (num >= good) return 'good';
+            if (num >= warn) return 'warn';
+            return 'bad';
+        }
+    };
+
+    const metricsHtml = `
+        <div class="ai-metrics-title">📊 Fundamental Health Matrix</div>
+        <div class="ai-metrics-grid">
+            <div class="ai-metric-item"><span class="ai-metric-label">P/E Ratio</span><span class="ai-metric-value ${getMetricClass(pe, 15, 25, true)}">${pe > 0 ? pe.toFixed(1) : 'N/A'}</span></div>
+            <div class="ai-metric-item"><span class="ai-metric-label">PEG Ratio</span><span class="ai-metric-value ${getMetricClass(peg, 1.0, 2.0, true)}">${peg}</span></div>
+            <div class="ai-metric-item"><span class="ai-metric-label">ROE (Return)</span><span class="ai-metric-value ${getMetricClass(roe*100, 15, 10)}">${(roe*100).toFixed(1)}%</span></div>
+            <div class="ai-metric-item"><span class="ai-metric-label">Profit Margin</span><span class="ai-metric-value ${getMetricClass(margin*100, 15, 5)}">${(margin*100).toFixed(1)}%</span></div>
+            <div class="ai-metric-item"><span class="ai-metric-label">DER (Utang)</span><span class="ai-metric-value ${getMetricClass(der, 0.5, 1.5, true)}">${der > 0 ? der.toFixed(2) : 'N/A'}</span></div>
+            <div class="ai-metric-item"><span class="ai-metric-label">Div. Yield</span><span class="ai-metric-value ${getMetricClass(div*100, 3, 1)}">${(div*100).toFixed(1)}%</span></div>
+            <div class="ai-metric-item"><span class="ai-metric-label">P/B Ratio</span><span class="ai-metric-value ${getMetricClass(pb, 1.5, 3, true)}">${pb > 0 ? pb.toFixed(1) : 'N/A'}</span></div>
+            <div class="ai-metric-item"><span class="ai-metric-label">FCF Yield</span><span class="ai-metric-value ${getMetricClass(fcfYield, 5, 2)}">${fcfYield}</span></div>
+        </div>
+    `;
+
+    const reasonsHtml = reasons.map(r => {
+        let boxClass = 'ai-insight-box';
+        let icon = '💡';
+        if (r.toLowerCase().includes('risk') || r.toLowerCase().includes('debt') || r.toLowerCase().includes('turun')) {
+            boxClass += ' risk'; icon = '🚨';
+        } else if (r.toLowerCase().includes('growth') || r.toLowerCase().includes('profit') || r.toLowerCase().includes('naik')) {
+            boxClass += ' opportunity'; icon = '📈';
+        }
+        return `<div class="${boxClass}"><strong>${icon} Analisis:</strong> ${r}</div>`;
+    }).join('');
+
+    container.innerHTML = `
+        ${metricsHtml}
+        
+        <div class="ai-verdict-box">
+            <div class="ai-verdict-signal ${signalClass}">${signalIcon} ${signal}</div>
+            <div class="ai-confidence-wrap" style="width: 100%;">
+                <div class="ai-confidence-header"><span>AI Confidence Score</span><span style="color: ${barColor};">${confidence}/100</span></div>
+                <div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: 0%; background: ${barColor};"></div></div>
+            </div>
+        </div>
+
+        <div class="ai-metrics-title">🧠 Critical Reasoning & Insights</div>
+        ${reasonsHtml}
+
+        <div class="ai-summary-text">
+            <strong style="color: var(--cyan);">> FINAL EXECUTIVE SUMMARY:</strong><br>
+            ${formatAnalysis(data.analysis)}
+        </div>
+    `;
+
+    setTimeout(() => { 
+        const fillBar = container.querySelector('.ai-confidence-fill'); 
+        if (fillBar) fillBar.style.width = confidence + '%'; 
+    }, 100);
+}
