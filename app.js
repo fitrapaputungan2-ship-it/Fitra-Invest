@@ -459,16 +459,15 @@ function renderBrowseStocks() {
         return; 
     }
     
-    body.innerHTML = filtered.map((stock, index) => { 
+    body.innerHTML = filtered.map((stock) => { 
         const inWatchlist = watchlist.some(w => w.symbol === stock.symbol);
         const typeLabel = stock.type === 'stock' ? 'SAHAM' : stock.type === 'crypto' ? 'CRYPTO' : 'KOMODITAS';
         
-        // SVG Icons
         const iconAdd = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
         const iconAdded = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
-        // style="animation-delay: ${index * 0.05}s;" bikin animasinya muncul bergantian
-        return `<div class="browse-item ${inWatchlist ? 'in-watchlist' : ''}" style="animation-delay: ${index * 0.05}s;" onclick="toggleFromBrowse('${stock.symbol}', '${stock.name.replace(/'/g, "\\'")}', '${stock.type}')">
+        // Gw hapus style="animation-delay: ..." biar semua langsung muncul!
+        return `<div class="browse-item ${inWatchlist ? 'in-watchlist' : ''}" onclick="toggleFromBrowse('${stock.symbol}', '${stock.name.replace(/'/g, "\\'")}', '${stock.type}')">
             <div class="browse-item-info">
                 <div class="browse-symbol-wrap">
                     <span class="browse-symbol">${stock.symbol}</span>
