@@ -21,7 +21,6 @@
                 </div>
             </div>
             <div class="header-right-actions">
-                <!-- Theme Toggle Dihapus -->
                 <button class="currency-open-btn" id="currencyOpenBtn" aria-label="Currency">💱</button>
                 <button class="browse-btn" id="browseStockBtn">+ Browse</button>
             </div>
@@ -43,7 +42,6 @@
 
             <!-- WATCHLIST REDESIGN -->
             <div class="tab-content active" id="tab-watchlist">
-                <!-- Header Baru -->
                 <div class="watchlist-header-new">
                     <h2>My Watchlist</h2>
                     <p class="subtitle-new">Track your assets. Understand the market.</p>
@@ -52,34 +50,30 @@
                             <span class="icon">⇅</span> Sort
                         </button>
                         <button class="add-group-btn-new" id="addGroupBtn" title="Tambah Folder">📁</button>
-                        <button class="add-asset-btn-new" id="addAssetBtn">+</button>
+                        <!-- TOMBOL + MANUAL UDAH DIHAPUS -->
                     </div>
                 </div>
 
-                <!-- Market Movers -->
                 <div class="section-header"><h3>Market Movers</h3></div>
                 <div class="market-movers" id="marketMovers"><div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data...</p></div></div>
                 
-                <!-- Price Alerts -->
                 <div class="section-header" style="margin-top: 24px;"><h3>Price Alerts</h3></div>
                 <div class="price-alerts-section" id="priceAlertsSection" style="display: none;">
                     <div class="alerts-header-new"><span>Active Alerts</span><span class="count-badge" id="alertsCount">0</span></div>
                     <div class="price-alerts-list" id="priceAlertsList"></div>
                 </div>
 
-                <!-- Filter Groups (Chips) -->
                 <div class="watchlist-groups-bar" id="watchlistGroupsBar">
                     <button class="group-chip active" data-group="all">🌐 Semua Aset</button>
                     <button class="group-chip" data-group="favorites">⭐ Favorites</button>
                 </div>
 
-                <!-- Daftar Saham -->
                 <div class="watchlist" id="watchlist">
                     <div class="empty-state">Memuat watchlist...</div>
                 </div>
             </div>
 
-            <!-- SCREENER (Unchanged) -->
+            <!-- SCREENER -->
             <div class="tab-content" id="tab-screener">
                 <div class="section-header"><h2>Value Screener</h2></div>
                 <p class="description">Cari saham undervalued dengan fundamental kuat ala Warren Buffett.</p>
@@ -94,7 +88,7 @@
                 <div id="screenerResults"></div>
             </div>
 
-            <!-- PORTFOLIO (Unchanged) -->
+            <!-- PORTFOLIO -->
             <div class="tab-content" id="tab-portfolio">
                 <div class="section-header"><h2>My Portfolio</h2><button class="add-btn" id="addHolding">+</button></div>
                 <div class="portfolio-summary">
@@ -120,13 +114,13 @@
                 <div class="holdings" id="holdings"><div class="empty-state">Belum ada holding.</div></div>
             </div>
 
-            <!-- NEWS (Unchanged) -->
+            <!-- NEWS -->
             <div class="tab-content" id="tab-news">
                 <div class="section-header"><h2>Market News</h2></div>
                 <div class="news-list" id="newsList"><div class="empty-state">Memuat berita...</div></div>
             </div>
 
-            <!-- CRYPTO (Unchanged) -->
+            <!-- CRYPTO -->
             <div class="tab-content" id="tab-crypto">
                 <div class="crypto-banner">
                     <div class="crypto-banner-icon">🪙</div>
@@ -137,20 +131,9 @@
                     </div>
                 </div>
                 <div class="crypto-global-stats" id="cryptoGlobalStats"><div class="crypto-stat-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data global...</p></div></div>
-                <div class="crypto-fng-section" id="cryptoFngSection">
-                    <div class="crypto-fng-title">😱 Fear & Greed Index</div>
-                    <div class="crypto-fng-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat sentimen...</p></div>
-                </div>
-                <div class="crypto-trending-section" id="cryptoTrendingSection">
-                    <div class="crypto-section-title">🔥 Trending Sekarang</div>
-                    <div class="crypto-trending-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat trending...</p></div>
-                </div>
-                <div class="crypto-events-section" id="cryptoEventsSection">
-                    <div class="crypto-section-title">📅 Crypto Events Calendar</div>
-                    <div class="crypto-events-list" id="cryptoEventsList">
-                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat event...</p></div>
-                    </div>
-                </div>
+                <div class="crypto-fng-section" id="cryptoFngSection"><div class="crypto-fng-title">😱 Fear & Greed Index</div><div class="crypto-fng-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat sentimen...</p></div></div>
+                <div class="crypto-trending-section" id="cryptoTrendingSection"><div class="crypto-section-title">🔥 Trending Sekarang</div><div class="crypto-trending-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat trending...</p></div></div>
+                <div class="crypto-events-section" id="cryptoEventsSection"><div class="crypto-section-title">📅 Crypto Events Calendar</div><div class="crypto-events-list" id="cryptoEventsList"><div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat event...</p></div></div></div>
                 <div class="crypto-categories-section" id="cryptoCategoriesSection">
                     <div class="crypto-section-title">🎯 Categories</div>
                     <div class="crypto-cat-bar" id="cryptoCatBar">
@@ -162,9 +145,7 @@
                         <button class="crypto-cat-chip" data-cat="gamefi">🎮 GameFi</button>
                         <button class="crypto-cat-chip" data-cat="rwa">🏠 RWA</button>
                     </div>
-                    <div class="crypto-cat-list" id="cryptoCatList">
-                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat categories...</p></div>
-                    </div>
+                    <div class="crypto-cat-list" id="cryptoCatList"><div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat categories...</p></div></div>
                 </div>
                 <div class="crypto-heatmap-section" id="cryptoHeatmapSection">
                     <div class="crypto-heatmap-header">
@@ -177,76 +158,30 @@
                             <span class="heatmap-legend-item"><span class="legend-box heatmap-pos-strong"></span> +10%+</span>
                         </div>
                     </div>
-                    <div class="crypto-heatmap-grid" id="cryptoHeatmapGrid">
-                        <div class="crypto-heatmap-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat heatmap...</p></div>
-                    </div>
+                    <div class="crypto-heatmap-grid" id="cryptoHeatmapGrid"><div class="crypto-heatmap-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat heatmap...</p></div></div>
                 </div>
                 <div class="staking-section" id="stakingSection">
-                    <div class="staking-header">
-                        <div class="staking-section-title">🥩 Staking Calculator</div>
-                        <div class="staking-subtitle">Hitung estimasi reward staking crypto kamu</div>
-                    </div>
+                    <div class="staking-header"><div class="staking-section-title">🥩 Staking Calculator</div><div class="staking-subtitle">Hitung estimasi reward staking crypto kamu</div></div>
                     <div class="staking-inputs">
-                        <div class="staking-input-group">
-                            <label>Coin</label>
-                            <select id="stakingCoin">
-                                <option value="ETH" data-apy="3.5">🪙 ETH - Ethereum (APY 3.5%)</option>
-                                <option value="SOL" data-apy="7.0">🪙 SOL - Solana (APY 7.0%)</option>
-                                <option value="ADA" data-apy="3.0">🪙 ADA - Cardano (APY 3.0%)</option>
-                                <option value="DOT" data-apy="14.0">🪙 DOT - Polkadot (APY 14.0%)</option>
-                                <option value="ATOM" data-apy="15.0">🪙 ATOM - Cosmos (APY 15.0%)</option>
-                                <option value="MATIC" data-apy="4.5">🪙 MATIC - Polygon (APY 4.5%)</option>
-                                <option value="AVAX" data-apy="7.5">🪙 AVAX - Avalanche (APY 7.5%)</option>
-                                <option value="BNB" data-apy="2.5">🪙 BNB - Binance Coin (APY 2.5%)</option>
-                                <option value="TRX" data-apy="4.0">🪙 TRX - TRON (APY 4.0%)</option>
-                                <option value="NEAR" data-apy="9.0">🪙 NEAR - NEAR Protocol (APY 9.0%)</option>
-                            </select>
-                        </div>
+                        <div class="staking-input-group"><label>Coin</label><select id="stakingCoin">
+                            <option value="ETH" data-apy="3.5">🪙 ETH - Ethereum (APY 3.5%)</option>
+                            <option value="SOL" data-apy="7.0">🪙 SOL - Solana (APY 7.0%)</option>
+                            <option value="ADA" data-apy="3.0">🪙 ADA - Cardano (APY 3.0%)</option>
+                            <option value="DOT" data-apy="14.0">🪙 DOT - Polkadot (APY 14.0%)</option>
+                        </select></div>
                         <div class="staking-input-group"><label>Jumlah Staking ($)</label><input type="number" id="stakingAmount" value="1000" min="0" step="1"></div>
-                        <div class="staking-input-group"><label>APY (%) <span style="font-size: 10px; color: var(--text-muted);">— bisa di-edit manual</span></label><input type="number" id="stakingApy" value="3.5" min="0" max="100" step="0.1"></div>
-                        <div class="staking-input-group">
-                            <label>Durasi</label>
-                            <select id="stakingDuration">
-                                <option value="30">1 Bulan</option>
-                                <option value="90">3 Bulan</option>
-                                <option value="180">6 Bulan</option>
-                                <option value="365" selected>1 Tahun</option>
-                                <option value="730">2 Tahun</option>
-                                <option value="1095">3 Tahun</option>
-                                <option value="1825">5 Tahun</option>
-                            </select>
-                        </div>
-                        <div class="staking-input-group">
-                            <label>Mode</label>
-                            <select id="stakingMode">
-                                <option value="compound">📈 Compound (Bunga Berbunga)</option>
-                                <option value="simple">📊 Simple (Tanpa Compound)</option>
-                            </select>
-                        </div>
-                        <div class="staking-input-group">
-                            <label>Frekuensi Compound</label>
-                            <select id="stakingFrequency">
-                                <option value="365">Harian</option>
-                                <option value="52">Mingguan</option>
-                                <option value="12" selected>Bulanan</option>
-                                <option value="4">Triwulanan</option>
-                                <option value="1">Tahunan</option>
-                            </select>
-                        </div>
+                        <div class="staking-input-group"><label>APY (%)</label><input type="number" id="stakingApy" value="3.5" min="0" max="100" step="0.1"></div>
+                        <div class="staking-input-group"><label>Durasi</label><select id="stakingDuration"><option value="365" selected>1 Tahun</option></select></div>
+                        <div class="staking-input-group"><label>Mode</label><select id="stakingMode"><option value="compound">📈 Compound</option><option value="simple">📊 Simple</option></select></div>
+                        <div class="staking-input-group"><label>Frekuensi Compound</label><select id="stakingFrequency"><option value="12" selected>Bulanan</option></select></div>
                         <button class="staking-calc-btn" id="stakingCalcBtn">📊 Hitung Reward Staking</button>
                     </div>
                     <div class="staking-result" id="stakingResult" style="display: none;"></div>
-                    <div class="staking-chart-section" id="stakingChartSection" style="display: none;">
-                        <div class="staking-chart-title">📈 Pertumbuhan Staking</div>
-                        <div id="stakingChart" class="staking-chart"></div>
-                    </div>
+                    <div class="staking-chart-section" id="stakingChartSection" style="display: none;"><div class="staking-chart-title">📈 Pertumbuhan Staking</div><div id="stakingChart" class="staking-chart"></div></div>
                     <div class="staking-comparison" id="stakingComparison" style="display: none;"></div>
                 </div>
                 <div class="il-calculator-section">
-                    <div class="staking-header">
-                        <div class="staking-section-title">⚖️ Impermanent Loss Calculator</div>
-                        <div class="staking-subtitle">Hitung risiko kerugian di Liquidity Pool (DeFi)</div>
-                    </div>
+                    <div class="staking-header"><div class="staking-section-title">⚖️ Impermanent Loss Calculator</div><div class="staking-subtitle">Hitung risiko kerugian di Liquidity Pool (DeFi)</div></div>
                     <div class="staking-inputs">
                         <div class="il-input-grid">
                             <div class="staking-input-group"><label>Harga Awal Coin A ($)</label><input type="number" id="ilInitA" value="1" step="any"></div>
@@ -259,24 +194,18 @@
                     <div class="il-result" id="ilResult" style="display: none;"></div>
                 </div>
                 <div class="dca-calculator-section">
-                    <div class="staking-header">
-                        <div class="staking-section-title">💰 DCA Calculator (Dollar-Cost Averaging)</div>
-                        <div class="staking-subtitle">Simulasi nabung crypto rutin (Beli di harga rata-rata)</div>
-                    </div>
+                    <div class="staking-header"><div class="staking-section-title">💰 DCA Calculator (Dollar-Cost Averaging)</div><div class="staking-subtitle">Simulasi nabung crypto rutin (Beli di harga rata-rata)</div></div>
                     <div class="staking-inputs">
                         <div class="staking-input-group"><label>Pilih Coin</label><select id="dcaCoin"></select></div>
                         <div class="il-input-grid">
                             <div class="staking-input-group"><label>Nabung per Periode ($)</label><input type="number" id="dcaAmount" value="100" min="1"></div>
-                            <div class="staking-input-group"><label>Frekuensi</label><select id="dcaFrequency"><option value="7">Mingguan</option><option value="30" selected>Bulanan</option></select></div>
-                            <div class="staking-input-group"><label>Durasi</label><select id="dcaDuration"><option value="30">1 Bulan</option><option value="90">3 Bulan</option><option value="180">6 Bulan</option><option value="365" selected>1 Tahun</option><option value="730">2 Tahun</option></select></div>
+                            <div class="staking-input-group"><label>Frekuensi</label><select id="dcaFrequency"><option value="30" selected>Bulanan</option></select></div>
+                            <div class="staking-input-group"><label>Durasi</label><select id="dcaDuration"><option value="365" selected>1 Tahun</option></select></div>
                         </div>
                         <button class="staking-calc-btn" id="dcaCalcBtn" style="background: linear-gradient(135deg, var(--gold), var(--green)); color: #0a0a0f;">💸 Hitung Hasil DCA</button>
                     </div>
                     <div class="dca-result" id="dcaResult" style="display: none;"></div>
-                    <div class="dca-chart-section" id="dcaChartSection" style="display: none;">
-                        <div class="staking-chart-title">📈 Portfolio vs Invested</div>
-                        <div id="dcaChart" class="staking-chart"></div>
-                    </div>
+                    <div class="dca-chart-section" id="dcaChartSection" style="display: none;"><div class="staking-chart-title">📈 Portfolio vs Invested</div><div id="dcaChart" class="staking-chart"></div></div>
                 </div>
                 <div class="crypto-top-section">
                     <div class="crypto-top-header">
@@ -292,7 +221,7 @@
                 <div class="crypto-footer"><span class="crypto-update-info" id="cryptoLastUpdated">Data dari CoinGecko · Terakhir diupdate: --</span></div>
             </div>
 
-            <!-- COMMODITY (Unchanged) -->
+            <!-- COMMODITY -->
             <div class="tab-content" id="tab-commodity">
                 <div class="commodity-banner">
                     <div class="commodity-banner-icon">🥇</div>
@@ -302,142 +231,66 @@
                         <button class="crypto-correlation-btn" id="openDxyCorrelationBtn" aria-label="DXY Correlation" style="color: var(--green); font-size: 16px;">💵</button>
                     </div>
                 </div>
-                
-                <div class="commodity-spotlight-section">
-                    <div class="crypto-section-title">✨ Gold Spotlight</div>
-                    <div class="commodity-spotlight-card" id="goldSpotlight">
-                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data emas...</p></div>
-                    </div>
-                </div>
-
-                <div class="commodity-ratio-section" id="commodityRatioSection">
-                    <div class="crypto-section-title">⚖️ Gold/Silver Ratio</div>
-                    <div class="commodity-ratio-card" id="commodityRatioCard">
-                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat rasio...</p></div>
-                    </div>
-                </div>
-
+                <div class="commodity-spotlight-section"><div class="crypto-section-title">✨ Gold Spotlight</div><div class="commodity-spotlight-card" id="goldSpotlight"><div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat data emas...</p></div></div></div>
+                <div class="commodity-ratio-section" id="commodityRatioSection"><div class="crypto-section-title">⚖️ Gold/Silver Ratio</div><div class="commodity-ratio-card" id="commodityRatioCard"><div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat rasio...</p></div></div></div>
                 <div class="crypto-heatmap-section" id="commodityHeatmapSection">
-                    <div class="crypto-heatmap-header">
-                        <div class="crypto-section-title">🔥 Commodity Heatmap</div>
-                    </div>
-                    <div class="crypto-heatmap-grid" id="commodityHeatmapGrid">
-                        <div class="crypto-heatmap-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat heatmap...</p></div>
-                    </div>
+                    <div class="crypto-heatmap-header"><div class="crypto-section-title">🔥 Commodity Heatmap</div></div>
+                    <div class="crypto-heatmap-grid" id="commodityHeatmapGrid"><div class="crypto-heatmap-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat heatmap...</p></div></div>
                 </div>
-
                 <div class="commodity-idr-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
-                    <div class="staking-header">
-                        <div class="staking-section-title">🇮🇩 Harga Emas (Rupiah)</div>
-                        <div class="staking-subtitle">Estimasi harga emas spot per gram dalam Rupiah</div>
-                    </div>
-                    <div class="il-result" id="idrResult" style="display: block; margin-top: 0;">
-                        <div class="il-result-main" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;">
-                            <div class="il-result-label">Harga Emas / Gram</div>
-                            <div class="il-result-big positive" id="goldIdrPrice">Rp 0</div>
-                            <div class="il-result-sub" id="goldIdrSub">Berdasarkan kurs USD/IDR saat ini</div>
-                        </div>
-                    </div>
+                    <div class="staking-header"><div class="staking-section-title">🇮🇩 Harga Emas (Rupiah)</div><div class="staking-subtitle">Estimasi harga emas spot per gram dalam Rupiah</div></div>
+                    <div class="il-result" id="idrResult" style="display: block; margin-top: 0;"><div class="il-result-main" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;"><div class="il-result-label">Harga Emas / Gram</div><div class="il-result-big positive" id="goldIdrPrice">Rp 0</div><div class="il-result-sub" id="goldIdrSub">Berdasarkan kurs USD/IDR saat ini</div></div></div>
                 </div>
-
                 <div class="commodity-zakat-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
-                    <div class="staking-header">
-                        <div class="staking-section-title">🕌 Kalkulator Zakat Emas</div>
-                        <div class="staking-subtitle">Hitung zakat mal emas (Nisab: 85 gram)</div>
-                    </div>
+                    <div class="staking-header"><div class="staking-section-title">🕌 Kalkulator Zakat Emas</div><div class="staking-subtitle">Hitung zakat mal emas (Nisab: 85 gram)</div></div>
                     <div class="staking-inputs">
-                        <div class="staking-input-group">
-                            <label>Total Berat Emas yang Dimiliki (Gram)</label>
-                            <input type="number" id="zakatGoldWeight" value="100" min="0" step="0.1">
-                        </div>
+                        <div class="staking-input-group"><label>Total Berat Emas yang Dimiliki (Gram)</label><input type="number" id="zakatGoldWeight" value="100" min="0" step="0.1"></div>
                         <button class="staking-calc-btn" id="zakatCalcBtn" style="background: linear-gradient(135deg, var(--green), var(--gold)); color: #0a0a0f;">🕌 Hitung Zakat</button>
                     </div>
                     <div class="il-result" id="zakatResult" style="display: none;"></div>
                 </div>
-
                 <div class="commodity-weight-section">
-                    <div class="staking-header">
-                        <div class="staking-section-title">🧮 Weight Converter (Konversi Berat)</div>
-                        <div class="staking-subtitle">Ubah Troy Ounce ke Gram/Kg (Standar Emas)</div>
-                    </div>
+                    <div class="staking-header"><div class="staking-section-title">🧮 Weight Converter (Konversi Berat)</div><div class="staking-subtitle">Ubah Troy Ounce ke Gram/Kg (Standar Emas)</div></div>
                     <div class="staking-inputs">
                         <div class="il-input-grid">
-                            <div class="staking-input-group">
-                                <label>Jumlah</label>
-                                <input type="number" id="weightAmount" value="1" min="0" step="any">
-                            </div>
-                            <div class="staking-input-group">
-                                <label>Dari</label>
-                                <select id="weightFrom">
-                                    <option value="toz">Troy Ounce (oz t)</option>
-                                    <option value="g">Gram (g)</option>
-                                    <option value="kg">Kilogram (kg)</option>
-                                </select>
-                            </div>
+                            <div class="staking-input-group"><label>Jumlah</label><input type="number" id="weightAmount" value="1" min="0" step="any"></div>
+                            <div class="staking-input-group"><label>Dari</label><select id="weightFrom"><option value="toz">Troy Ounce (oz t)</option><option value="g">Gram (g)</option><option value="kg">Kilogram (kg)</option></select></div>
                         </div>
-                        <div class="staking-input-group">
-                            <label>Konversi Ke</label>
-                            <select id="weightTo">
-                                <option value="g">Gram (g)</option>
-                                <option value="toz">Troy Ounce (oz t)</option>
-                                <option value="kg">Kilogram (kg)</option>
-                            </select>
-                        </div>
+                        <div class="staking-input-group"><label>Konversi Ke</label><select id="weightTo"><option value="g">Gram (g)</option><option value="toz">Troy Ounce (oz t)</option><option value="kg">Kilogram (kg)</option></select></div>
                         <button class="staking-calc-btn" id="weightCalcBtn" style="background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #0a0a0f;">⚖️ Hitung Konversi</button>
                     </div>
                     <div class="il-result" id="weightResult" style="display: none;"></div>
                 </div>
-
                 <div class="commodity-seasonality-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
-                    <div class="staking-header">
-                        <div class="staking-section-title">🗓️ Gold Seasonality (10 Tahun)</div>
-                        <div class="staking-subtitle">Rata-rata performa bulanan Emas historis</div>
-                    </div>
-                    <div id="seasonalityChart" class="seasonality-chart" style="min-height: 200px;">
-                        <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Menghitung data historis...</p></div>
-                    </div>
+                    <div class="staking-header"><div class="staking-section-title">🗓️ Gold Seasonality (10 Tahun)</div><div class="staking-subtitle">Rata-rata performa bulanan Emas historis</div></div>
+                    <div id="seasonalityChart" class="seasonality-chart" style="min-height: 200px;"><div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Menghitung data historis...</p></div></div>
                 </div>
-
                 <div class="commodity-inflation-section" style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px;">
-                    <div class="staking-header">
-                        <div class="staking-section-title">💵 Harga Emas vs Inflasi</div>
-                        <div class="staking-subtitle">Perbandingan harga asli vs harga disesuaikan inflasi (10 Tahun)</div>
-                    </div>
+                    <div class="staking-header"><div class="staking-section-title">💵 Harga Emas vs Inflasi</div><div class="staking-subtitle">Perbandingan harga asli vs harga disesuaikan inflasi (10 Tahun)</div></div>
                     <div id="inflationChart" class="staking-chart" style="height: 250px;"></div>
                 </div>
-
                 <div class="commodity-filters" id="commodityFilters">
                     <button class="commodity-filter-btn active" data-cat="all">🌐 Semua</button>
                     <button class="commodity-filter-btn" data-cat="metals">💍 Logam</button>
                     <button class="commodity-filter-btn" data-cat="energy">🛢️ Energi</button>
                     <button class="commodity-filter-btn" data-cat="agri">🌾 Pertanian</button>
                 </div>
-
-                <div class="commodity-grid" id="commodityGrid">
-                    <div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat pasar komoditas...</p></div>
-                </div>
+                <div class="commodity-grid" id="commodityGrid"><div class="crypto-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat pasar komoditas...</p></div></div>
             </div>
 
-            <!-- HEATMAP (Unchanged) -->
+            <!-- HEATMAP -->
             <div class="tab-content" id="tab-heatmap">
                 <div class="section-header"><h2>🔥 Sector Heatmap</h2></div>
                 <p class="description">Visualisasi performa tiap sektor pasar saham hari ini.</p>
                 <div class="heatmap-sentiment" id="heatmapSentiment">
                     <div class="heatmap-sentiment-title">📊 Market Breadth</div>
-                    <div class="heatmap-sentiment-bar">
-                        <div class="heatmap-sentiment-fill bullish" id="hmBullFill" style="width:50%"></div>
-                        <div class="heatmap-sentiment-fill bearish" id="hmBearFill" style="width:50%"></div>
-                    </div>
-                    <div class="heatmap-sentiment-stats" id="heatmapSentimentStats">
-                        <span class="sentiment-stat bullish">🟢 - Bullish</span><span class="sentiment-stat bearish">🔴 - Bearish</span>
-                    </div>
+                    <div class="heatmap-sentiment-bar"><div class="heatmap-sentiment-fill bullish" id="hmBullFill" style="width:50%"></div><div class="heatmap-sentiment-fill bearish" id="hmBearFill" style="width:50%"></div></div>
+                    <div class="heatmap-sentiment-stats" id="heatmapSentimentStats"><span class="sentiment-stat bullish">🟢 - Bullish</span><span class="sentiment-stat bearish">🔴 - Bearish</span></div>
                 </div>
-                <div class="heatmap-grid" id="heatmapGrid">
-                    <div style="grid-column: 1 / -1; text-align:center; padding: 30px 20px;"><div class="loading-spinner"></div><p class="loading-text">Memuat data sektor...</p></div>
-                </div>
+                <div class="heatmap-grid" id="heatmapGrid"><div style="grid-column: 1 / -1; text-align:center; padding: 30px 20px;"><div class="loading-spinner"></div><p class="loading-text">Memuat data sektor...</p></div></div>
             </div>
 
-            <!-- COMPARE (Unchanged) -->
+            <!-- COMPARE -->
             <div class="tab-content" id="tab-compare">
                 <div class="section-header"><h2>⚖️ Compare Stocks</h2></div>
                 <p class="description">Bandingin 2 saham head-to-head.</p>
@@ -450,12 +303,9 @@
                 <div id="compareResult"><div class="empty-state">Pilih 2 saham terus tap "Compare Now"</div></div>
             </div>
 
-            <!-- INDEKS (Unchanged) -->
+            <!-- INDEKS -->
             <div class="tab-content" id="tab-indeks">
-                <div class="indeks-banner">
-                    <div class="indeks-banner-icon">🌍</div>
-                    <div class="indeks-banner-text"><strong>Pantau Pasar Global</strong><span>Lihat kinerja indeks saham utama dari berbagai negara</span></div>
-                </div>
+                <div class="indeks-banner"><div class="indeks-banner-icon">🌍</div><div class="indeks-banner-text"><strong>Pantau Pasar Global</strong><span>Lihat kinerja indeks saham utama dari berbagai negara</span></div></div>
                 <div class="indeks-search-bar"><input type="text" id="indeksSearch" placeholder="🔍 Cari indeks..." autocomplete="off"></div>
                 <div class="indeks-filters" id="indeksFilters">
                     <button class="indeks-filter-btn active" data-region="all">🌍 Semua</button>
@@ -485,7 +335,7 @@
         </div>
     </div>
 
-    <!-- MODAL: ADD GROUP (UPDATED WITH SECTOR) -->
+    <!-- MODAL: ADD GROUP -->
     <div class="modal-overlay" id="groupModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Buat Folder Baru</h3><button class="modal-close" id="closeGroupModal">×</button></div>
@@ -511,7 +361,7 @@
         </div>
     </div>
 
-    <!-- MODAL: SORT WATCHLIST (BARU) -->
+    <!-- MODAL: SORT WATCHLIST -->
     <div class="modal-overlay" id="sortModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Urutkan Watchlist</h3><button class="modal-close" id="closeSortModal">×</button></div>
@@ -526,21 +376,19 @@
         </div>
     </div>
 
-    <!-- MODAL: MOVE TO FOLDER (BARU) -->
+    <!-- MODAL: MOVE TO FOLDER -->
     <div class="modal-overlay" id="moveFolderModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Pindahkan ke Folder</h3><button class="modal-close" id="closeMoveFolderModal">×</button></div>
             <div class="modal-body">
                 <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Pilih folder untuk <strong id="moveAssetSymbol">AAPL</strong>:</p>
-                <div class="form-group">
-                    <select id="moveAssetGroupSelect"></select>
-                </div>
+                <div class="form-group"><select id="moveAssetGroupSelect"></select></div>
             </div>
             <div class="modal-footer"><button class="btn-cancel" id="cancelMoveFolder">Batal</button><button class="btn-save" id="saveMoveFolder">Pindahkan</button></div>
         </div>
     </div>
 
-    <!-- MODAL: BROWSE (Unchanged) -->
+    <!-- MODAL: BROWSE -->
     <div class="modal-overlay" id="browseModal">
         <div class="modal-content browse-content">
             <div class="modal-header"><h3>Browse Market</h3><button class="modal-close" id="closeBrowseModal">×</button></div>
@@ -562,7 +410,7 @@
         </div>
     </div>
 
-    <!-- MODAL: ADD HOLDING (Unchanged) -->
+    <!-- MODAL: ADD HOLDING -->
     <div class="modal-overlay" id="holdingModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Tambah Holding</h3><button class="modal-close" id="closeHoldingModal">×</button></div>
@@ -577,97 +425,37 @@
         </div>
     </div>
 
-    <!-- MODAL: CHART & AI (Unchanged) -->
+    <!-- MODAL: CHART & AI -->
     <div class="chart-modal" id="chartModal">
         <div class="chart-content">
-            <div class="chart-header">
-                <div>
-                    <h3 id="chartTitle">AAPL — Apple Inc.</h3>
-                    <div class="chart-subtitle" id="chartPrice">$0.00 (+0.00%)</div>
-                </div>
-                <button class="analysis-close" id="closeChartModal">×</button>
-            </div>
-            <div class="chart-toolbar">
-                <div class="tf-group">
-                    <button class="tf-btn" data-tf="5M">5M</button>
-                    <button class="tf-btn" data-tf="30M">30M</button>
-                    <button class="tf-btn" data-tf="1H">1H</button>
-                    <button class="tf-btn active" data-tf="D">D</button>
-                    <button class="tf-btn" data-tf="W">W</button>
-                    <button class="tf-btn" data-tf="M">M</button>
-                    <button class="tf-btn" data-tf="Y">Y</button>
-                </div>
-            </div>
-            <div class="indicator-toggles">
-                <button class="ind-toggle-btn" data-ind="ma50">MA 50</button>
-                <button class="ind-toggle-btn" data-ind="ma200">MA 200</button>
-                <button class="ind-toggle-btn" data-ind="bollinger">Bollinger</button>
-                <button class="ind-toggle-btn" data-ind="macd">MACD</button>
-            </div>
+            <div class="chart-header"><div><h3 id="chartTitle">AAPL — Apple Inc.</h3><div class="chart-subtitle" id="chartPrice">$0.00 (+0.00%)</div></div><button class="analysis-close" id="closeChartModal">×</button></div>
+            <div class="chart-toolbar"><div class="tf-group"><button class="tf-btn" data-tf="5M">5M</button><button class="tf-btn" data-tf="30M">30M</button><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn active" data-tf="D">D</button><button class="tf-btn" data-tf="W">W</button><button class="tf-btn" data-tf="M">M</button><button class="tf-btn" data-tf="Y">Y</button></div></div>
+            <div class="indicator-toggles"><button class="ind-toggle-btn" data-ind="ma50">MA 50</button><button class="ind-toggle-btn" data-ind="ma200">MA 200</button><button class="ind-toggle-btn" data-ind="bollinger">Bollinger</button><button class="ind-toggle-btn" data-ind="macd">MACD</button></div>
             <div class="tradingview-container" id="tradingviewContainer"></div>
             <div class="macd-container" id="macdContainer" style="display:none;"></div>
-            <div class="indicators-panel">
-                <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
-                <div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div>
-                <div class="indicator-item"><span class="ind-label">EMA 20</span><span class="ind-value" id="ema20Value">-</span></div>
-                <div class="indicator-item"><span class="ind-label">RSI 14</span><span class="ind-value" id="rsiValue">-</span></div>
-            </div>
-            <div class="bidask-panel">
-                <div class="bidask-item bid"><span class="bidask-label">BID</span><span class="bidask-value" id="bidValue">-</span></div>
-                <div class="bidask-item ask"><span class="bidask-label">ASK</span><span class="bidask-value" id="askValue">-</span></div>
-            </div>
-            <div class="sentiment-panel">
-                <div class="sentiment-header">
-                    <span class="sentiment-title">MARKET SENTIMENT</span>
-                    <div class="sentiment-stats"><span class="buy-stat" id="buyerPct">50% Buy</span><span class="sell-stat" id="sellerPct">50% Sell</span></div>
-                </div>
-                <div class="sentiment-bar">
-                    <div class="sentiment-fill buy" id="buyerBar" style="width: 50%;"></div>
-                    <div class="sentiment-fill sell" id="sellerBar" style="width: 50%;"></div>
-                </div>
-            </div>
+            <div class="indicators-panel"><div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div><div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div><div class="indicator-item"><span class="ind-label">EMA 20</span><span class="ind-value" id="ema20Value">-</span></div><div class="indicator-item"><span class="ind-label">RSI 14</span><span class="ind-value" id="rsiValue">-</span></div></div>
+            <div class="bidask-panel"><div class="bidask-item bid"><span class="bidask-label">BID</span><span class="bidask-value" id="bidValue">-</span></div><div class="bidask-item ask"><span class="bidask-label">ASK</span><span class="bidask-value" id="askValue">-</span></div></div>
+            <div class="sentiment-panel"><div class="sentiment-header"><span class="sentiment-title">MARKET SENTIMENT</span><div class="sentiment-stats"><span class="buy-stat" id="buyerPct">50% Buy</span><span class="sell-stat" id="sellerPct">50% Sell</span></div></div><div class="sentiment-bar"><div class="sentiment-fill buy" id="buyerBar" style="width: 50%;"></div><div class="sentiment-fill sell" id="sellerBar" style="width: 50%;"></div></div></div>
             <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
             <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
             <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
             <button class="crypto-scorecard-btn" id="openCryptoScorecardBtn" style="display:none;">🪙 Crypto Value Scorecard</button>
-            <div class="analysis-section">
-                <div class="analysis-title">🧠 Analisis AI Value Investing</div>
-                <div class="analysis-body-inline" id="analysisBody"><div class="loading-spinner"></div><p class="loading-text">Mengambil data...</p></div>
-            </div>
+            <div class="analysis-section"><div class="analysis-title">🧠 Analisis AI Value Investing</div><div class="analysis-body-inline" id="analysisBody"><div class="loading-spinner"></div><p class="loading-text">Mengambil data...</p></div></div>
         </div>
     </div>
 
-    <!-- MODAL: ALERT (Unchanged) -->
+    <!-- MODAL: ALERT -->
     <div class="modal-overlay" id="alertModal">
         <div class="modal-content alert-modal-content">
             <div class="modal-header"><h3>Set Smart Alert</h3><button class="modal-close" id="closeAlertModal">×</button></div>
             <div class="modal-body">
-                <div class="alert-info-box">
-                    <div class="alert-info-symbol" id="alertSymbol">AAPL</div>
-                    <div class="alert-info-name" id="alertName">Apple Inc.</div>
-                    <div class="alert-info-current" id="alertCurrentPrice">Harga Sekarang: $0.00</div>
-                </div>
-                <div>
-                    <label style="font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; display: block;">Jenis Alert:</label>
-                    <div class="alert-type-selector">
-                        <button class="alert-type-btn active" data-type="price" onclick="selectAlertType('price')"><span class="type-icon">💰</span><span>Harga</span></button>
-                        <button class="alert-type-btn" data-type="rsi" onclick="selectAlertType('rsi')"><span class="type-icon">📊</span><span>RSI</span></button>
-                        <button class="alert-type-btn" data-type="ema" onclick="selectAlertType('ema')"><span class="type-icon">📈</span><span>EMA</span></button>
-                        <button class="alert-type-btn" data-type="volume" onclick="selectAlertType('volume')"><span class="type-icon">📶</span><span>Volume</span></button>
-                        <button class="alert-type-btn" data-type="multi" onclick="selectAlertType('multi')"><span class="type-icon">🧠</span><span>Multi</span></button>
-                    </div>
-                </div>
+                <div class="alert-info-box"><div class="alert-info-symbol" id="alertSymbol">AAPL</div><div class="alert-info-name" id="alertName">Apple Inc.</div><div class="alert-info-current" id="alertCurrentPrice">Harga Sekarang: $0.00</div></div>
+                <div><label style="font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; display: block;">Jenis Alert:</label><div class="alert-type-selector"><button class="alert-type-btn active" data-type="price" onclick="selectAlertType('price')"><span class="type-icon">💰</span><span>Harga</span></button><button class="alert-type-btn" data-type="rsi" onclick="selectAlertType('rsi')"><span class="type-icon">📊</span><span>RSI</span></button><button class="alert-type-btn" data-type="ema" onclick="selectAlertType('ema')"><span class="type-icon">📈</span><span>EMA</span></button><button class="alert-type-btn" data-type="volume" onclick="selectAlertType('volume')"><span class="type-icon">📶</span><span>Volume</span></button><button class="alert-type-btn" data-type="multi" onclick="selectAlertType('multi')"><span class="type-icon">🧠</span><span>Multi</span></button></div></div>
                 <div class="form-group" id="alertPriceField"><label>Target Harga ($)</label><input type="number" id="alertTargetPrice" placeholder="Masukkan target" step="0.01"></div>
                 <div class="form-group" id="alertRsiField" style="display: none;"><label>Target RSI (0-100)</label><input type="number" id="alertRsiValue" placeholder="30 atau 70" min="0" max="100" step="1"></div>
-                <div class="form-group" id="alertEmaField" style="display: none;">
-                    <label>Periode EMA</label>
-                    <select id="alertEmaPeriod"><option value="9">EMA 9</option><option value="20" selected>EMA 20</option><option value="50">EMA 50</option><option value="200">EMA 200</option></select>
-                </div>
+                <div class="form-group" id="alertEmaField" style="display: none;"><label>Periode EMA</label><select id="alertEmaPeriod"><option value="9">EMA 9</option><option value="20" selected>EMA 20</option><option value="50">EMA 50</option><option value="200">EMA 200</option></select></div>
                 <div class="form-group" id="alertVolumeField" style="display: none;"><label>Multiplier Volume</label><input type="number" id="alertVolumeMultiplier" placeholder="2" min="1" max="10" step="0.5" value="2"></div>
-                <div class="alert-direction-group" id="alertDirectionGroup">
-                    <button class="direction-btn active" data-dir="above" onclick="selectDirection('above')"><span class="dir-icon">↑</span><span class="dir-label">Di Atas</span></button>
-                    <button class="direction-btn" data-dir="below" onclick="selectDirection('below')"><span class="dir-icon">↓</span><span class="dir-label">Di Bawah</span></button>
-                </div>
+                <div class="alert-direction-group" id="alertDirectionGroup"><button class="direction-btn active" data-dir="above" onclick="selectDirection('above')"><span class="dir-icon">↑</span><span class="dir-label">Di Atas</span></button><button class="direction-btn" data-dir="below" onclick="selectDirection('below')"><span class="dir-icon">↓</span><span class="dir-label">Di Bawah</span></button></div>
                 <div class="form-group"><label>Catatan (Opsional)</label><input type="text" id="alertNote" placeholder="Contoh: Buy the dip"></div>
                 <div class="alert-preview" id="alertPreview"><span class="alert-preview-icon">🔔</span><span class="alert-preview-text">Alert bakal aktif kalau harga nyentuh target</span></div>
             </div>
@@ -675,125 +463,72 @@
         </div>
     </div>
 
-    <!-- MODAL: NEWS DETAIL (Unchanged) -->
+    <!-- MODAL: NEWS DETAIL -->
     <div class="news-detail-modal" id="newsDetailModal">
         <div class="news-detail-content">
-            <div class="news-detail-header">
-                <div class="news-detail-header-info"><span class="news-detail-source" id="ndSource">Source</span><span class="news-detail-time" id="ndTime">Time</span></div>
-                <button class="modal-close" id="closeNewsDetail">×</button>
-            </div>
-            <div class="news-detail-badge-row">
-                <span class="sentiment-tag neutral" id="ndCategory">NEWS</span>
-                <span class="news-detail-translation-badge" id="ndTransBadge"><span class="trans-loading-spinner"></span> Menerjemahkan...</span>
-            </div>
+            <div class="news-detail-header"><div class="news-detail-header-info"><span class="news-detail-source" id="ndSource">Source</span><span class="news-detail-time" id="ndTime">Time</span></div><button class="modal-close" id="closeNewsDetail">×</button></div>
+            <div class="news-detail-badge-row"><span class="sentiment-tag neutral" id="ndCategory">NEWS</span><span class="news-detail-translation-badge" id="ndTransBadge"><span class="trans-loading-spinner"></span> Menerjemahkan...</span></div>
             <h2 class="news-detail-title" id="ndTitle">Judul Berita</h2>
             <div class="news-detail-summary" id="ndSummary">Ringkasan berita...</div>
-            <div class="news-detail-actions">
-                <button class="news-action-btn primary" id="ndOpenOriginal">🌐 Baca Asli</button>
-                <button class="news-action-btn" id="ndCopyLink">🔗 Copy Link</button>
-            </div>
+            <div class="news-detail-actions"><button class="news-action-btn primary" id="ndOpenOriginal">🌐 Baca Asli</button><button class="news-action-btn" id="ndCopyLink">🔗 Copy Link</button></div>
         </div>
     </div>
 
-    <!-- MODAL: CURRENCY (Unchanged) -->
+    <!-- MODAL: CURRENCY -->
     <div class="currency-modal" id="currencyModal">
         <div class="currency-content">
             <div class="currency-header"><h3>💱 Currency Converter</h3><button class="modal-close" id="closeCurrencyModal">×</button></div>
             <div class="currency-card">
-                <div class="currency-field"><span class="currency-field-label">Dari</span>
-                    <div class="currency-input-row"><input type="number" id="currencyFromAmount" value="1" min="0" step="any"><select id="currencyFromSelect"></select></div>
-                </div>
+                <div class="currency-field"><span class="currency-field-label">Dari</span><div class="currency-input-row"><input type="number" id="currencyFromAmount" value="1" min="0" step="any"><select id="currencyFromSelect"></select></div></div>
                 <button class="currency-swap-btn" id="currencySwapBtn">⇅</button>
-                <div class="currency-field"><span class="currency-field-label">Ke</span>
-                    <div class="currency-input-row"><select class="currency-to-select" id="currencyToSelect"></select></div>
-                </div>
+                <div class="currency-field"><span class="currency-field-label">Ke</span><div class="currency-input-row"><select class="currency-to-select" id="currencyToSelect"></select></div></div>
                 <div class="currency-result-box" id="currencyToResult">Rp 0</div>
             </div>
-            <div class="currency-card">
-                <div class="currency-rate-info">
-                    <div class="currency-rate-line" id="currencyRateLine">💱 1 USD = ... IDR</div>
-                    <div class="currency-rate-update" id="currencyRateUpdate">Terakhir diupdate: --</div>
-                </div>
-            </div>
-            <div class="currency-quick-section"><span class="currency-quick-label">Jumlah Cepat</span>
-                <div class="currency-quick-amounts">
-                    <button class="quick-amount-btn" data-amount="1">1</button>
-                    <button class="quick-amount-btn active" data-amount="100">100</button>
-                    <button class="quick-amount-btn" data-amount="1000">1K</button>
-                    <button class="quick-amount-btn" data-amount="10000">10K</button>
-                </div>
-            </div>
+            <div class="currency-card"><div class="currency-rate-info"><div class="currency-rate-line" id="currencyRateLine">💱 1 USD = ... IDR</div><div class="currency-rate-update" id="currencyRateUpdate">Terakhir diupdate: --</div></div></div>
+            <div class="currency-quick-section"><span class="currency-quick-label">Jumlah Cepat</span><div class="currency-quick-amounts"><button class="quick-amount-btn" data-amount="1">1</button><button class="quick-amount-btn active" data-amount="100">100</button><button class="quick-amount-btn" data-amount="1000">1K</button><button class="quick-amount-btn" data-amount="10000">10K</button></div></div>
             <div class="currency-quick-section"><span class="currency-quick-label">Mata Uang Populer</span><div class="currency-quick-targets" id="currencyQuickTargets"></div></div>
             <button class="currency-refresh-btn" id="currencyRefreshBtn"><span class="refresh-icon">⟳</span> Refresh Rate</button>
         </div>
     </div>
 
-    <!-- MODAL: SECTOR DETAIL (Unchanged) -->
+    <!-- MODAL: SECTOR DETAIL -->
     <div class="sector-detail-modal" id="sectorDetailModal">
         <div class="sector-detail-content">
-            <div class="sector-detail-header">
-                <div class="sector-detail-title-wrap"><span class="sector-detail-icon" id="sdIcon">🏭</span><div><h3 id="sdName">Technology</h3><p class="sector-detail-subtitle" id="sdSubtitle">- stocks</p></div></div>
-                <button class="analysis-close" id="closeSectorDetail">×</button>
-            </div>
-            <div class="sector-detail-summary">
-                <div class="sector-summary-item"><span class="summary-label">AVG CHANGE</span><span class="summary-value" id="sdAvgChange">-</span></div>
-                <div class="sector-summary-item"><span class="summary-label">BULLISH</span><span class="summary-value up" id="sdBullish">-</span></div>
-                <div class="sector-summary-item"><span class="summary-label">BEARISH</span><span class="summary-value down" id="sdBearish">-</span></div>
-            </div>
+            <div class="sector-detail-header"><div class="sector-detail-title-wrap"><span class="sector-detail-icon" id="sdIcon">🏭</span><div><h3 id="sdName">Technology</h3><p class="sector-detail-subtitle" id="sdSubtitle">- stocks</p></div></div><button class="analysis-close" id="closeSectorDetail">×</button></div>
+            <div class="sector-detail-summary"><div class="sector-summary-item"><span class="summary-label">AVG CHANGE</span><span class="summary-value" id="sdAvgChange">-</span></div><div class="sector-summary-item"><span class="summary-label">BULLISH</span><span class="summary-value up" id="sdBullish">-</span></div><div class="sector-summary-item"><span class="summary-label">BEARISH</span><span class="summary-value down" id="sdBearish">-</span></div></div>
             <div class="sector-stocks-list" id="sdStocksList"></div>
         </div>
     </div>
 
-    <!-- MODAL: INDEKS DETAIL (Unchanged) -->
+    <!-- MODAL: INDEKS DETAIL -->
     <div class="indeks-detail-modal" id="indeksDetailModal">
         <div class="indeks-detail-content">
-            <div class="indeks-detail-header">
-                <div class="indeks-detail-title-wrap"><span class="indeks-detail-flag" id="detailFlag">🌍</span><div><h3 id="detailTitle">Indeks</h3><p class="indeks-detail-subtitle" id="detailSubtitle">Region</p></div></div>
-                <button class="analysis-close" id="closeDetailModal">×</button>
-            </div>
+            <div class="indeks-detail-header"><div class="indeks-detail-title-wrap"><span class="indeks-detail-flag" id="detailFlag">🌍</span><div><h3 id="detailTitle">Indeks</h3><p class="indeks-detail-subtitle" id="detailSubtitle">Region</p></div></div><button class="analysis-close" id="closeDetailModal">×</button></div>
             <div class="indeks-detail-price-box"><div class="indeks-detail-price" id="detailPrice">-</div><div class="indeks-detail-change" id="detailChange">-</div></div>
-            <div class="indeks-detail-stats">
-                <div class="indeks-stat-item"><span class="indeks-stat-label">DAY HIGH</span><span class="indeks-stat-value up" id="detailHigh">-</span></div>
-                <div class="indeks-stat-item"><span class="indeks-stat-label">DAY LOW</span><span class="indeks-stat-value down" id="detailLow">-</span></div>
-                <div class="indeks-stat-item"><span class="indeks-stat-label">PREV CLOSE</span><span class="indeks-stat-value" id="detailPrevClose">-</span></div>
-                <div class="indeks-stat-item"><span class="indeks-stat-label">VOLUME</span><span class="indeks-stat-value" id="detailVolume">-</span></div>
-            </div>
+            <div class="indeks-detail-stats"><div class="indeks-stat-item"><span class="indeks-stat-label">DAY HIGH</span><span class="indeks-stat-value up" id="detailHigh">-</span></div><div class="indeks-stat-item"><span class="indeks-stat-label">DAY LOW</span><span class="indeks-stat-value down" id="detailLow">-</span></div><div class="indeks-stat-item"><span class="indeks-stat-label">PREV CLOSE</span><span class="indeks-stat-value" id="detailPrevClose">-</span></div><div class="indeks-stat-item"><span class="indeks-stat-label">VOLUME</span><span class="indeks-stat-value" id="detailVolume">-</span></div></div>
             <div class="indeks-detail-sectors-section"><h4 class="indeks-section-title">🏭 Sektor Breakdown</h4><div class="indeks-sectors-list" id="detailSectors"></div></div>
             <div class="indeks-detail-chart-section"><h4 class="indeks-section-title">📈 Chart 1 Tahun</h4><div id="indeksChartContainer" class="indeks-chart-container"></div></div>
             <div class="indeks-detail-constituents-section"><h4 class="indeks-section-title">🏆 Top Holdings</h4><div class="indeks-constituents-list" id="detailConstituents"></div></div>
         </div>
     </div>
 
-    <!-- TOAST: ALERT (Unchanged) -->
-    <div class="alert-toast" id="alertToast">
-        <div class="alert-toast-icon">🔔</div>
-        <div class="alert-toast-content">
-            <div class="alert-toast-title" id="alertToastTitle">Alert!</div>
-            <div class="alert-toast-message" id="alertToastMessage">Pesan alert...</div>
-        </div>
-        <button class="alert-toast-close" id="alertToastClose">×</button>
-    </div>
+    <!-- TOAST: ALERT -->
+    <div class="alert-toast" id="alertToast"><div class="alert-toast-icon">🔔</div><div class="alert-toast-content"><div class="alert-toast-title" id="alertToastTitle">Alert!</div><div class="alert-toast-message" id="alertToastMessage">Pesan alert...</div></div><button class="alert-toast-close" id="alertToastClose">×</button></div>
 
-    <!-- MODAL: SCORECARD SAHAM (Unchanged) -->
+    <!-- MODAL: SCORECARD SAHAM -->
     <div class="scorecard-modal" id="scorecardModal">
         <div class="scorecard-content">
-            <div class="scorecard-header">
-                <div><h3 id="scorecardTitle">AAPL — Apple Inc.</h3><div class="scorecard-subtitle">Value Investing Scorecard ala Warren Buffett</div></div>
-                <button class="analysis-close" id="closeScorecardModal">×</button>
-            </div>
+            <div class="scorecard-header"><div><h3 id="scorecardTitle">AAPL — Apple Inc.</h3><div class="scorecard-subtitle">Value Investing Scorecard ala Warren Buffett</div></div><button class="analysis-close" id="closeScorecardModal">×</button></div>
             <div class="scorecard-hero" id="scorecardHero"><div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Menghitung skor...</p></div></div>
             <div class="scorecard-breakdown" id="scorecardBreakdown"></div>
             <div class="scorecard-verdict" id="scorecardVerdict" style="display:none;"></div>
         </div>
     </div>
 
-    <!-- MODAL: DCF (Unchanged) -->
+    <!-- MODAL: DCF -->
     <div class="dcf-modal" id="dcfModal">
         <div class="dcf-content">
-            <div class="dcf-header">
-                <div><h3 id="dcfTitle">AAPL — Apple Inc.</h3><div class="dcf-subtitle">DCF Valuation Calculator</div></div>
-                <button class="analysis-close" id="closeDcfModal">×</button>
-            </div>
+            <div class="dcf-header"><div><h3 id="dcfTitle">AAPL — Apple Inc.</h3><div class="dcf-subtitle">DCF Valuation Calculator</div></div><button class="analysis-close" id="closeDcfModal">×</button></div>
             <div class="dcf-hero" id="dcfHero"><div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Mengambil data...</p></div></div>
             <div class="dcf-inputs-section" id="dcfInputsSection">
                 <div class="dcf-section-title">⚙️ Asumsi DCF</div>
@@ -810,13 +545,10 @@
         </div>
     </div>
 
-    <!-- MODAL: CRYPTO CONVERTER (Unchanged) -->
+    <!-- MODAL: CRYPTO CONVERTER -->
     <div class="crypto-converter-modal" id="cryptoConverterModal">
         <div class="crypto-converter-content">
-            <div class="crypto-converter-header">
-                <div><h3>🔄 Crypto Converter</h3><div class="crypto-converter-subtitle">Konversi antar crypto & USD</div></div>
-                <button class="analysis-close" id="closeCryptoConverterModal">×</button>
-            </div>
+            <div class="crypto-converter-header"><div><h3>🔄 Crypto Converter</h3><div class="crypto-converter-subtitle">Konversi antar crypto & USD</div></div><button class="analysis-close" id="closeCryptoConverterModal">×</button></div>
             <div class="crypto-converter-card">
                 <div class="crypto-converter-field"><span class="crypto-converter-label">Jumlah</span><input type="number" id="cryptoConvAmount" value="1" min="0" step="any"></div>
                 <div class="crypto-converter-field"><span class="crypto-converter-label">Dari</span><select id="cryptoConvFrom"></select></div>
@@ -829,92 +561,62 @@
         </div>
     </div>
 
-    <!-- MODAL: CRYPTO SCORECARD (Unchanged) -->
+    <!-- MODAL: CRYPTO SCORECARD -->
     <div class="crypto-scorecard-modal" id="cryptoScorecardModal">
         <div class="crypto-scorecard-content">
-            <div class="crypto-scorecard-header">
-                <div><h3 id="cryptoScorecardTitle">BTC — Bitcoin</h3><div class="crypto-scorecard-subtitle">Crypto Value Scorecard</div></div>
-                <button class="analysis-close" id="closeCryptoScorecardModal">×</button>
-            </div>
+            <div class="crypto-scorecard-header"><div><h3 id="cryptoScorecardTitle">BTC — Bitcoin</h3><div class="crypto-scorecard-subtitle">Crypto Value Scorecard</div></div><button class="analysis-close" id="closeCryptoScorecardModal">×</button></div>
             <div class="crypto-scorecard-hero" id="cryptoScorecardHero"><div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Menghitung skor crypto...</p></div></div>
             <div class="crypto-scorecard-breakdown" id="cryptoScorecardBreakdown"></div>
             <div class="crypto-scorecard-verdict" id="cryptoScorecardVerdict" style="display:none;"></div>
         </div>
     </div>
 
-    <!-- MODAL: CRYPTO CORRELATION (Unchanged) -->
+    <!-- MODAL: CRYPTO CORRELATION -->
     <div class="crypto-correlation-modal" id="cryptoCorrelationModal">
         <div class="crypto-correlation-content">
-            <div class="crypto-correlation-header">
-                <div><h3>📊 Crypto Correlation</h3><div class="crypto-correlation-subtitle">Bandingkan pergerakan 2 coin</div></div>
-                <button class="analysis-close" id="closeCryptoCorrelationModal">×</button>
-            </div>
+            <div class="crypto-correlation-header"><div><h3>📊 Crypto Correlation</h3><div class="crypto-correlation-subtitle">Bandingkan pergerakan 2 coin</div></div><button class="analysis-close" id="closeCryptoCorrelationModal">×</button></div>
             <div class="crypto-correlation-card">
                 <div class="crypto-corr-input-group"><label>Coin A</label><select id="corrCoinA"></select></div>
                 <div class="crypto-corr-vs">VS</div>
                 <div class="crypto-corr-input-group"><label>Coin B</label><select id="corrCoinB"></select></div>
-                <div class="crypto-corr-input-group">
-                    <label>Period</label>
-                    <select id="corrPeriod"><option value="30">30 Hari</option><option value="90" selected>90 Hari</option><option value="365">365 Hari</option></select>
-                </div>
+                <div class="crypto-corr-input-group"><label>Period</label><select id="corrPeriod"><option value="30">30 Hari</option><option value="90" selected>90 Hari</option><option value="365">365 Hari</option></select></div>
                 <button class="crypto-corr-calc-btn" id="corrCalcBtn">📊 Hitung Korelasi</button>
             </div>
             <div class="crypto-correlation-result" id="corrResult" style="display:none;"></div>
-            <div class="crypto-correlation-chart-section" id="corrChartSection" style="display:none;">
-                <div class="crypto-corr-chart-title">📈 Chart Overlay (Normalized %)</div>
-                <div id="corrChart" class="crypto-corr-chart"></div>
-            </div>
+            <div class="crypto-correlation-chart-section" id="corrChartSection" style="display:none;"><div class="crypto-corr-chart-title">📈 Chart Overlay (Normalized %)</div><div id="corrChart" class="crypto-corr-chart"></div></div>
         </div>
     </div>
 
-    <!-- MODAL: COMMODITY CORRELATION (Unchanged) -->
+    <!-- MODAL: COMMODITY CORRELATION -->
     <div class="crypto-correlation-modal" id="commodityCorrelationModal">
         <div class="crypto-correlation-content">
-            <div class="crypto-correlation-header">
-                <div><h3>📊 Commodity Correlation</h3><div class="crypto-correlation-subtitle">Bandingkan pergerakan 2 komoditas</div></div>
-                <button class="analysis-close" id="closeCommodityCorrelationModal">×</button>
-            </div>
+            <div class="crypto-correlation-header"><div><h3>📊 Commodity Correlation</h3><div class="crypto-correlation-subtitle">Bandingkan pergerakan 2 komoditas</div></div><button class="analysis-close" id="closeCommodityCorrelationModal">×</button></div>
             <div class="crypto-correlation-card">
                 <div class="crypto-corr-input-group"><label>Komoditas A</label><select id="commCorrA"></select></div>
                 <div class="crypto-corr-vs">VS</div>
                 <div class="crypto-corr-input-group"><label>Komoditas B</label><select id="commCorrB"></select></div>
-                <div class="crypto-corr-input-group">
-                    <label>Period</label>
-                    <select id="commCorrPeriod"><option value="30">30 Hari</option><option value="90" selected>90 Hari</option><option value="365">365 Hari</option></select>
-                </div>
+                <div class="crypto-corr-input-group"><label>Period</label><select id="commCorrPeriod"><option value="30">30 Hari</option><option value="90" selected>90 Hari</option><option value="365">365 Hari</option></select></div>
                 <button class="crypto-corr-calc-btn" id="commCorrCalcBtn">📊 Hitung Korelasi</button>
             </div>
             <div class="crypto-correlation-result" id="commCorrResult" style="display:none;"></div>
-            <div class="crypto-correlation-chart-section" id="commCorrChartSection" style="display:none;">
-                <div class="crypto-corr-chart-title">📈 Chart Overlay (Normalized %)</div>
-                <div id="commCorrChart" class="crypto-corr-chart"></div>
-            </div>
+            <div class="crypto-correlation-chart-section" id="commCorrChartSection" style="display:none;"><div class="crypto-corr-chart-title">📈 Chart Overlay (Normalized %)</div><div id="commCorrChart" class="crypto-corr-chart"></div></div>
         </div>
     </div>
 
-    <!-- MODAL: DXY CORRELATION (Unchanged) -->
+    <!-- MODAL: DXY CORRELATION -->
     <div class="crypto-correlation-modal" id="dxyCorrelationModal">
         <div class="crypto-correlation-content">
-            <div class="crypto-correlation-header">
-                <div><h3>💵 DXY vs Gold</h3><div class="crypto-correlation-subtitle">Korelasi Dolar AS (DXY) vs Emas</div></div>
-                <button class="analysis-close" id="closeDxyCorrelationModal">×</button>
-            </div>
+            <div class="crypto-correlation-header"><div><h3>💵 DXY vs Gold</h3><div class="crypto-correlation-subtitle">Korelasi Dolar AS (DXY) vs Emas</div></div><button class="analysis-close" id="closeDxyCorrelationModal">×</button></div>
             <div class="crypto-correlation-card">
-                <div class="crypto-corr-input-group">
-                    <label>Period</label>
-                    <select id="dxyPeriod"><option value="30">30 Hari</option><option value="90" selected>90 Hari</option><option value="365">365 Hari</option></select>
-                </div>
+                <div class="crypto-corr-input-group"><label>Period</label><select id="dxyPeriod"><option value="30">30 Hari</option><option value="90" selected>90 Hari</option><option value="365">365 Hari</option></select></div>
                 <button class="crypto-corr-calc-btn" id="dxyCalcBtn" style="background: linear-gradient(135deg, var(--green), var(--cyan));">📊 Hitung Korelasi DXY</button>
             </div>
             <div class="crypto-correlation-result" id="dxyResult" style="display:none;"></div>
-            <div class="crypto-correlation-chart-section" id="dxyChartSection" style="display:none;">
-                <div class="crypto-corr-chart-title">📈 Chart Overlay DXY vs Gold (Normalized %)</div>
-                <div id="dxyChart" class="crypto-corr-chart"></div>
-            </div>
+            <div class="crypto-correlation-chart-section" id="dxyChartSection" style="display:none;"><div class="crypto-corr-chart-title">📈 Chart Overlay DXY vs Gold (Normalized %)</div><div id="dxyChart" class="crypto-corr-chart"></div></div>
         </div>
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=24006"></script>
+    <script src="app.js?v=24008"></script>
 </body>
-                </html>
+    </html>
