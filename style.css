@@ -982,35 +982,125 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
 .browse-item:active { background: var(--card-elevated); }
 .browse-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: 0.3s; border-radius: 12px 0 0 12px; }
 .browse-item:hover::before { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
-
-.browse-item.in-watchlist { 
-    background: rgba(67, 214, 162, 0.08); 
-    border-color: rgba(67, 214, 162, 0.3); 
+/* =========================================
+   ULTIMATE WEBVIEW-PROOF BROWSE MODAL
+   ========================================= */
+.browse-content { 
+    width: 100% !important;
+    height: 90vh !important; /* Pakai vh lagi, tapi kita paksa */
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #0D1827 !important; /* Warna solid, anti transparan */
+    border-radius: 24px 24px 0 0 !important;
+    overflow: hidden !important; /* Kunci mati */
+    display: block !important; /* HAPUS FLEXBOX DI SINI! */
 }
-.browse-item.in-watchlist::before { background: var(--green); box-shadow: 0 0 10px var(--green); }
 
-/* Info Text */
-.browse-item-info { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow: hidden; }
-.browse-symbol-wrap { display: flex; align-items: center; gap: 8px; }
-.browse-symbol { font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px; white-space: nowrap; }
-.browse-name { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Header (Kunci Tinggi 60px) */
+.browse-content .modal-header { 
+    height: 60px !important;
+    padding: 0 20px !important; 
+    display: flex !important; 
+    align-items: center !important;
+    justify-content: space-between !important;
+    border-bottom: 1px solid #26394C !important;
+    box-sizing: border-box !important;
+}
+.browse-content .modal-header h3 { 
+    font-size: 20px; font-weight: 800; color: #50E4F2; margin: 0; 
+}
+.browse-content .modal-close svg { width: 20px; height: 20px; stroke: #91A8BB; }
+.browse-content .modal-close:active svg { stroke: #FF7387; }
 
-/* Type Tags */
-.browse-type-tag { font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-.browse-type-tag.stock { background: rgba(185, 160, 255, 0.15); color: var(--violet); border: 1px solid rgba(185, 160, 255, 0.3); }
-.browse-type-tag.crypto { background: rgba(80, 228, 242, 0.15); color: var(--cyan); border: 1px solid rgba(80, 228, 242, 0.3); }
-.browse-type-tag.commodity { background: rgba(233, 185, 73, 0.15); color: var(--gold); border: 1px solid rgba(233, 185, 73, 0.3); }
+/* Search Bar (Kunci Tinggi 70px) */
+.browse-search-bar { 
+    height: 70px !important;
+    padding: 12px 20px !important; 
+    box-sizing: border-box !important; 
+}
+.browse-search-wrapper { position: relative; display: flex; align-items: center; width: 100%; height: 100%; }
+.browse-search-wrapper svg { position: absolute; left: 14px; width: 18px; height: 18px; stroke: #50E4F2; }
+.browse-search-wrapper input { 
+    width: 100%; height: 100%; padding: 0 16px 0 42px; 
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid #26394C; 
+    border-radius: 12px; color: #F4F7FB; 
+    font-size: 14px; outline: none; font-family: inherit; 
+    box-sizing: border-box !important;
+}
 
-/* Action Buttons */
+/* Categories (Kunci Tinggi 50px) */
+.browse-categories { 
+    height: 50px !important;
+    padding: 0 20px 12px !important; 
+    display: flex !important; 
+    gap: 8px !important; 
+    overflow-x: auto !important; 
+    align-items: center !important;
+    box-sizing: border-box !important;
+}
+.browse-categories::-webkit-scrollbar { height: 0; }
+.cat-btn { 
+    background: rgba(255, 255, 255, 0.05); border: 1px solid #26394C; 
+    color: #91A8BB; font-size: 11px; font-weight: 700; 
+    padding: 6px 14px; border-radius: 16px; cursor: pointer; font-family: inherit; 
+    white-space: nowrap; flex-shrink: 0 !important; 
+}
+.cat-btn.active { background: rgba(80, 228, 242, 0.15); color: #50E4F2; border-color: #50E4F2; }
+
+/* AREA SCROLL (INI KUNCI RAHASIANYA) */
+.browse-body { 
+    height: calc(90vh - 180px) !important; /* 90vh - (Header 60 + Search 70 + Cat 50) */
+    overflow-y: auto !important; 
+    padding: 10px 20px 30px !important; 
+    box-sizing: border-box !important; 
+    display: block !important; /* JANGAN PAKAI FLEXBOX DI SINI */
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* ITEM CARD (KUNCI TINGGI 72px) */
+.browse-item { 
+    width: 100%;
+    height: 72px !important; /* KUNCI MATI TINGGINYA */
+    display: flex !important; 
+    justify-content: space-between !important; 
+    align-items: center !important; 
+    background: #101F30 !important; 
+    border: 1px solid #26394C !important; 
+    border-radius: 12px !important; 
+    padding: 0 16px !important; 
+    cursor: pointer; 
+    position: relative !important; 
+    box-sizing: border-box !important;
+    margin-bottom: 10px !important; /* Jarak antar item pakai margin, BUKAN gap */
+}
+
+.browse-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; border-radius: 12px 0 0 12px; }
+.browse-item.in-watchlist { background: rgba(67, 214, 162, 0.08) !important; border-color: rgba(67, 214, 162, 0.3) !important; }
+.browse-item.in-watchlist::before { background: #43D6A2; box-shadow: 0 0 10px #43D6A2; }
+
+/* Teks & Label */
+.browse-item-info { display: flex !important; flex-direction: column !important; gap: 4px !important; flex: 1 !important; overflow: hidden !important; }
+.browse-symbol-wrap { display: flex !important; align-items: center !important; gap: 8px !important; }
+.browse-symbol { font-size: 15px; font-weight: 800; color: #F4F7FB; white-space: nowrap; }
+.browse-name { font-size: 11px; color: #91A8BB; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.browse-type-tag { font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+.browse-type-tag.stock { background: rgba(185, 160, 255, 0.15); color: #B9A0FF; }
+.browse-type-tag.crypto { background: rgba(80, 228, 242, 0.15); color: #50E4F2; }
+.browse-type-tag.commodity { background: rgba(233, 185, 73, 0.15); color: #E9B949; }
+
+/* Tombol Add */
 .browse-badge { 
     font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: 8px; 
-    text-transform: uppercase; letter-spacing: 0.5px; 
-    display: flex; align-items: center; gap: 4px; transition: 0.3s;
-    flex-shrink: 0; margin-left: 10px;
+    display: flex !important; align-items: center !important; gap: 4px !important; 
+    flex-shrink: 0 !important; margin-left: 10px !important;
 }
 .browse-badge svg { width: 12px; height: 12px; stroke-width: 3; }
-.browse-badge.add { background: rgba(80, 228, 242, 0.1); color: var(--cyan); border: 1px solid rgba(80, 228, 242, 0.3); }
-.browse-badge.added { background: rgba(67, 214, 162, 0.1); color: var(--green); border: 1px solid rgba(67, 214, 162, 0.3); }
+.browse-badge.add { background: rgba(80, 228, 242, 0.1); color: #50E4F2; border: 1px solid rgba(80, 228, 242, 0.3); }
+.browse-badge.added { background: rgba(67, 214, 162, 0.1); color: #43D6A2; border: 1px solid rgba(67, 214, 162, 0.3); }
 /* Tombol ADD (Neon Pulse Animation) */
 .browse-badge.add { 
     background: rgba(80, 228, 242, 0.1); color: var(--cyan); 
