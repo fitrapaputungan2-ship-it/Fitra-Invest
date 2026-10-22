@@ -937,7 +937,7 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
     transform: scale(1.05);
 }
 
-/* List Body & Animasi Staggered */
+/* List Body */
 .browse-body { 
     flex: 1; 
     overflow-y: auto; 
@@ -945,13 +945,15 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
+    justify-content: flex-start; /* Biar item gak melar ke bawah */
+    align-items: stretch;
 }
 
 .browse-item { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    flex-shrink: 0; /* KUNCI UTAMA: Biar gak melar ke bawah */
+    flex-shrink: 0; /* Biar gak ketarik melar */
     background: linear-gradient(135deg, rgba(20, 36, 56, 0.4), rgba(13, 24, 39, 0.6)); 
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.05); 
@@ -962,13 +964,13 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
     position: relative; 
     overflow: hidden;
     
-    /* Animasi Muncul */
-    opacity: 0; 
-    animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    /* Animasi muncul (tanpa opacity: 0) */
+    animation: slideUpFade 0.3s ease-out;
 }
+
 @keyframes slideUpFade {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { transform: translateY(10px); }
+    to { transform: translateY(0); }
 }
 
 .browse-item:active { transform: scale(0.98); background: rgba(20, 36, 56, 0.9); }
