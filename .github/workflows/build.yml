@@ -10,59 +10,104 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Source Code
-      uses: actions/checkout@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Setup Java JDK
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Install Cordova CLI
-      run: npm install -g cordova
+      # ==========================================
+      # 🔍 BAGIAN DEBUGGING: CEK APAKAH FILE LU BENERAN ADA
+      # ==========================================
+      - name: 🔍 Debug - Cek Isi File HTML
+        run: |
+          echo "=== MULAI DEBUGGING FILE ==="
+          echo "Mengecek apakah ID 'ai-terminal-section' ada di index.html..."
+          if grep -q "ai-terminal-section" index.html; then
+            echo "✅ SUKSES: 'ai-terminal-section' DITEMUKAN di index.html!"
+          else
+            echo "❌ GAGAL: 'ai-terminal-section' TIDAK DITEMUKAN di index.html!"
+          fi
+          
+          echo "Mengecek apakah ID 'analysisBody' ada di index.html..."
+          if grep -q "analysisBody" index.html; then
+            echo "✅ SUKSES: 'analysisBody' DITEMUKAN di index.html!"
+          else
+            echo "❌ GAGAL: 'analysisBody' TIDAK DITEMUKAN di index.html!"
+          fi
+          
+          echo "Mengecek apakah file ai.js ada di repo..."
+          if [ -f "ai.js" ]; then
+            echo "✅ SUKSES: ai.js DITEMUKAN!"
+          else
+            echo "⚠️ INFO: ai.js TIDAK ADA (Mungkin lu pake script inline)"
+          fi
+          
+          echo "=== SELESAI DEBUGGING ==="
 
-    - name: Create Cordova Project
-      run: cordova create fitra-invest-app com.fitra.invest "Fitra Invest"
+      # ==========================================
+      # BUILD CORDOVA
+      # ==========================================
+      - name: Install Cordova CLI
+        run: npm install -g cordova
 
-    # 🚀 INJEKSI CONFIG.XML UNTUK HARDWARE ACCELERATION
-    - name: Inject Optimized Config.xml
-      run: |
-        cat << 'EOF' > fitra-invest-app/config.xml
-        <?xml version='1.0' encoding='utf-8'?>
-        <widget id="com.fitra.invest" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-            <name>Fitra Invest</name>
-            <content src="index.html" />
-            <allow-navigation href="*" />
-            <access origin="*" />
-            <preference name="android-hardware-acceleration" value="true" />
-            <preference name="android-allow-mixed-content" value="true" />
-            <preference name="MixedContentMode" value="0" />
-            <preference name="android-targetSdkVersion" value="34" />
-            <preference name="ScrollEnabled" value="true" />
-        </widget>
-        EOF
+      - name: Create Cordova Project
+        run: cordova create fitra-invest-app com.fitra.invest "Fitra Invest"
 
-    - name: Copy Web Assets
-      run: |
-        cp index.html fitra-invest-app/www/
-        cp style.css fitra-invest-app/www/
-        cp app.js fitra-invest-app/www/
-        cp lightweight-charts.js fitra-invest-app/www/
+      - name: Inject Optimized Config.xml
+        run: |
+          cat << 'EOF' > fitra-invest-app/config.xml
+          <?xml version='1.0' encoding='utf-8'?>
+          <widget id="com.fitra.invest" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+              <name>Fitra Invest</name>
+              <content src="index.html" />
+              <allow-navigation href="*" />
+              <access origin="*" />
+              <preference name="android-hardware-acceleration" value="true" />
+              <preference name="android-allow-mixed-content" value="true" />
+              <preference name="MixedContentMode" value="0" />
+              <preference name="android-targetSdkVersion" value="34" />
+              <preference name="ScrollEnabled" value="true" />
+          </widget>
+          EOF
 
-    - name: Add Android Platform & Build APK
-      run: |
-        cd fitra-invest-app
-        cordova platform add android
-        cordova build android
+      - name: Copy Web Assets
+        run: |
+          echo "Mencopy file ke folder www Cordova..."
+          cp index.html fitra-invest-app/www/
+          cp style.css fitra-invest-app/www/
+          cp app.js fitra-invest-app/www/
+          cp ai.js fitra-invest-app/www/ 2>/dev/null || echo "ai.js tidak ada, skip."
+          cp lightweight-charts.js fitra-invest-app/www/
+          
+          echo "=== CEK ISI FOLDER WWW SETELAH COPY ==="
+          ls -la fitra-invest-app/www/
+          
+          echo "=== CEK APAKAH AI MASIH ADA DI FOLDER WWW ==="
+          if grep -q "ai-terminal-section" fitra-invest-app/www/index.html; then
+            echo "✅ SUKSES: AI Terminal berhasil dicopy ke folder www!"
+          else
+            echo "❌ GAGAL: AI Terminal HILANG setelah dicopy ke folder www!"
+          fi
 
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: FitraInvest-Debug-APK
-        path: fitra-invest-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Add Android Platform & Build APK
+        run: |
+          cd fitra-invest-app
+          cordova platform add android
+          
+          echo "=== MEMULAI BUILD APK ==="
+          cordova build android
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FitraInvest-Debug-APK
+          path: fitra-invest-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
