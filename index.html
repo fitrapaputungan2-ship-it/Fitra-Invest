@@ -50,7 +50,7 @@
                             <span class="icon">⇅</span> Sort
                         </button>
                         <button class="add-group-btn-new" id="addGroupBtn" title="Tambah Folder">📁</button>
-                        <!-- TOMBOL + MANUAL UDAH DIHAPUS -->
+                        <!-- TOMBOL + MANUAL DAN MODALNYA UDAH DIHAPUS TOTAL -->
                     </div>
                 </div>
 
@@ -319,20 +319,6 @@
             </div>
 
         </main>
-    </div>
-
-    <!-- MODAL: ADD ASSET -->
-    <div class="modal-overlay" id="assetModal">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Tambah Aset ke Watchlist</h3><button class="modal-close" id="closeAssetModal">×</button></div>
-            <div class="modal-body">
-                <div class="form-group"><label>Symbol</label><input type="text" id="assetSymbol" placeholder="Contoh: AAPL, BTC"></div>
-                <div class="form-group"><label>Nama Aset</label><input type="text" id="assetName" placeholder="Contoh: Apple Inc."></div>
-                <div class="form-group"><label>Tipe</label><select id="assetType"><option value="stock">Saham</option><option value="crypto">Crypto</option><option value="commodity">Commodity</option></select></div>
-                <div class="form-group"><label>Group (Opsional)</label><select id="assetGroup"><option value="">— Tanpa Group —</option></select></div>
-            </div>
-            <div class="modal-footer"><button class="btn-cancel" id="cancelAsset">Batal</button><button class="btn-save" id="saveAsset">Simpan</button></div>
-        </div>
     </div>
 
     <!-- MODAL: ADD GROUP -->
@@ -617,6 +603,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=24008"></script>
+    <script src="app.js?v=24010"></script> <!-- Naikin versi cache biar update -->
 </body>
     </html>
