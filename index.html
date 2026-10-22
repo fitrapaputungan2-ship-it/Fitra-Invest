@@ -414,7 +414,7 @@
     </div>
 </div>
 
-</div>   <!-- MODAL: ADD HOLDING -->
+   <!-- MODAL: ADD HOLDING -->
     <div class="modal-overlay" id="holdingModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Tambah Holding</h3><button class="modal-close" id="closeHoldingModal">×</button></div>
@@ -430,37 +430,78 @@
     </div>
 
     <!-- MODAL: CHART & AI -->
-    <div class="chart-modal" id="chartModal">
-        <div class="chart-content">
-            <div class="chart-header"><div><h3 id="chartTitle">AAPL — Apple Inc.</h3><div class="chart-subtitle" id="chartPrice">$0.00 (+0.00%)</div></div><button class="analysis-close" id="closeChartModal">×</button></div>
-            <div class="chart-toolbar"><div class="tf-group"><button class="tf-btn" data-tf="5M">5M</button><button class="tf-btn" data-tf="30M">30M</button><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn active" data-tf="D">D</button><button class="tf-btn" data-tf="W">W</button><button class="tf-btn" data-tf="M">M</button><button class="tf-btn" data-tf="Y">Y</button></div></div>
-            <div class="indicator-toggles"><button class="ind-toggle-btn" data-ind="ma50">MA 50</button><button class="ind-toggle-btn" data-ind="ma200">MA 200</button><button class="ind-toggle-btn" data-ind="bollinger">Bollinger</button><button class="ind-toggle-btn" data-ind="macd">MACD</button></div>
-            <div class="tradingview-container" id="tradingviewContainer"></div>
-            <div class="macd-container" id="macdContainer" style="display:none;"></div>
-            <div class="indicators-panel"><div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div><div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div><div class="indicator-item"><span class="ind-label">EMA 20</span><span class="ind-value" id="ema20Value">-</span></div><div class="indicator-item"><span class="ind-label">RSI 14</span><span class="ind-value" id="rsiValue">-</span></div></div>
-            <div class="bidask-panel"><div class="bidask-item bid"><span class="bidask-label">BID</span><span class="bidask-value" id="bidValue">-</span></div><div class="bidask-item ask"><span class="bidask-label">ASK</span><span class="bidask-value" id="askValue">-</span></div></div>
-            <div class="sentiment-panel"><div class="sentiment-header"><span class="sentiment-title">MARKET SENTIMENT</span><div class="sentiment-stats"><span class="buy-stat" id="buyerPct">50% Buy</span><span class="sell-stat" id="sellerPct">50% Sell</span></div></div><div class="sentiment-bar"><div class="sentiment-fill buy" id="buyerBar" style="width: 50%;"></div><div class="sentiment-fill sell" id="sellerBar" style="width: 50%;"></div></div></div>
-            <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
-            <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
-            <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
-            <button class="crypto-scorecard-btn" id="openCryptoScorecardBtn" style="display:none;">🪙 Crypto Value Scorecard</button>
-            <!-- --- COMPANY PROFILE --- -->
-<div class="company-profile-section" id="companyProfileSection" style="display: none;">
-    <!-- Di-render via JS -->
-</div>
+<div class="chart-modal" id="chartModal">
+    <div class="chart-content">
+        <div class="chart-header">
+            <div>
+                <h3 id="chartTitle">AAPL — Apple Inc.</h3>
+                <div class="chart-subtitle" id="chartPrice">$0.00 (+0.00%)</div>
+            </div>
+            <button class="analysis-close" id="closeChartModal">×</button>
+        </div>
+        <div class="chart-toolbar">
+            <div class="tf-group">
+                <button class="tf-btn" data-tf="5M">5M</button>
+                <button class="tf-btn" data-tf="30M">30M</button>
+                <button class="tf-btn" data-tf="1H">1H</button>
+                <button class="tf-btn active" data-tf="D">D</button>
+                <button class="tf-btn" data-tf="W">W</button>
+                <button class="tf-btn" data-tf="M">M</button>
+                <button class="tf-btn" data-tf="Y">Y</button>
+            </div>
+        </div>
+        <div class="indicator-toggles">
+            <button class="ind-toggle-btn" data-ind="ma50">MA 50</button>
+            <button class="ind-toggle-btn" data-ind="ma200">MA 200</button>
+            <button class="ind-toggle-btn" data-ind="bollinger">Bollinger</button>
+            <button class="ind-toggle-btn" data-ind="macd">MACD</button>
+        </div>
+        <div class="tradingview-container" id="tradingviewContainer"></div>
+        <div class="macd-container" id="macdContainer" style="display:none;"></div>
+        <div class="indicators-panel">
+            <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
+            <div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div>
+            <div class="indicator-item"><span class="ind-label">EMA 20</span><span class="ind-value" id="ema20Value">-</span></div>
+            <div class="indicator-item"><span class="ind-label">RSI 14</span><span class="ind-value" id="rsiValue">-</span></div>
+        </div>
+        <div class="bidask-panel">
+            <div class="bidask-item bid"><span class="bidask-label">BID</span><span class="bidask-value" id="bidValue">-</span></div>
+            <div class="bidask-item ask"><span class="bidask-label">ASK</span><span class="bidask-value" id="askValue">-</span></div>
+        </div>
+        <div class="sentiment-panel">
+            <div class="sentiment-header">
+                <span class="sentiment-title">MARKET SENTIMENT</span>
+                <div class="sentiment-stats"><span class="buy-stat" id="buyerPct">50% Buy</span><span class="sell-stat" id="sellerPct">50% Sell</span></div>
+            </div>
+            <div class="sentiment-bar">
+                <div class="sentiment-fill buy" id="buyerBar" style="width: 50%;"></div>
+                <div class="sentiment-fill sell" id="sellerBar" style="width: 50%;"></div>
+            </div>
+        </div>
+        
+        <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
+        <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
+        <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
+        <button class="crypto-scorecard-btn" id="openCryptoScorecardBtn" style="display:none;">🪙 Crypto Value Scorecard</button>
 
-<!-- --- AI VALUE INVESTING TERMINAL --- -->
-<div class="ai-terminal-section">
-    <div class="terminal-header">
-        <div class="terminal-dots"><span></span><span></span><span></span></div>
-        <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
-        <div class="terminal-status" id="terminalStatus">SYS.READY</div>
-    </div>
-    <div class="analysis-body-inline" id="analysisBody">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">Menginisialisasi AI Neural Network...</p>
-    </div>
-</div>
+        <!-- --- COMPANY PROFILE BARU --- -->
+        <div class="company-profile-section" id="companyProfileSection" style="display: none;"></div>
+
+        <!-- --- AI TERMINAL BARU --- -->
+        <div class="ai-terminal-section">
+            <div class="terminal-header">
+                <div class="terminal-dots"><span></span><span></span><span></span></div>
+                <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
+                <div class="terminal-status" id="terminalStatus">SYS.READY</div>
+            </div>
+            <div class="analysis-body-inline" id="analysisBody">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Menginisialisasi AI Neural Network...</p>
+            </div>
+        </div>
+        
+    </div> <!-- INI PENUTUP CHART CONTENT -->
+</div> <!-- INI PENUTUP CHART MODAL -->
 
     <!-- MODAL: ALERT -->
     <div class="modal-overlay" id="alertModal">
