@@ -446,11 +446,41 @@ function deleteFromWatchlist(index, event) {
 function openBrowseModal() { document.getElementById('browseModal').classList.add('active'); renderBrowseStocks(); }
 function closeBrowseModal() { document.getElementById('browseModal').classList.remove('active'); }
 function renderBrowseStocks() {
-    const body = document.getElementById('browseBody'); const search = (document.getElementById('browseSearch').value || '').toLowerCase().trim(); const cat = currentBrowseCategory;
-    let filtered = STOCK_UNIVERSE; if (cat !== 'all') filtered = filtered.filter(s => s.category === cat);
+    const body = document.getElementById('browseBody'); 
+    const search = (document.getElementById('browseSearch').value || '').toLowerCase().trim(); 
+    const cat = currentBrowseCategory;
+    
+    let filtered = STOCK_UNIVERSE; 
+    if (cat !== 'all') filtered = filtered.filter(s => s.category === cat);
     if (search) filtered = filtered.filter(s => s.symbol.toLowerCase().includes(search) || s.name.toLowerCase().includes(search));
-    if (filtered.length === 0) { body.innerHTML = '<div class="empty-state">Gak ada saham yang match.</div>'; return; }
-    body.innerHTML = filtered.map(stock => { const inWatchlist = watchlist.some(w => w.symbol === stock.symbol); return `<div class="browse-item ${inWatchlist ? 'in-watchlist' : ''}" onclick="toggleFromBrowse('${stock.symbol}', '${stock.name.replace(/'/g, "\\'")}', '${stock.type}')"><div class="browse-item-info"><span class="browse-symbol">${stock.symbol}</span><span class="browse-name">${stock.name}</span></div><div class="browse-item-action">${inWatchlist ? '<span class="browse-badge added">✓ Added</span>' : '<span class="browse-badge add">+ Add</span>'}</div></div>`; }).join('');
+    
+    if (filtered.length === 0) { 
+        body.innerHTML = '<div class="empty-state">Gak ada aset yang match.</div>'; 
+        return; 
+    }
+    
+    body.innerHTML = filtered.map((stock, index) => { 
+        const inWatchlist = watchlist.some(w => w.symbol === stock.symbol);
+        const typeLabel = stock.type === 'stock' ? 'SAHAM' : stock.type === 'crypto' ? 'CRYPTO' : 'KOMODITAS';
+        
+        // SVG Icons
+        const iconAdd = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+        const iconAdded = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+        // style="animation-delay: ${index * 0.05}s;" bikin animasinya muncul bergantian
+        return `<div class="browse-item ${inWatchlist ? 'in-watchlist' : ''}" style="animation-delay: ${index * 0.05}s;" onclick="toggleFromBrowse('${stock.symbol}', '${stock.name.replace(/'/g, "\\'")}', '${stock.type}')">
+            <div class="browse-item-info">
+                <div class="browse-symbol-wrap">
+                    <span class="browse-symbol">${stock.symbol}</span>
+                    <span class="browse-type-tag ${stock.type}">${typeLabel}</span>
+                </div>
+                <span class="browse-name">${stock.name}</span>
+            </div>
+            <div class="browse-badge ${inWatchlist ? 'added' : 'add'}">
+                ${inWatchlist ? iconAdded : iconAdd} ${inWatchlist ? 'ADDED' : 'ADD'}
+            </div>
+        </div>`; 
+    }).join('');
 }
 function toggleFromBrowse(symbol, name, type) { 
     const idx = watchlist.findIndex(w => w.symbol === symbol); 
