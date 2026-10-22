@@ -1326,3 +1326,22 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
     padding-top: 12px;
     border-top: 1px dashed rgba(255,255,255,0.1);
 }
+.ai-terminal-section {
+    background: #050a14;
+    border: 1px solid rgba(80, 228, 242, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(80, 228, 242, 0.1);
+}
+.terminal-header {
+    background: rgba(80, 228, 242, 0.1);
+    border-bottom: 1px solid rgba(80, 228, 242, 0.2);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.terminal-title { color: var(--cyan); font-family: monospace; font-size: 11px; }
+.terminal-status { color: var(--green); font-family: monospace; font-size: 10px; }
+.analysis-body-inline { padding: 16px; }
