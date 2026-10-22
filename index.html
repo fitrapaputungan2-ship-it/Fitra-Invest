@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1010">
+    <link rel="stylesheet" href="style.css?v=1011">
 </head>
 <body>
     <div class="app">
@@ -481,20 +481,6 @@
             <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
             <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
             <button class="crypto-scorecard-btn" id="openCryptoScorecardBtn" style="display:none;">🪙 Crypto Value Scorecard</button>
-
-            <!-- STATIC CONTAINERS FOR AI -->
-            <div class="company-profile-section" id="companyProfileSection" style="display: none;"></div>
-            <div class="ai-terminal-section">
-                <div class="terminal-header">
-                    <div class="terminal-dots"><span></span><span></span><span></span></div>
-                    <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
-                    <div class="terminal-status" id="terminalStatus">SYS.READY</div>
-                </div>
-                <div class="analysis-body-inline" id="analysisBody">
-                    <div class="loading-spinner"></div>
-                    <p class="loading-text">Menginisialisasi AI Neural Network...</p>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -670,123 +656,148 @@
         </div>
     </div>
 
-    <!-- SCRIPT OVERRIDE AI TERMINAL (SAFE MODE) -->
+    <!-- 🔥 SCRIPT RAJA: OVERRIDE TOTAL (PASTI MUNCUL) -->
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            const COMPANY_PROFILES = {
-                'AAPL': { story: 'Didirikan pada 1976 oleh Steve Jobs, Steve Wozniak, dan Ronald Wayne. Berawal dari garasi, Apple kini jadi raksasa teknologi global. Perusahaan ini berhasil melewati berbagai krisis dan revolusi produk (Mac, iPod, iPhone).', gen: 'Generasi ke-2 (Tim Cook)', sector: 'Technology (Consumer Electronics)', ceo: 'Tim Cook', owner: 'Institutional Investors & Public' },
-                'MSFT': { story: 'Didirikan pada 1975 oleh Bill Gates dan Paul Allen. Berfokus pada software (Windows & Office) sebelum berevolusi menjadi raksasa Cloud (Azure) dan AI di bawah kepemimpinan Satya Nadella.', gen: 'Generasi ke-3 (Satya Nadella)', sector: 'Technology (Software & Cloud)', ceo: 'Satya Nadella', owner: 'Institutional Investors & Public' },
-                'NVDA': { story: 'Didirikan pada 1993 oleh Jensen Huang, Chris Malachowsky, dan Curtis Priem. Berawal dari GPU untuk gaming, NVIDIA kini mendominasi pasar chip AI global.', gen: 'Generasi ke-1 (Jensen Huang)', sector: 'Technology (Semiconductors)', ceo: 'Jensen Huang', owner: 'Institutional Investors & Public' },
-                'TSLA': { story: 'Didirikan pada 2003 oleh Martin Eberhard dan Marc Tarpenning. Elon Musk bergabung tak lama setelahnya. Misi utamanya adalah mempercepat transisi dunia menuju energi berkelanjutan.', gen: 'Generasi ke-1 (Elon Musk)', sector: 'Consumer Cyclical (Automotive)', ceo: 'Elon Musk', owner: 'Elon Musk & Public' },
-                'GOOGL': { story: 'Didirikan pada 1998 oleh Larry Page dan Sergey Brin saat mereka masih mahasiswa Stanford. Berevolusi dari mesin pencari menjadi raksasa iklan digital dan AI (Alphabet).', gen: 'Generasi ke-2 (Sundar Pichai)', sector: 'Technology (Internet Content)', ceo: 'Sundar Pichai', owner: 'Founders & Public' },
-                'AMZN': { story: 'Didirikan pada 1994 oleh Jeff Bezos sebagai toko buku online. Berkat obsesinya pada pelanggan, Amazon menjadi raksasa e-commerce dan Cloud (AWS).', gen: 'Generasi ke-2 (Andy Jassy)', sector: 'Consumer Cyclical (E-commerce)', ceo: 'Andy Jassy', owner: 'Jeff Bezos & Public' }
-            };
+    (function() {
+        // Dataset Profil Perusahaan
+        const PROFILES = {
+            'AAPL': { story: 'Didirikan pada 1976 oleh Steve Jobs, Steve Wozniak, dan Ronald Wayne. Berawal dari garasi, Apple kini jadi raksasa teknologi global. Perusahaan ini berhasil melewati berbagai krisis dan revolusi produk (Mac, iPod, iPhone).', gen: 'Generasi ke-2 (Tim Cook)', sector: 'Technology (Consumer Electronics)', ceo: 'Tim Cook', owner: 'Institutional Investors & Public' },
+            'MSFT': { story: 'Didirikan pada 1975 oleh Bill Gates dan Paul Allen. Berfokus pada software (Windows & Office) sebelum berevolusi menjadi raksasa Cloud (Azure) dan AI di bawah kepemimpinan Satya Nadella.', gen: 'Generasi ke-3 (Satya Nadella)', sector: 'Technology (Software & Cloud)', ceo: 'Satya Nadella', owner: 'Institutional Investors & Public' },
+            'NVDA': { story: 'Didirikan pada 1993 oleh Jensen Huang, Chris Malachowsky, dan Curtis Priem. Berawal dari GPU untuk gaming, NVIDIA kini mendominasi pasar chip AI global.', gen: 'Generasi ke-1 (Jensen Huang)', sector: 'Technology (Semiconductors)', ceo: 'Jensen Huang', owner: 'Institutional Investors & Public' },
+            'TSLA': { story: 'Didirikan pada 2003 oleh Martin Eberhard dan Marc Tarpenning. Elon Musk bergabung tak lama setelahnya. Misi utamanya adalah mempercepat transisi dunia menuju energi berkelanjutan.', gen: 'Generasi ke-1 (Elon Musk)', sector: 'Consumer Cyclical (Automotive)', ceo: 'Elon Musk', owner: 'Elon Musk & Public' },
+            'GOOGL': { story: 'Didirikan pada 1998 oleh Larry Page dan Sergey Brin saat mereka masih mahasiswa Stanford. Berevolusi dari mesin pencari menjadi raksasa iklan digital dan AI (Alphabet).', gen: 'Generasi ke-2 (Sundar Pichai)', sector: 'Technology (Internet Content)', ceo: 'Sundar Pichai', owner: 'Founders & Public' },
+            'AMZN': { story: 'Didirikan pada 1994 oleh Jeff Bezos sebagai toko buku online. Berkat obsesinya pada pelanggan, Amazon menjadi raksasa e-commerce dan Cloud (AWS).', gen: 'Generasi ke-2 (Andy Jassy)', sector: 'Consumer Cyclical (E-commerce)', ceo: 'Andy Jassy', owner: 'Jeff Bezos & Public' }
+        };
 
-            // OVERRIDE LOAD ANALYSIS DENGAN METRIK LENGKAP
-            window.loadAnalysis = async function(symbol, name, price, type) {
-                const cpSection = document.getElementById('companyProfileSection');
-                
-                // Render Company Profile
-                if (type === 'stock') {
-                    const profile = COMPANY_PROFILES[symbol] || { story: `${symbol} merupakan perusahaan publik yang terdaftar di bursa saham global.`, gen: 'Generasi ke-1', sector: 'Diversified', ceo: 'TBA', owner: 'Public' };
-                    if(cpSection) {
-                        cpSection.style.display = 'block';
-                        cpSection.innerHTML = `
-                            <div class="company-profile-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg> Company Intel</div>
-                            <div class="company-story-text">"${profile.story}"</div>
-                            <div class="company-meta-grid">
-                                <div class="company-meta-item"><span class="company-meta-label">Sektor</span><span class="company-meta-value">${profile.sector}</span></div>
-                                <div class="company-meta-item"><span class="company-meta-label">Generasi</span><span class="company-meta-value">${profile.gen}</span></div>
-                                <div class="company-meta-item"><span class="company-meta-label">CEO</span><span class="company-meta-value">${profile.ceo}</span></div>
-                                <div class="company-meta-item"><span class="company-meta-label">Owner</span><span class="company-meta-value">${profile.owner}</span></div>
-                            </div>
-                        `;
-                    }
-                } else {
-                    if(cpSection) cpSection.style.display = 'none';
-                }
+        // Fungsi Utama Menggambar UI (Pake Inline Style Biar Kaga Error)
+        async function drawAI(symbol, type) {
+            const chartContent = document.querySelector('.chart-content');
+            if (!chartContent) return;
 
-                const container = document.getElementById('analysisBody');
-                const statusEl = document.getElementById('terminalStatus');
-                if(!container) return;
-                
-                if(statusEl) statusEl.textContent = 'SYS.ANALYZING...';
-                container.innerHTML = `<div style="text-align:center; padding: 20px; font-family: monospace; color: #50E4F2;"><div class="loading-spinner"></div><p style="margin-top:10px;">> Menganalisis fundamental ${symbol}...</p></div>`;
+            // Hapus UI lama (kalo ada)
+            const oldAI = document.getElementById('RAJA_AI_BOX');
+            if (oldAI) oldAI.remove();
+            const oldCP = document.getElementById('RAJA_CP_BOX');
+            if (oldCP) oldCP.remove();
 
+            // --- 1. GAMBAR COMPANY INTEL ---
+            if (type === 'stock') {
+                const p = PROFILES[symbol] || { story: symbol + ' adalah perusahaan publik global.', gen: 'Generasi ke-1', sector: 'Diversified', ceo: 'TBA', owner: 'Public' };
+                const cpBox = document.createElement('div');
+                cpBox.id = 'RAJA_CP_BOX';
+                cpBox.style.cssText = "background:linear-gradient(135deg,#142438,#0D1827);border:1px solid #E9B949;border-left:4px solid #E9B949;border-radius:12px;padding:16px;margin-bottom:16px;width:100%;box-sizing:border-box;display:block;";
+                cpBox.innerHTML = `
+                    <div style="font-size:14px;font-weight:800;color:#E9B949;margin-bottom:12px;">⚙️ COMPANY INTEL</div>
+                    <div style="font-size:12px;line-height:1.6;color:#F4F7FB;margin-bottom:14px;font-style:italic;border-left:2px solid #E9B949;padding-left:8px;">"${p.story}"</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;"><div style="font-size:9px;color:#91A8BB;font-weight:bold;">SEKTOR</div><div style="font-size:12px;font-weight:bold;color:#50E4F2;">${p.sector}</div></div>
+                        <div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;"><div style="font-size:9px;color:#91A8BB;font-weight:bold;">GENERASI</div><div style="font-size:12px;font-weight:bold;color:#50E4F2;">${p.gen}</div></div>
+                        <div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;"><div style="font-size:9px;color:#91A8BB;font-weight:bold;">CEO</div><div style="font-size:12px;font-weight:bold;color:#50E4F2;">${p.ceo}</div></div>
+                        <div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;"><div style="font-size:9px;color:#91A8BB;font-weight:bold;">OWNER</div><div style="font-size:12px;font-weight:bold;color:#50E4F2;">${p.owner}</div></div>
+                    </div>
+                `;
+                chartContent.appendChild(cpBox);
+            }
+
+            // --- 2. GAMBAR AI TERMINAL ---
+            const aiBox = document.createElement('div');
+            aiBox.id = 'RAJA_AI_BOX';
+            aiBox.style.cssText = "background:#050a14;border:1px solid #50E4F2;border-radius:12px;margin-top:16px;overflow:hidden;width:100%;box-sizing:border-box;display:block;";
+            aiBox.innerHTML = `
+                <div style="background:rgba(80,228,242,0.1);border-bottom:1px solid rgba(80,228,242,0.2);padding:10px 14px;color:#50E4F2;font-family:monospace;font-size:11px;font-weight:bold;">AI_WARREN_BUFFETT.exe</div>
+                <div id="RAJA_AI_BODY" style="padding:16px;text-align:center;font-family:monospace;color:#50E4F2;">
+                    <div class="loading-spinner" style="margin:20px auto;"></div>
+                    <p>> Menganalisis fundamental ${symbol}...</p>
+                </div>
+            `;
+            chartContent.appendChild(aiBox);
+
+            const body = document.getElementById('RAJA_AI_BODY');
+
+            // --- 3. FETCH DATA & RENDER ---
+            try {
+                let fund = {};
                 try {
-                    let fundamental = {};
-                    try {
-                        const fRes = await fetch("https://twxsupmgnmkzsyiqebln.supabase.co/functions/v1/fetch-fundamental", {
-                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC', 'apikey': 'sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC' }, body: JSON.stringify({ symbol, type })
-                        });
-                        const fData = await fRes.json();
-                        fundamental = fData.fundamental || {};
-                    } catch (e) { }
-
-                    const res = await fetch("https://twxsupmgnmkzsyiqebln.supabase.co/functions/v1/analyze-stock", {
-                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC', 'apikey': 'sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC' },
-                        body: JSON.stringify({ symbol, name, price, fundamental })
+                    const fRes = await fetch("https://twxsupmgnmkzsyiqebln.supabase.co/functions/v1/fetch-fundamental", {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC', 'apikey': 'sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC' }, body: JSON.stringify({ symbol, type })
                     });
-                    
-                    if (!res.ok) throw new Error("API Error");
-                    const data = await res.json();
-                    
-                    if(statusEl) statusEl.textContent = 'SYS.ONLINE';
-                    
-                    const pe = fundamental.pe_ratio || 0;
-                    const roe = fundamental.roe || 0;
-                    const der = fundamental.debt_to_equity || 0;
-                    const margin = fundamental.profit_margin || 0;
+                    const fData = await fRes.json();
+                    fund = fData.fundamental || {};
+                } catch(e) { }
 
-                    const getMetricColor = (val, good, warn, isLowerBetter = false) => {
-                        if (val === 'N/A' || val === 0) return '#91A8BB';
-                        const num = parseFloat(val);
-                        if (isLowerBetter) { if (num <= good) return '#43D6A2'; if (num <= warn) return '#E9B949'; return '#FF7387'; } 
-                        else { if (num >= good) return '#43D6A2'; if (num >= warn) return '#E9B949'; return '#FF7387'; }
-                    };
+                const res = await fetch("https://twxsupmgnmkzsyiqebln.supabase.co/functions/v1/analyze-stock", {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC', 'apikey': 'sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC' },
+                    body: JSON.stringify({ symbol, name: symbol, price: 0, fundamental: fund })
+                });
+                if (!res.ok) throw new Error('API Error');
+                const data = await res.json();
 
-                    const signal = data.ai_signal ? data.ai_signal.toUpperCase() : 'HOLD';
-                    let color = signal.includes('BUY') ? '#43D6A2' : signal.includes('SELL') ? '#FF7387' : '#E9B949';
-                    let icon = signal.includes('BUY') ? '🚀' : signal.includes('SELL') ? '⚠️' : '⏸️';
-                    let conf = data.confidence || 50;
+                const pe = fund.pe_ratio || 0;
+                const roe = fund.roe || 0;
+                const der = fund.debt_to_equity || 0;
+                const margin = fund.profit_margin || 0;
 
-                    container.innerHTML = `
-                        <div class="ai-metrics-title">📊 Health Matrix</div>
-                        <div class="ai-metrics-grid">
-                            <div class="ai-metric-item" style="border-left-color: ${getMetricColor(pe, 15, 25, true)};"><span class="ai-metric-label">P/E Ratio</span><span class="ai-metric-value" style="color: ${getMetricColor(pe, 15, 25, true)};">${pe > 0 ? pe.toFixed(1) : 'N/A'}</span></div>
-                            <div class="ai-metric-item" style="border-left-color: ${getMetricColor(roe*100, 15, 10)};"><span class="ai-metric-label">ROE</span><span class="ai-metric-value" style="color: ${getMetricColor(roe*100, 15, 10)};">${(roe*100).toFixed(1)}%</span></div>
-                            <div class="ai-metric-item" style="border-left-color: ${getMetricColor(der, 0.5, 1.5, true)};"><span class="ai-metric-label">DER (Debt)</span><span class="ai-metric-value" style="color: ${getMetricColor(der, 0.5, 1.5, true)};">${der > 0 ? der.toFixed(2) : 'N/A'}</span></div>
-                            <div class="ai-metric-item" style="border-left-color: ${getMetricColor(margin*100, 15, 5)};"><span class="ai-metric-label">Margin</span><span class="ai-metric-value" style="color: ${getMetricColor(margin*100, 15, 5)};">${(margin*100).toFixed(1)}%</span></div>
-                        </div>
-                        <div class="ai-verdict-box">
-                            <div class="ai-verdict-signal" style="border: 2px solid ${color}; color: ${color}; box-shadow: 0 0 15px ${color}40;">${icon} ${signal}</div>
-                            <div class="ai-confidence-wrap" style="width: 100%; margin-top: 15px;">
-                                <div class="ai-confidence-header"><span>Confidence Score</span><span style="color: ${color};">${conf}/100</span></div>
-                                <div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: ${conf}%; background: ${color};"></div></div>
-                            </div>
-                        </div>
-                        <div class="ai-metrics-title">🧠 CRITICAL INSIGHTS</div>
-                        ${(data.reasons || []).map(r => {
-                            let cls = 'ai-insight-box';
-                            let rIcon = '💡';
-                            if (r.toLowerCase().includes('risk') || r.toLowerCase().includes('debt')) { cls += ' risk'; rIcon = '🚨'; }
-                            else if (r.toLowerCase().includes('growth') || r.toLowerCase().includes('profit')) { cls += ' opportunity'; rIcon = '📈'; }
-                            return `<div class="${cls}"><strong>${rIcon} Analisis:</strong> ${r}</div>`;
-                        }).join('')}
-                        <div class="ai-summary-text"><strong style="color: var(--cyan);">> EXECUTIVE SUMMARY:</strong><br>${data.analysis || "Tidak ada ringkasan."}</div>
-                    `;
+                const getColor = (val, good, warn, lowerBetter) => {
+                    if (!val || val === 0) return '#91A8BB';
+                    if (lowerBetter) { if (val <= good) return '#43D6A2'; if (val <= warn) return '#E9B949'; return '#FF7387'; }
+                    else { if (val >= good) return '#43D6A2'; if (val >= warn) return '#E9B949'; return '#FF7387'; }
+                };
 
-                } catch (err) {
-                    if(statusEl) statusEl.textContent = 'SYS.ERROR';
-                    container.innerHTML = `<div style="color: #FF7387; padding: 20px; text-align: center; font-family: monospace;">❌ SYS.ERROR: Gagal terhubung ke AI.<br><span style="font-size: 10px;">${err.message}</span></div>`;
-                }
-            };
-        }, 1500);
-    });
+                const sig = (data.ai_signal || 'HOLD').toUpperCase();
+                const col = sig.includes('BUY') ? '#43D6A2' : sig.includes('SELL') ? '#FF7387' : '#E9B949';
+                const ico = sig.includes('BUY') ? '🚀' : sig.includes('SELL') ? '⚠️' : '⏸️';
+                const conf = data.confidence || 50;
+
+                body.innerHTML = `
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+                        <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:6px;border-left:3px solid ${getColor(pe, 15, 25, true)};"><div style="font-size:9px;color:#91A8BB;font-weight:bold;">P/E RATIO</div><div style="font-size:14px;font-weight:bold;color:${getColor(pe, 15, 25, true)};">${pe > 0 ? pe.toFixed(1) : 'N/A'}</div></div>
+                        <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:6px;border-left:3px solid ${getColor(roe*100, 15, 10, false)};"><div style="font-size:9px;color:#91A8BB;font-weight:bold;">ROE</div><div style="font-size:14px;font-weight:bold;color:${getColor(roe*100, 15, 10, false)};">${(roe*100).toFixed(1)}%</div></div>
+                        <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:6px;border-left:3px solid ${getColor(der, 0.5, 1.5, true)};"><div style="font-size:9px;color:#91A8BB;font-weight:bold;">DER</div><div style="font-size:14px;font-weight:bold;color:${getColor(der, 0.5, 1.5, true)};">${der > 0 ? der.toFixed(2) : 'N/A'}</div></div>
+                        <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:6px;border-left:3px solid ${getColor(margin*100, 15, 5, false)};"><div style="font-size:9px;color:#91A8BB;font-weight:bold;">MARGIN</div><div style="font-size:14px;font-weight:bold;color:${getColor(margin*100, 15, 5, false)};">${(margin*100).toFixed(1)}%</div></div>
+                    </div>
+                    <div style="text-align:center;padding:15px 0;border-top:1px dashed #26394C;border-bottom:1px dashed #26394C;margin-bottom:16px;">
+                        <div style="display:inline-block;padding:10px 24px;border-radius:8px;border:2px solid ${col};color:${col};font-weight:900;font-size:18px;margin-bottom:10px;">${ico} ${sig}</div>
+                        <div style="font-size:10px;color:#91A8BB;margin-bottom:4px;">Confidence: ${conf}/100</div>
+                        <div style="width:100%;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;"><div style="width:${conf}%;height:100%;background:${col};"></div></div>
+                    </div>
+                    <div style="text-align:left;font-size:11px;font-weight:bold;color:#E9B949;margin-bottom:8px;">🧠 INSIGHTS</div>
+                    ${(data.reasons || []).map(r => {
+                        let bCol = '#B9A0FF'; let rIco = '💡';
+                        if (r.toLowerCase().includes('risk') || r.toLowerCase().includes('debt')) { bCol = '#FF7387'; rIco = '🚨'; }
+                        else if (r.toLowerCase().includes('growth') || r.toLowerCase().includes('profit')) { bCol = '#43D6A2'; rIco = '📈'; }
+                        return `<div style="background:rgba(0,0,0,0.3);border-left:3px solid ${bCol};padding:10px;margin-bottom:8px;border-radius:0 8px 8px 0;font-size:11px;text-align:left;color:#F4F7FB;line-height:1.4;"><strong>${rIco}</strong> ${r}</div>`;
+                    }).join('')}
+                    <div style="text-align:left;font-size:11px;line-height:1.5;color:#91A8BB;margin-top:12px;"><strong style="color:#50E4F2;">> SUMMARY:</strong><br>${data.analysis || 'Tidak ada ringkasan.'}</div>
+                `;
+            } catch(e) {
+                body.innerHTML = `<div style="color:#FF7387;padding:20px;text-align:center;">❌ ERROR: ${e.message}</div>`;
+            }
+        }
+
+        // --- JALANKAN SAAT CHART DIBUKA ---
+        const interval = setInterval(() => {
+            const modal = document.getElementById('chartModal');
+            if (!modal || !modal.classList.contains('active')) return;
+            
+            const title = document.getElementById('chartTitle').textContent;
+            const match = title.match(/^([A-Z0-9^=\-.]+)/);
+            if (!match) return;
+            const sym = match[1];
+            
+            // Jangan render berulang kalo box udah ada
+            if (document.getElementById('RAJA_AI_BOX')) return;
+            
+            // Ambil tipe aset
+            let type = 'stock';
+            if (window.currentType) type = window.currentType;
+            else if (['BTC','ETH','SOL','BNB','XRP'].includes(sym)) type = 'crypto';
+
+            drawAI(sym, type);
+        }, 1000);
+    })();
     </script>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=1010"></script>
+    <script src="app.js?v=1011"></script>
 </body>
-                                                                                     </html>
+    </html>
