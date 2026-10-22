@@ -2,7 +2,7 @@
 const SUPABASE_URL = "https://twxsupmgnmkzsyiqebln.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC";
 
-// ============ 🛡️ SAFE JSON PARSER (Mencegah Crash) ============
+// ============ 🛡️ SAFE JSON PARSER ============
 function safeParse(key, fallback) {
     try {
         const item = localStorage.getItem(key);
@@ -27,6 +27,7 @@ function fetchWithTimeout(url, options = {}, timeout = 15000) {
         });
 }
 
+// ============ GLOBAL STATE ============
 let indicatorInterval = null;
 let alertCheckInterval = null;
 let currentChart = null;
@@ -325,7 +326,7 @@ function applySort(mode) {
     renderWatchlist();
 }
 
-// ============ 🎯 RENDER WATCHLIST (SORTING DIPERBAIKI) ============
+// ============ 🎯 RENDER WATCHLIST (FUTURISTIC) ============
 async function renderWatchlist() {
     const container = document.getElementById('watchlist'); if (!container) return;
     
@@ -351,13 +352,11 @@ async function renderWatchlist() {
     });
     container.innerHTML = `<div class="watchlist-section">${skeletonHtml}</div>`;
 
-    // Fetch all prices first for accurate sorting
     const assetsWithPrices = await Promise.all(filteredWatchlist.map(async (asset) => {
         const priceData = await fetchPrice(asset.symbol, asset.type);
         return { ...asset, priceData };
     }));
 
-    // Apply Sorting Logic
     assetsWithPrices.sort((a, b) => {
         if (currentSortMode === 'az') return a.symbol.localeCompare(b.symbol);
         if (currentSortMode === 'favorites') return (isFavorite(b.symbol) ? 1 : 0) - (isFavorite(a.symbol) ? 1 : 0);
@@ -371,10 +370,9 @@ async function renderWatchlist() {
         if (currentSortMode === 'price-asc') return priceA - priceB;
         if (currentSortMode === 'change-desc') return changeB - changeA;
         if (currentSortMode === 'change-asc') return changeA - changeB;
-        return 0; // default
+        return 0; 
     });
 
-    // Re-render sorted
     let finalHtml = '';
     assetsWithPrices.forEach((asset) => {
         const idx = watchlist.findIndex(w => w.symbol === asset.symbol);
@@ -388,13 +386,18 @@ function renderAssetCard(asset, priceData, index) {
     const isFav = isFavorite(asset.symbol); 
     const hasAl = hasAlert(asset.symbol);
     
+    // SVG Icons
+    const starSvg = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+    const folderSvg = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+    const trashSvg = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+    
     if (!p) {
         return `
         <div class="watchlist-card-wrapper">
             <div class="asset-card-new neutral">
                 <div class="asset-info-new"><span class="asset-symbol-new">${asset.symbol}</span><span class="asset-name-new">${asset.name}</span></div>
                 <div class="asset-price-wrap-new"><span class="asset-price-new">-</span><span class="asset-change-new" style="color:var(--text-muted)">Gagal</span></div>
-                <div class="asset-actions-new"><button class="action-btn-sm delete" onclick="deleteFromWatchlist(${index}, event)">×</button></div>
+                <div class="asset-actions-new"><button class="action-btn-sm delete" onclick="deleteFromWatchlist(${index}, event)">${trashSvg}</button></div>
             </div>
         </div>`;
     }
@@ -403,27 +406,27 @@ function renderAssetCard(asset, priceData, index) {
     const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%'; 
     const priceStr = '$' + p.price.toLocaleString('en-US', { maximumFractionDigits: 2 });
     
-    const sparkPath = trend === 'up' ? "M0,15 L10,12 L20,8 L30,10 L40,2" : "M0,5 L10,8 L20,12 L30,10 L40,18";
+    const sparkPath = trend === 'up' ? "M0,18 L10,14 L20,8 L30,10 L40,2 L50,4" : "M0,4 L10,8 L20,14 L30,10 L40,18 L50,16";
     const sparkColor = trend === 'up' ? 'var(--green)' : 'var(--red)';
 
     return `
     <div class="watchlist-card-wrapper">
         <div class="asset-card-new ${trend}" onclick="openAssetDetail('${asset.symbol}', '${(p.name || asset.name).replace(/'/g, "\\'")}', ${p.price}, ${p.change}, '${asset.type}')">
             <div class="asset-info-new">
-                <span class="asset-symbol-new">${asset.symbol}${hasAl ? ' <span style="font-size:10px; animation: bellRing 2s infinite;">🔔</span>' : ''}</span>
+                <span class="asset-symbol-new">${asset.symbol}<span class="live-dot ${trend}"></span></span>
                 <span class="asset-name-new">${asset.name}</span>
             </div>
             <div class="asset-sparkline">
-                <svg width="40" height="20" viewBox="0 0 40 20"><path d="${sparkPath}" fill="none" stroke="${sparkColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg width="50" height="20" viewBox="0 0 50 20" style="color:${sparkColor};"><path d="${sparkPath}" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div class="asset-price-wrap-new">
                 <span class="asset-price-new">${priceStr}</span>
                 <span class="asset-change-new ${trend}">${changeStr}</span>
             </div>
             <div class="asset-actions-new">
-                <button class="action-btn-sm star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${isFav ? '★' : '☆'}</button>
-                <button class="action-btn-sm move" onclick="openMoveFolderModal('${asset.symbol}'); event.stopPropagation();">📁</button>
-                <button class="action-btn-sm delete" onclick="deleteFromWatchlist(${index}, event)">×</button>
+                <button class="action-btn-sm star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${asset.symbol}', event)">${starSvg}</button>
+                <button class="action-btn-sm move" onclick="openMoveFolderModal('${asset.symbol}'); event.stopPropagation();">${folderSvg}</button>
+                <button class="action-btn-sm delete" onclick="deleteFromWatchlist(${index}, event)">${trashSvg}</button>
             </div>
         </div>
     </div>`;
@@ -460,16 +463,53 @@ async function fetchMarketMovers() {
     const container = document.getElementById('marketMovers'); if (!container) return;
     container.innerHTML = '<div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat pergerakan pasar...</p></div>';
     const results = []; const batchSize = 10;
-    for (let i = 0; i < MOVERS_UNIVERSE.length; i += batchSize) { const batch = MOVERS_UNIVERSE.slice(i, i + batchSize); const batchResults = await Promise.all(batch.map(async (symbol) => { const stockInfo = STOCK_UNIVERSE.find(s => s.symbol === symbol) || { symbol, name: symbol, type: 'stock' }; const priceData = await fetchPrice(symbol, stockInfo.type); if (!priceData) return null; return { symbol, name: priceData.name || stockInfo.name, type: stockInfo.type, price: priceData.price, change: priceData.change }; })); results.push(...batchResults.filter(Boolean)); }
+    for (let i = 0; i < MOVERS_UNIVERSE.length; i += batchSize) { 
+        const batch = MOVERS_UNIVERSE.slice(i, i + batchSize); 
+        const batchResults = await Promise.all(batch.map(async (symbol) => { 
+            const stockInfo = STOCK_UNIVERSE.find(s => s.symbol === symbol) || { symbol, name: symbol, type: 'stock' }; 
+            const priceData = await fetchPrice(symbol, stockInfo.type); 
+            if (!priceData) return null; 
+            return { symbol, name: priceData.name || stockInfo.name, type: stockInfo.type, price: priceData.price, change: priceData.change }; 
+        })); 
+        results.push(...batchResults.filter(Boolean)); 
+    }
     if (results.length === 0) { container.innerHTML = '<div class="empty-state">Gagal memuat data</div>'; return; }
-    const sorted = results.sort((a, b) => b.change - a.change); marketMoversData = { gainers: sorted.filter(r => r.change > 0).slice(0, 5), losers: sorted.filter(r => r.change < 0).slice(-5).reverse() }; renderMarketMovers();
+    const sorted = results.sort((a, b) => b.change - a.change); 
+    marketMoversData = { gainers: sorted.filter(r => r.change > 0).slice(0, 5), losers: sorted.filter(r => r.change < 0).slice(-5).reverse() }; 
+    renderMarketMovers();
 }
+
 function renderMarketMovers() {
     const container = document.getElementById('marketMovers'); if (!container) return;
     const { gainers, losers } = marketMoversData; if (gainers.length === 0 && losers.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada data</div>'; return; }
     let html = '';
-    if (gainers.length > 0) html += `<div class="movers-section"><div class="movers-header"><span class="movers-title gainers-title">📈 Top Gainers</span><span class="movers-count">${gainers.length}</span></div><div class="movers-list">${gainers.map(g => `<div class="mover-item gainer" onclick="openAssetDetail('${g.symbol}', '${g.name.replace(/'/g, "\\'")}', ${g.price}, ${g.change}, '${g.type}')"><div class="mover-info"><span class="mover-symbol">${g.symbol}</span><span class="mover-name">${g.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${g.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change gainer">+${g.change.toFixed(2)}%</span></div></div>`).join('')}</div></div>`;
-    if (losers.length > 0) html += `<div class="movers-section"><div class="movers-header"><span class="movers-title losers-title">📉 Top Losers</span><span class="movers-count">${losers.length}</span></div><div class="movers-list">${losers.map(l => `<div class="mover-item loser" onclick="openAssetDetail('${l.symbol}', '${l.name.replace(/'/g, "\\'")}', ${l.price}, ${l.change}, '${l.type}')"><div class="mover-info"><span class="mover-symbol">${l.symbol}</span><span class="mover-name">${l.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${l.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change loser">${l.change.toFixed(2)}%</span></div></div>`).join('')}</div></div>`;
+    
+    if (gainers.length > 0) {
+        html += `<div class="movers-section">
+            <div class="movers-header"><span class="movers-title gainers-title">📈 Top Gainers</span><span class="movers-count">${gainers.length}</span></div>
+            <div class="movers-list">`;
+        gainers.forEach(g => {
+            html += `<div class="mover-item gainer" onclick="openAssetDetail('${g.symbol}', '${g.name.replace(/'/g, "\\'")}', ${g.price}, ${g.change}, '${g.type}')">
+                <div class="mover-info"><span class="mover-symbol">${g.symbol}</span><span class="mover-name">${g.name}</span></div>
+                <div class="mover-price-wrap"><span class="mover-price">$${g.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change gainer">+${g.change.toFixed(2)}%</span></div>
+            </div>`;
+        });
+        html += `</div></div>`;
+    }
+    
+    if (losers.length > 0) {
+        html += `<div class="movers-section">
+            <div class="movers-header"><span class="movers-title losers-title">📉 Top Losers</span><span class="movers-count">${losers.length}</span></div>
+            <div class="movers-list">`;
+        losers.forEach(l => {
+            html += `<div class="mover-item loser" onclick="openAssetDetail('${l.symbol}', '${l.name.replace(/'/g, "\\'")}', ${l.price}, ${l.change}, '${l.type}')">
+                <div class="mover-info"><span class="mover-symbol">${l.symbol}</span><span class="mover-name">${l.name}</span></div>
+                <div class="mover-price-wrap"><span class="mover-price">$${l.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change loser">${l.change.toFixed(2)}%</span></div>
+            </div>`;
+        });
+        html += `</div></div>`;
+    }
+    
     container.innerHTML = html;
 }
 
@@ -497,9 +537,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
             for (let i = 0; i < timestamps.length; i++) { if (opens[i] == null || closes[i] == null) continue; candles.push({ time: timestamps[i], open: opens[i], high: highs[i], low: lows[i], close: closes[i], volume: volumes[i] || 0 }); } return candles;
         } return [];
     } catch (error) { return []; }
-}
-
-// ============ 🪙 CRYPTO TAB ============
+}// ============ 🪙 CRYPTO TAB ============
 const CRYPTO_FALLBACK = [
     { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', current_price: 65000, market_cap: 1280000000000, market_cap_rank: 1, price_change_percentage_24h: 0, total_volume: 30000000000, circulating_supply: 19000000, total_supply: 21000000, ath: 73750, ath_change_percentage: -12 },
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
@@ -1287,8 +1325,6 @@ function renderCryptoScorecardBreakdown(criteria) {
 function renderCryptoScorecardVerdict(result, verdict, coinData) {
     const verdictEl = document.getElementById('cryptoScorecardVerdict');
     const passCount = result.criteria.filter(c => c.status === 'pass').length;
-    const partialCount = result.criteria.filter(c => c.status === 'partial').length;
-    const failCount = result.criteria.filter(c => c.status === 'fail').length;
     let summaryText = '';
     if (result.score >= 80) summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>sangat baik</strong>.`;
     else if (result.score >= 60) summaryText = `<strong>${currentSymbol}</strong> kualitas cryptonya <strong>baik</strong>.`;
@@ -1667,9 +1703,7 @@ function renderDxyChart(alignedA, alignedB, times) {
     const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
     const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
     seriesA.setData(dataA); seriesB.setData(dataB); dxyChartInstance.timeScale().fitContent();
-}
-
-// ============ SMART ALERT MODAL ============
+                }// ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol; currentAlertName = name; currentAlertAssetType = type; currentAlertPrice = price;
     currentAlertType = 'price'; currentAlertDirection = 'above';
@@ -1677,17 +1711,30 @@ function openAlertModal(symbol, name, price, type) {
     document.getElementById('alertCurrentPrice').textContent = 'Harga Sekarang: $' + price.toLocaleString('en-US', { maximumFractionDigits: 2 });
     document.getElementById('alertTargetPrice').value = ''; document.getElementById('alertNote').value = '';
     document.getElementById('alertRsiValue').value = ''; document.getElementById('alertEmaPeriod').value = '20'; document.getElementById('alertVolumeMultiplier').value = '2';
-    document.querySelectorAll('.alert-type-btn').forEach(b => b.classList.remove('active')); document.querySelector('.alert-type-btn[data-type="price"]').classList.add('active');
-    document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active')); document.querySelector('.direction-btn[data-dir="above"]').classList.add('active');
+    document.querySelectorAll('.alert-type-btn').forEach(b => b.classList.remove('active')); 
+    const priceBtn = document.querySelector('.alert-type-btn[data-type="price"]'); if(priceBtn) priceBtn.classList.add('active');
+    document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active')); 
+    const aboveBtn = document.querySelector('.direction-btn[data-dir="above"]'); if(aboveBtn) aboveBtn.classList.add('active');
     updateAlertFormFields(); updateAlertPreview(); document.getElementById('alertModal').classList.add('active');
     setTimeout(() => document.getElementById('alertTargetPrice').focus(), 300);
 }
 function closeAlertModal() { document.getElementById('alertModal').classList.remove('active'); }
-function selectAlertType(type) { currentAlertType = type; document.querySelectorAll('.alert-type-btn').forEach(b => b.classList.remove('active')); document.querySelector(`.alert-type-btn[data-type="${type}"]`).classList.add('active'); updateAlertFormFields(); updateAlertPreview(); }
-function selectDirection(dir) { currentAlertDirection = dir; document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active')); document.querySelector(`.direction-btn[data-dir="${dir}"]`).classList.add('active'); updateAlertPreview(); }
+function selectAlertType(type) { 
+    currentAlertType = type; 
+    document.querySelectorAll('.alert-type-btn').forEach(b => b.classList.remove('active')); 
+    const btn = document.querySelector(`.alert-type-btn[data-type="${type}"]`); if(btn) btn.classList.add('active'); 
+    updateAlertFormFields(); updateAlertPreview(); 
+}
+function selectDirection(dir) { 
+    currentAlertDirection = dir; 
+    document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active')); 
+    const btn = document.querySelector(`.direction-btn[data-dir="${dir}"]`); if(btn) btn.classList.add('active'); 
+    updateAlertPreview(); 
+}
 function updateAlertFormFields() {
     const priceField = document.getElementById('alertPriceField'); const rsiField = document.getElementById('alertRsiField');
     const emaField = document.getElementById('alertEmaField'); const volumeField = document.getElementById('alertVolumeField'); const directionGroup = document.getElementById('alertDirectionGroup');
+    if(!priceField) return;
     priceField.style.display = 'none'; rsiField.style.display = 'none'; emaField.style.display = 'none'; volumeField.style.display = 'none'; directionGroup.style.display = 'grid';
     if (currentAlertType === 'price') priceField.style.display = 'block';
     else if (currentAlertType === 'rsi') { rsiField.style.display = 'block'; directionGroup.style.display = 'none'; }
@@ -1696,7 +1743,8 @@ function updateAlertFormFields() {
     else if (currentAlertType === 'multi') { priceField.style.display = 'block'; rsiField.style.display = 'block'; }
 }
 function updateAlertPreview() {
-    const preview = document.getElementById('alertPreview'); const priceInput = document.getElementById('alertTargetPrice').value; const rsiInput = document.getElementById('alertRsiValue').value;
+    const preview = document.getElementById('alertPreview'); if(!preview) return;
+    const priceInput = document.getElementById('alertTargetPrice').value; const rsiInput = document.getElementById('alertRsiValue').value;
     let previewText = '';
     if (currentAlertType === 'price') { if (!priceInput || isNaN(parseFloat(priceInput))) previewText = '🔔 Alert bakal aktif kalau harga nyentuh target'; else { const target = parseFloat(priceInput); const dirText = currentAlertDirection === 'above' ? 'naik ke atas' : 'turun ke bawah'; previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> ${dirText} <strong>$${target.toLocaleString('en-US', { maximumFractionDigits: 2 })}</strong>`; } }
     else if (currentAlertType === 'rsi') { if (!rsiInput || isNaN(parseFloat(rsiInput))) previewText = '🔔 Alert bakal aktif kalau RSI nyentuh target'; else { const rsi = parseFloat(rsiInput); const zone = rsi <= 30 ? 'oversold' : rsi >= 70 ? 'overbought' : 'netral'; previewText = `🔔 Notif kalau <strong>${currentAlertSymbol}</strong> RSI ${rsi} (${zone})`; } }
@@ -1735,13 +1783,15 @@ async function checkAlerts() {
 }
 function showAlertToast(alert, currentPrice, isNewSet = false, reason = '') {
     const toast = document.getElementById('alertToast'); const title = document.getElementById('alertToastTitle'); const message = document.getElementById('alertToastMessage');
+    if(!toast) return;
     if (isNewSet) { title.textContent = '🔔 Alert Aktif!'; message.textContent = `${alert.symbol} - Alert berhasil dibuat`; }
     else { title.textContent = '🔔 SMART ALERT TRIGGERED!'; message.innerHTML = `<strong>${alert.symbol}</strong>: ${reason}<br/>Harga: $${currentPrice?.toFixed(2) || 'N/A'}`; }
     toast.classList.add('active'); setTimeout(() => toast.classList.remove('active'), 10000);
 }
 function closeAlertToast() { document.getElementById('alertToast').classList.remove('active'); }
 function renderPriceAlerts() {
-    const section = document.getElementById('priceAlertsSection'); const list = document.getElementById('priceAlertsList'); const count = document.getElementById('alertsCount'); if (!section || !list || !count) return;
+    const section = document.getElementById('priceAlertsSection'); const list = document.getElementById('priceAlertsList'); const count = document.getElementById('alertsCount'); 
+    if (!section || !list || !count) return;
     const activeAlerts = alerts.filter(a => !a.triggered); if (activeAlerts.length === 0) { section.style.display = 'none'; return; }
     section.style.display = 'block'; count.textContent = activeAlerts.length;
     const typeIcons = { price: '💰', rsi: '📊', ema: '📈', volume: '📶', multi: '🧠' }; const typeLabels = { price: 'Price', rsi: 'RSI', ema: 'EMA', volume: 'Volume', multi: 'Multi' };
@@ -1767,14 +1817,20 @@ async function updateIndicators(symbol, type) {
     const ema20 = calcEMA(closes, 20), ema5 = calcEMA(closes, 5), rsi = calcRSI(closes, 14);
     const htf = currentPrice > ema20 ? 'BULLISH' : 'BEARISH'; const ltf = ema5 > ema20 ? 'BULLISH' : 'BEARISH';
     const htfEl = document.getElementById('htfValue'); const ltfEl = document.getElementById('ltfValue'); const emaEl = document.getElementById('ema20Value'); const rsiEl = document.getElementById('rsiValue');
-    htfEl.textContent = htf; htfEl.className = 'ind-value ' + (htf === 'BULLISH' ? 'bullish' : 'bearish'); ltfEl.textContent = ltf; ltfEl.className = 'ind-value ' + (ltf === 'BULLISH' ? 'bullish' : 'bearish');
-    emaEl.textContent = ema20.toFixed(2); emaEl.className = 'ind-value neutral';
-    rsiEl.textContent = rsi.toFixed(0); if (rsi >= 70) rsiEl.className = 'ind-value bearish'; else if (rsi <= 30) rsiEl.className = 'ind-value bullish'; else rsiEl.className = 'ind-value neutral';
+    if(htfEl) { htfEl.textContent = htf; htfEl.className = 'ind-value ' + (htf === 'BULLISH' ? 'bullish' : 'bearish'); }
+    if(ltfEl) { ltfEl.textContent = ltf; ltfEl.className = 'ind-value ' + (ltf === 'BULLISH' ? 'bullish' : 'bearish'); }
+    if(emaEl) { emaEl.textContent = ema20.toFixed(2); emaEl.className = 'ind-value neutral'; }
+    if(rsiEl) { rsiEl.textContent = rsi.toFixed(0); if (rsi >= 70) rsiEl.className = 'ind-value bearish'; else if (rsi <= 30) rsiEl.className = 'ind-value bullish'; else rsiEl.className = 'ind-value neutral'; }
     const bid = currentPrice - (currentPrice * 0.0001); const ask = currentPrice + (currentPrice * 0.0001);
-    document.getElementById('bidValue').textContent = '$' + bid.toFixed(2); document.getElementById('askValue').textContent = '$' + ask.toFixed(2);
+    const bidEl = document.getElementById('bidValue'); const askEl = document.getElementById('askValue');
+    if(bidEl) bidEl.textContent = '$' + bid.toFixed(2); if(askEl) askEl.textContent = '$' + ask.toFixed(2);
     const sentiment = calcSentiment(candles);
-    document.getElementById('buyerPct').textContent = sentiment.buyPct.toFixed(0) + '% Buy'; document.getElementById('sellerPct').textContent = sentiment.sellPct.toFixed(0) + '% Sell';
-    document.getElementById('buyerBar').style.width = sentiment.buyPct + '%'; document.getElementById('sellerBar').style.width = sentiment.sellPct + '%';
+    const buyerPctEl = document.getElementById('buyerPct'); const sellerPctEl = document.getElementById('sellerPct');
+    const buyerBarEl = document.getElementById('buyerBar'); const sellerBarEl = document.getElementById('sellerBar');
+    if(buyerPctEl) buyerPctEl.textContent = sentiment.buyPct.toFixed(0) + '% Buy';
+    if(sellerPctEl) sellerPctEl.textContent = sentiment.sellPct.toFixed(0) + '% Sell';
+    if(buyerBarEl) buyerBarEl.style.width = sentiment.buyPct + '%';
+    if(sellerBarEl) sellerBarEl.style.width = sentiment.sellPct + '%';
 }
 let activeIndicators = { ma50: false, ma200: false, bollinger: false, macd: false };
 let ma50Series = null, ma200Series = null, bollingerUpper = null, bollingerLower = null, bollingerMiddle = null, macdChart = null, macdLineSeries = null, macdSignalSeries = null, macdHistSeries = null;
@@ -1829,9 +1885,9 @@ async function openAssetDetail(symbol, name, price, change, type) {
     loadChart(symbol, type); updateIndicators(symbol, type); loadAnalysis(symbol, name, price, type);
     if (indicatorInterval) clearInterval(indicatorInterval); indicatorInterval = setInterval(() => { if (currentSymbol) updateIndicators(currentSymbol, currentType); }, 15000);
 }
-function updateChartPrice() { const changeStr = (currentChange >= 0 ? '+' : '') + currentChange.toFixed(2) + '%'; const priceStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 }); const priceEl = document.getElementById('chartPrice'); priceEl.textContent = priceStr + '  ' + changeStr; priceEl.style.color = currentChange >= 0 ? '#43D6A2' : '#FF7387'; }
+function updateChartPrice() { const changeStr = (currentChange >= 0 ? '+' : '') + currentChange.toFixed(2) + '%'; const priceStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 }); const priceEl = document.getElementById('chartPrice'); if(priceEl) { priceEl.textContent = priceStr + '  ' + changeStr; priceEl.style.color = currentChange >= 0 ? '#43D6A2' : '#FF7387'; } }
 function loadChart(symbol, type) {
-    const container = document.getElementById('tradingviewContainer'); container.innerHTML = ''; clearIndicatorSeries();
+    const container = document.getElementById('tradingviewContainer'); if(!container) return; container.innerHTML = ''; clearIndicatorSeries();
     if (currentChart) { currentChart.remove(); currentChart = null; }
     const isMobile = window.innerWidth < 400; const chartHeight = isMobile ? 450 : 520;
     if (typeof LightweightCharts === 'undefined') { container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library gagal dimuat.</div>'; return; }
@@ -1860,6 +1916,7 @@ function setupTimeframeButtons() { document.querySelectorAll('.tf-btn').forEach(
 function resizeChart() { if (currentChart) { const container = document.getElementById('tradingviewContainer'); currentChart.applyOptions({ width: container.clientWidth }); } }
 async function loadAnalysis(symbol, name, price, type) {
     const container = document.getElementById('analysisBody');
+    if(!container) return;
     container.innerHTML = `<div style="text-align:center; padding: 30px 0;"><div class="loading-spinner"></div><p class="loading-text" style="margin-top:10px;">🤖 AI Warren Buffett sedang menganalisis ${symbol}...</p></div>`;
     try {
         const fundamental = await fetchFundamental(symbol, type);
@@ -1879,8 +1936,10 @@ function renderAISignalUI(data, container) {
 }
 function formatAnalysis(text) { if (!text) return ''; return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
 function closeAssetDetail() { document.getElementById('chartModal').classList.remove('active'); document.getElementById('tradingviewContainer').innerHTML = ''; clearIndicatorSeries(); if (currentChart) { currentChart.remove(); currentChart = null; candleSeries = null; volumeSeries = null; } if (indicatorInterval) { clearInterval(indicatorInterval); indicatorInterval = null; } window.removeEventListener('resize', resizeChart); }
+
+// ============ SCREENER ============
 async function runScreener() {
-    const results = document.getElementById('screenerResults'); results.innerHTML = '<div class="empty-state">Screener lagi diproses...</div>';
+    const results = document.getElementById('screenerResults'); if(!results) return; results.innerHTML = '<div class="empty-state">Screener lagi diproses...</div>';
     const peMax = parseFloat(document.getElementById('peMax').value) || 15; const pbMax = parseFloat(document.getElementById('pbMax').value) || 1.5;
     const roeMin = (parseFloat(document.getElementById('roeMin').value) || 15) / 100; const derMax = parseFloat(document.getElementById('derMax').value) || 1; const divMin = (parseFloat(document.getElementById('divMin').value) || 3) / 100;
     try {
@@ -1890,10 +1949,13 @@ async function runScreener() {
         results.innerHTML = `<p class="description">${data.count} saham lolos filter:</p>` + data.results.map(stock => `<div class="asset-card"><div class="asset-info"><span class="asset-symbol">${stock.symbol}</span><span class="asset-name">${stock.company_name}</span><span class="asset-metrics">P/E ${stock.pe_ratio?.toFixed(2)} · P/B ${stock.pb_ratio?.toFixed(2)} · ROE ${((stock.roe || 0) * 100).toFixed(1)}% · Div ${((stock.dividend_yield || 0) * 100).toFixed(1)}%</span></div></div>`).join('');
     } catch (error) { results.innerHTML = `<div class="empty-state">❌ Gagal: ${error.message}</div>`; }
 }
+
+// ============ PORTFOLIO ============
 let portfolioPerfChart = null;
 async function renderPortfolio() {
     const container = document.getElementById('holdings'); const totalValueEl = document.getElementById('totalValue'); const unrealizedPLEl = document.getElementById('unrealizedPL');
     const totalCostEl = document.getElementById('totalCost'); const totalHoldingsEl = document.getElementById('totalHoldings'); const chartSection = document.getElementById('portfolioChartSection');
+    if(!container) return;
     if (portfolio.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada holding.</div>'; totalValueEl.textContent = '$ 0'; unrealizedPLEl.textContent = '$ 0'; totalCostEl.textContent = '$ 0'; totalHoldingsEl.textContent = '0'; if (chartSection) chartSection.style.display = 'none'; const perfSec = document.getElementById('portfolioPerfSection'); if (perfSec) perfSec.style.display = 'none'; return; }
     container.innerHTML = '<div class="empty-state">Memuat harga...</div>';
     const holdingsWithPrice = await Promise.all(portfolio.map(async (h) => { const priceData = await fetchPrice(h.symbol, h.type); return { ...h, currentPrice: priceData?.price || 0 }; }));
@@ -1963,14 +2025,16 @@ async function renderSectorHeatmap() {
         heatmapData = sectorResults.sort((a, b) => b.avgChange - a.avgChange);
         let totalBullish = 0, totalBearish = 0; sectorResults.forEach(s => { totalBullish += s.bullishCount; totalBearish += s.bearishCount; });
         const totalStocks = totalBullish + totalBearish; const bullPct = totalStocks > 0 ? (totalBullish / totalStocks) * 100 : 50; const bearPct = 100 - bullPct;
-        document.getElementById('hmBullFill').style.width = bullPct + '%'; document.getElementById('hmBearFill').style.width = bearPct + '%';
-        document.getElementById('heatmapSentimentStats').innerHTML = `<span class="sentiment-stat bullish">🟢 ${bullPct.toFixed(1)}% Bullish (${totalBullish})</span><span class="sentiment-stat bearish">🔴 ${bearPct.toFixed(1)}% Bearish (${totalBearish})</span>`;
+        const hmBullFill = document.getElementById('hmBullFill'); const hmBearFill = document.getElementById('hmBearFill');
+        if(hmBullFill) hmBullFill.style.width = bullPct + '%'; if(hmBearFill) hmBearFill.style.width = bearPct + '%';
+        const hmStats = document.getElementById('heatmapSentimentStats');
+        if(hmStats) hmStats.innerHTML = `<span class="sentiment-stat bullish">🟢 ${bullPct.toFixed(1)}% Bullish (${totalBullish})</span><span class="sentiment-stat bearish">🔴 ${bearPct.toFixed(1)}% Bearish (${totalBearish})</span>`;
         grid.innerHTML = heatmapData.map((sector, idx) => { const avgChange = sector.avgChange; const trendClass = avgChange > 0 ? 'up' : avgChange < 0 ? 'down' : 'flat'; const trendSign = avgChange > 0 ? '+' : ''; const heatColor = getHeatColor(avgChange); const dotsToShow = sector.stocks.slice(0, 10); const dotsHtml = dotsToShow.map(s => { const dotColor = getHeatColor(s.change); return `<div class="sector-heat-dot" style="background:${dotColor};"></div>`; }).join(''); return `<div class="sector-card" style="border-left: 3px solid ${heatColor};" onclick="openSectorDetail(${idx})"><div class="sector-card-header"><span class="sector-card-icon">${sector.icon}</span><span class="sector-card-name">${sector.name}</span></div><div class="sector-card-avg ${trendClass}">${trendSign}${avgChange.toFixed(2)}%</div><div class="sector-card-count">${sector.totalStocks} stocks · 🟢 ${sector.bullishCount} · 🔴 ${sector.bearishCount}</div><div class="sector-card-heat-dots">${dotsHtml}</div></div>`; }).join('');
     } catch (error) { grid.innerHTML = '<div class="empty-state">❌ Gagal memuat heatmap</div>'; }
 }
 function openSectorDetail(index) {
     const sector = heatmapData[index]; if (!sector) return;
-    const modal = document.getElementById('sectorDetailModal'); modal.classList.add('active');
+    const modal = document.getElementById('sectorDetailModal'); if(modal) modal.classList.add('active');
     document.getElementById('sdIcon').textContent = sector.icon; document.getElementById('sdName').textContent = sector.name; document.getElementById('sdSubtitle').textContent = `${sector.totalStocks} stocks dalam sektor ini`;
     const avgChange = sector.avgChange; const avgEl = document.getElementById('sdAvgChange'); avgEl.textContent = (avgChange > 0 ? '+' : '') + avgChange.toFixed(2) + '%'; avgEl.className = 'summary-value ' + (avgChange > 0 ? 'up' : avgChange < 0 ? 'down' : '');
     document.getElementById('sdBullish').textContent = sector.bullishCount; document.getElementById('sdBearish').textContent = sector.bearishCount;
@@ -1982,7 +2046,7 @@ function closeSectorDetail() { document.getElementById('sectorDetailModal').clas
 // ============ NEWS ============
 function getNewsSentiment(text) { if (!text) return { label: 'NEUTRAL', class: 'neutral', icon: '⚪' }; const lowerText = text.toLowerCase(); const bullishWords = ['surge', 'jump', 'rally', 'beat', 'growth', 'profit', 'gain', 'bull', 'soar', 'record', 'up', 'rise', 'boost', 'high', 'buy', 'upgrade', 'positive', 'strong', 'recovery', 'breakout', 'momentum']; const bearishWords = ['drop', 'fall', 'crash', 'miss', 'loss', 'decline', 'bear', 'plunge', 'slump', 'down', 'cut', 'warn', 'low', 'sell', 'downgrade', 'negative', 'weak', 'recession', 'fear', 'risk', 'inflation', 'debt']; let bullScore = 0; let bearScore = 0; bullishWords.forEach(word => { if (lowerText.includes(word)) bullScore++; }); bearishWords.forEach(word => { if (lowerText.includes(word)) bearScore++; }); if (bullScore > bearScore) return { label: 'BULLISH', class: 'positive', icon: '🟢' }; if (bearScore > bullScore) return { label: 'BEARISH', class: 'negative', icon: '🔴' }; return { label: 'NEUTRAL', class: 'neutral', icon: '⚪' }; }
 async function renderNews() {
-    const container = document.getElementById('newsList'); container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
+    const container = document.getElementById('newsList'); if(!container) return; container.innerHTML = '<div class="empty-state">Memuat berita...</div>';
     try {
         const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/fetch-news`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ category: 'all' }) }, 12000);
         if (!response.ok) throw new Error('HTTP ' + response.status); const data = await response.json();
@@ -2229,10 +2293,10 @@ async function openStockScorecard() {
             const closes = candles.map(c => c.close);
             const ma50 = calcSMA(closes, 50);
             const lastMa50 = ma50[ma50.length - 1];
-            const currentPrice = closes[closes.length - 1];
-            if (currentPrice > lastMa50) { momScore = 10; momStatus = 'pass'; momDesc = 'Harga di atas MA50 (Bullish)'; }
+            const currentPriceVal = closes[closes.length - 1];
+            if (currentPriceVal > lastMa50) { momScore = 10; momStatus = 'pass'; momDesc = 'Harga di atas MA50 (Bullish)'; }
             else { momScore = 0; momStatus = 'fail'; momDesc = 'Harga di bawah MA50 (Bearish)'; }
-            criteria.push({ label: 'Momentum (MA50)', icon: '🔥', score: momScore, max: 10, value: currentPrice > lastMa50 ? 'Bullish' : 'Bearish', status: momStatus, desc: momDesc });
+            criteria.push({ label: 'Momentum (MA50)', icon: '🔥', score: momScore, max: 10, value: currentPriceVal > lastMa50 ? 'Bullish' : 'Bearish', status: momStatus, desc: momDesc });
         } else {
             criteria.push({ label: 'Momentum (MA50)', icon: '🔥', score: 5, max: 10, value: 'N/A', status: 'partial', desc: 'Data historis belum cukup' });
             momScore = 5;
@@ -2276,7 +2340,6 @@ async function openDcfModal() {
 
     try {
         const fund = await fetchFundamental(currentSymbol, currentType);
-        // Auto-fill EPS
         const eps = fund.eps || fund.trailing_eps || 0;
         document.getElementById('dcfEps').value = eps;
         document.getElementById('dcfResult').style.display = 'none';
@@ -2389,12 +2452,12 @@ function calculateDCF() {
     dcfMethodsEl.style.display = 'flex';
     
     // Graham Number = sqrt(22.5 * EPS * BVPS)
-    const bvps = fund.book_value_per_share || (fund.pb_ratio > 0 ? currentPriceVal / fund.pb_ratio : 0);
+    const bvps = fund?.book_value_per_share || (fund?.pb_ratio > 0 ? currentPriceVal / fund?.pb_ratio : 0);
     const graham = bvps > 0 ? Math.sqrt(22.5 * eps * bvps) : 0;
     
     // PE Multiple
-    const pe = fund.pe_ratio || 15;
-    const industryPe = 15; // Asumsi
+    const pe = fund?.pe_ratio || 15;
+    const industryPe = 15; 
     const peValuation = eps * industryPe;
 
     dcfMethodsEl.innerHTML = `
@@ -2425,8 +2488,6 @@ document.getElementById('browseStockBtn').addEventListener('click', openBrowseMo
 document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
 document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
 document.querySelectorAll('.cat-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentBrowseCategory = btn.dataset.cat; renderBrowseStocks(); }); });
-
-// TOMBOL + MANUAL DAN MODALNYA UDAH DIHAPUS TOTAL DARI SINI
 
 document.getElementById('setAlertBtn').addEventListener('click', () => openAlertModal(currentSymbol, currentName, currentPrice, currentType));
 document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal);
