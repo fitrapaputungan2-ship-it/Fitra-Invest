@@ -444,9 +444,23 @@
             <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
             <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
             <button class="crypto-scorecard-btn" id="openCryptoScorecardBtn" style="display:none;">🪙 Crypto Value Scorecard</button>
-            <div class="analysis-section"><div class="analysis-title">🧠 Analisis AI Value Investing</div><div class="analysis-body-inline" id="analysisBody"><div class="loading-spinner"></div><p class="loading-text">Mengambil data...</p></div></div>
-        </div>
+            <!-- --- COMPANY PROFILE --- -->
+<div class="company-profile-section" id="companyProfileSection" style="display: none;">
+    <!-- Di-render via JS -->
+</div>
+
+<!-- --- AI VALUE INVESTING TERMINAL --- -->
+<div class="ai-terminal-section">
+    <div class="terminal-header">
+        <div class="terminal-dots"><span></span><span></span><span></span></div>
+        <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
+        <div class="terminal-status" id="terminalStatus">SYS.READY</div>
     </div>
+    <div class="analysis-body-inline" id="analysisBody">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Menginisialisasi AI Neural Network...</p>
+    </div>
+</div>
 
     <!-- MODAL: ALERT -->
     <div class="modal-overlay" id="alertModal">
