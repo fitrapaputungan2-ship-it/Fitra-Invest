@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1001">
+    <link rel="stylesheet" href="style.css?v=1002">
 </head>
 <body>
     <div class="app">
@@ -21,7 +21,6 @@
                 </div>
             </div>
             <div class="header-right-actions">
-                <!-- Ganti Emoji jadi SVG Icon -->
                 <button class="currency-open-btn" id="currencyOpenBtn" aria-label="Currency">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 </button>
@@ -45,8 +44,7 @@
         </div>
 
         <main class="content">
-
-            <!-- WATCHLIST REDESIGN FUTURISTIC -->
+            <!-- WATCHLIST REDESIGN -->
             <div class="tab-content active" id="tab-watchlist">
                 <div class="watchlist-header-new">
                     <h2>My Watchlist</h2>
@@ -382,39 +380,39 @@
         </div>
     </div>
 
-    <!-- MODAL: BROWSE (ANTI-GLITCH REDESIGN) -->
-<div class="modal-overlay" id="browseModal">
-    <div class="modal-content browse-content">
-        <div class="modal-header">
-            <h3>Browse Market</h3>
-            <button class="modal-close" id="closeBrowseModal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-        <div class="browse-search-bar">
-            <div class="browse-search-wrapper">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="browseSearch" placeholder="Cari symbol atau nama aset..." autocomplete="off">
+    <!-- MODAL: BROWSE (FIXED FUTURISTIC) -->
+    <div class="modal-overlay" id="browseModal">
+        <div class="modal-content browse-content">
+            <div class="modal-header">
+                <h3>Browse Market</h3>
+                <button class="modal-close" id="closeBrowseModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
             </div>
+            <div class="browse-search-bar">
+                <div class="browse-search-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="browseSearch" placeholder="Cari symbol atau nama aset..." autocomplete="off">
+                </div>
+            </div>
+            <div class="browse-categories" id="browseCategoriesBar">
+                <button class="cat-btn active" data-cat="all">🌐 Semua</button>
+                <button class="cat-btn" data-cat="us-tech">💻 US Tech</button>
+                <button class="cat-btn" data-cat="us-finance">🏦 Finance</button>
+                <button class="cat-btn" data-cat="us-healthcare">💊 Healthcare</button>
+                <button class="cat-btn" data-cat="us-consumer">🛒 Consumer</button>
+                <button class="cat-btn" data-cat="us-industrial">🏭 Industrial</button>
+                <button class="cat-btn" data-cat="us-energy">⚡ Energy</button>
+                <button class="cat-btn" data-cat="international">🌍 International</button>
+                <button class="cat-btn" data-cat="crypto">🪙 Crypto</button>
+                <button class="cat-btn" data-cat="commodity">🥇 Commodity</button>
+                <button class="cat-btn" data-cat="index">📈 Index</button>
+            </div>
+            <div class="browse-body" id="browseBody"></div>
         </div>
-        <div class="browse-categories" id="browseCategoriesBar">
-            <button class="cat-btn active" data-cat="all">🌐 Semua</button>
-            <button class="cat-btn" data-cat="us-tech">💻 US Tech</button>
-            <button class="cat-btn" data-cat="us-finance">🏦 Finance</button>
-            <button class="cat-btn" data-cat="us-healthcare">💊 Healthcare</button>
-            <button class="cat-btn" data-cat="us-consumer">🛒 Consumer</button>
-            <button class="cat-btn" data-cat="us-industrial">🏭 Industrial</button>
-            <button class="cat-btn" data-cat="us-energy">⚡ Energy</button>
-            <button class="cat-btn" data-cat="international">🌍 International</button>
-            <button class="cat-btn" data-cat="crypto">🪙 Crypto</button>
-            <button class="cat-btn" data-cat="commodity">🥇 Commodity</button>
-            <button class="cat-btn" data-cat="index">📈 Index</button>
-        </div>
-        <div class="browse-body" id="browseBody"></div>
     </div>
-</div>
 
-   <!-- MODAL: ADD HOLDING -->
+    <!-- MODAL: ADD HOLDING -->
     <div class="modal-overlay" id="holdingModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Tambah Holding</h3><button class="modal-close" id="closeHoldingModal">×</button></div>
@@ -429,79 +427,79 @@
         </div>
     </div>
 
-    <!-- MODAL: CHART & AI -->
-<div class="chart-modal" id="chartModal">
-    <div class="chart-content">
-        <div class="chart-header">
-            <div>
-                <h3 id="chartTitle">AAPL — Apple Inc.</h3>
-                <div class="chart-subtitle" id="chartPrice">$0.00 (+0.00%)</div>
+    <!-- MODAL: CHART & AI (LENGKAP DENGAN COMPANY PROFILE) -->
+    <div class="chart-modal" id="chartModal">
+        <div class="chart-content">
+            <div class="chart-header">
+                <div>
+                    <h3 id="chartTitle">AAPL — Apple Inc.</h3>
+                    <div class="chart-subtitle" id="chartPrice">$0.00 (+0.00%)</div>
+                </div>
+                <button class="analysis-close" id="closeChartModal">×</button>
             </div>
-            <button class="analysis-close" id="closeChartModal">×</button>
-        </div>
-        <div class="chart-toolbar">
-            <div class="tf-group">
-                <button class="tf-btn" data-tf="5M">5M</button>
-                <button class="tf-btn" data-tf="30M">30M</button>
-                <button class="tf-btn" data-tf="1H">1H</button>
-                <button class="tf-btn active" data-tf="D">D</button>
-                <button class="tf-btn" data-tf="W">W</button>
-                <button class="tf-btn" data-tf="M">M</button>
-                <button class="tf-btn" data-tf="Y">Y</button>
+            <div class="chart-toolbar">
+                <div class="tf-group">
+                    <button class="tf-btn" data-tf="5M">5M</button>
+                    <button class="tf-btn" data-tf="30M">30M</button>
+                    <button class="tf-btn" data-tf="1H">1H</button>
+                    <button class="tf-btn active" data-tf="D">D</button>
+                    <button class="tf-btn" data-tf="W">W</button>
+                    <button class="tf-btn" data-tf="M">M</button>
+                    <button class="tf-btn" data-tf="Y">Y</button>
+                </div>
             </div>
-        </div>
-        <div class="indicator-toggles">
-            <button class="ind-toggle-btn" data-ind="ma50">MA 50</button>
-            <button class="ind-toggle-btn" data-ind="ma200">MA 200</button>
-            <button class="ind-toggle-btn" data-ind="bollinger">Bollinger</button>
-            <button class="ind-toggle-btn" data-ind="macd">MACD</button>
-        </div>
-        <div class="tradingview-container" id="tradingviewContainer"></div>
-        <div class="macd-container" id="macdContainer" style="display:none;"></div>
-        <div class="indicators-panel">
-            <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
-            <div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div>
-            <div class="indicator-item"><span class="ind-label">EMA 20</span><span class="ind-value" id="ema20Value">-</span></div>
-            <div class="indicator-item"><span class="ind-label">RSI 14</span><span class="ind-value" id="rsiValue">-</span></div>
-        </div>
-        <div class="bidask-panel">
-            <div class="bidask-item bid"><span class="bidask-label">BID</span><span class="bidask-value" id="bidValue">-</span></div>
-            <div class="bidask-item ask"><span class="bidask-label">ASK</span><span class="bidask-value" id="askValue">-</span></div>
-        </div>
-        <div class="sentiment-panel">
-            <div class="sentiment-header">
-                <span class="sentiment-title">MARKET SENTIMENT</span>
-                <div class="sentiment-stats"><span class="buy-stat" id="buyerPct">50% Buy</span><span class="sell-stat" id="sellerPct">50% Sell</span></div>
+            <div class="indicator-toggles">
+                <button class="ind-toggle-btn" data-ind="ma50">MA 50</button>
+                <button class="ind-toggle-btn" data-ind="ma200">MA 200</button>
+                <button class="ind-toggle-btn" data-ind="bollinger">Bollinger</button>
+                <button class="ind-toggle-btn" data-ind="macd">MACD</button>
             </div>
-            <div class="sentiment-bar">
-                <div class="sentiment-fill buy" id="buyerBar" style="width: 50%;"></div>
-                <div class="sentiment-fill sell" id="sellerBar" style="width: 50%;"></div>
+            <div class="tradingview-container" id="tradingviewContainer"></div>
+            <div class="macd-container" id="macdContainer" style="display:none;"></div>
+            <div class="indicators-panel">
+                <div class="indicator-item"><span class="ind-label">HTF</span><span class="ind-value" id="htfValue">-</span></div>
+                <div class="indicator-item"><span class="ind-label">LTF</span><span class="ind-value" id="ltfValue">-</span></div>
+                <div class="indicator-item"><span class="ind-label">EMA 20</span><span class="ind-value" id="ema20Value">-</span></div>
+                <div class="indicator-item"><span class="ind-label">RSI 14</span><span class="ind-value" id="rsiValue">-</span></div>
             </div>
-        </div>
-        
-        <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
-        <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
-        <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
-        <button class="crypto-scorecard-btn" id="openCryptoScorecardBtn" style="display:none;">🪙 Crypto Value Scorecard</button>
+            <div class="bidask-panel">
+                <div class="bidask-item bid"><span class="bidask-label">BID</span><span class="bidask-value" id="bidValue">-</span></div>
+                <div class="bidask-item ask"><span class="bidask-label">ASK</span><span class="bidask-value" id="askValue">-</span></div>
+            </div>
+            <div class="sentiment-panel">
+                <div class="sentiment-header">
+                    <span class="sentiment-title">MARKET SENTIMENT</span>
+                    <div class="sentiment-stats"><span class="buy-stat" id="buyerPct">50% Buy</span><span class="sell-stat" id="sellerPct">50% Sell</span></div>
+                </div>
+                <div class="sentiment-bar">
+                    <div class="sentiment-fill buy" id="buyerBar" style="width: 50%;"></div>
+                    <div class="sentiment-fill sell" id="sellerBar" style="width: 50%;"></div>
+                </div>
+            </div>
+            
+            <button class="alert-set-btn" id="setAlertBtn">🔔 Set Smart Alert</button>
+            <button class="scorecard-btn" id="openScorecardBtn">🎯 Value Investing Scorecard</button>
+            <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
+            <button class="crypto-scorecard-btn" id="openCryptoScorecardBtn" style="display:none;">🪙 Crypto Value Scorecard</button>
 
-        <!-- --- COMPANY PROFILE BARU --- -->
-        <div class="company-profile-section" id="companyProfileSection" style="display: none;"></div>
+            <!-- --- COMPANY PROFILE BARU --- -->
+            <div class="company-profile-section" id="companyProfileSection" style="display: none;"></div>
 
-        <!-- --- AI TERMINAL BARU --- -->
-        <div class="ai-terminal-section">
-            <div class="terminal-header">
-                <div class="terminal-dots"><span></span><span></span><span></span></div>
-                <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
-                <div class="terminal-status" id="terminalStatus">SYS.READY</div>
+            <!-- --- AI TERMINAL BARU --- -->
+            <div class="ai-terminal-section">
+                <div class="terminal-header">
+                    <div class="terminal-dots"><span></span><span></span><span></span></div>
+                    <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
+                    <div class="terminal-status" id="terminalStatus">SYS.READY</div>
+                </div>
+                <div class="analysis-body-inline" id="analysisBody">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Menginisialisasi AI Neural Network...</p>
+                </div>
             </div>
-            <div class="analysis-body-inline" id="analysisBody">
-                <div class="loading-spinner"></div>
-                <p class="loading-text">Menginisialisasi AI Neural Network...</p>
-            </div>
+            
         </div>
-        
-    </div> <!-- INI PENUTUP CHART CONTENT -->
-</div> <!-- INI PENUTUP CHART MODAL -->
+    </div>
 
     <!-- MODAL: ALERT -->
     <div class="modal-overlay" id="alertModal">
@@ -676,6 +674,6 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=24011"></script> <!-- Naikin versi cache -->
+    <script src="app.js?v=1002"></script>
 </body>
-                    </html>
+                                                                        </html>
