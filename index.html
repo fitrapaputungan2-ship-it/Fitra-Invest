@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1007">
+    <link rel="stylesheet" href="style.css?v=1008">
 </head>
 <body>
     <div class="app">
@@ -672,7 +672,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT PAMUNGKAS: PAKSA AI & COMPANY MUNCUL -->
+    <!-- SCRIPT PAMUNGKAS: FULL METRICS + COMPANY INTEL -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
@@ -770,12 +770,36 @@
                     
                     status.textContent = 'SYS.ONLINE';
                     
+                    // UI FULL METRICS & AI
                     const signal = data.ai_signal ? data.ai_signal.toUpperCase() : 'HOLD';
                     let color = signal.includes('BUY') ? '#43D6A2' : signal.includes('SELL') ? '#FF7387' : '#E9B949';
                     let icon = signal.includes('BUY') ? '🚀' : signal.includes('SELL') ? '⚠️' : '⏸️';
                     let conf = data.confidence || 50;
 
+                    const pe = fundamental.pe_ratio || 0;
+                    const roe = fundamental.roe || 0;
+                    const der = fundamental.debt_to_equity || 0;
+                    const margin = fundamental.profit_margin || 0;
+
+                    const getMetricClass = (val, good, warn, isLowerBetter = false) => {
+                        if (val === 'N/A') return 'warn';
+                        const num = parseFloat(val);
+                        if (isLowerBetter) { if (num <= good) return 'good'; if (num <= warn) return 'warn'; return 'bad'; } 
+                        else { if (num >= good) return 'good'; if (num >= warn) return 'warn'; return 'bad'; }
+                    };
+
+                    const metricsHtml = `
+                        <div class="ai-metrics-title">📊 Health Matrix</div>
+                        <div class="ai-metrics-grid">
+                            <div class="ai-metric-item"><span class="ai-metric-label">P/E Ratio</span><span class="ai-metric-value ${getMetricClass(pe, 15, 25, true)}">${pe > 0 ? pe.toFixed(1) : 'N/A'}</span></div>
+                            <div class="ai-metric-item"><span class="ai-metric-label">ROE</span><span class="ai-metric-value ${getMetricClass(roe*100, 15, 10)}">${(roe*100).toFixed(1)}%</span></div>
+                            <div class="ai-metric-item"><span class="ai-metric-label">DER (Debt)</span><span class="ai-metric-value ${getMetricClass(der, 0.5, 1.5, true)}">${der > 0 ? der.toFixed(2) : 'N/A'}</span></div>
+                            <div class="ai-metric-item"><span class="ai-metric-label">Margin</span><span class="ai-metric-value ${getMetricClass(margin*100, 15, 5)}">${(margin*100).toFixed(1)}%</span></div>
+                        </div>
+                    `;
+
                     body.innerHTML = `
+                        ${metricsHtml}
                         <div class="ai-verdict-box">
                             <div class="ai-verdict-signal" style="border: 2px solid ${color}; color: ${color}; box-shadow: 0 0 15px ${color}40;">${icon} ${signal}</div>
                             <div class="ai-confidence-wrap" style="width: 100%; margin-top: 15px;">
@@ -804,6 +828,6 @@
     </script>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=1007"></script>
+    <script src="app.js?v=1008"></script>
 </body>
-                                                                                                                                                </html>
+                                                                 </html>
