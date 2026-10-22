@@ -676,5 +676,61 @@
     <script src="./lightweight-charts.js"></script>
     <script src="app.js?v=1005"></script>
     <script src="ai.js"></script>
+    <!-- SCRIPT PAMUNGKAS: PAKSA AI MUNCUL -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Tunggu 1 detik biar app.js selesai loading
+    setTimeout(() => {
+        // Fungsi ini bakal nimpa fungsi bawaan app.js
+        window.loadAnalysis = async function(symbol, name, price, type) {
+            
+            // Hapus Company Intel lama kalau ada
+            const cp = document.getElementById('companyProfileSection');
+            if (cp) cp.style.display = 'none';
+
+            // Hapus kotak AI lama yang mungkin nyangkut/error
+            document.querySelectorAll('.analysis-section, .ai-terminal-section, #test-ai-box').forEach(el => el.remove());
+
+            // Cari tempat buat naruh kotak (chart content)
+            const chartContent = document.querySelector('.chart-content');
+            if (!chartContent) return;
+
+            // BIKIN KOTAK NEON SUPER TERANG
+            const box = document.createElement('div');
+            box.id = 'test-ai-box';
+            box.style.cssText = "background: #1a2b3c; border: 3px solid #50E4F2; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 0 30px rgba(80,228,242,0.5); width: 100%; box-sizing: border-box; z-index: 9999; position: relative;";
+            box.innerHTML = `
+                <h3 style="color:#50E4F2; font-family:monospace; margin-bottom:10px;">> AI SYSTEM TEST...</h3>
+                <p id="test-result" style="color:#fff; font-family:monospace; font-size:14px;">Menghubungi server Supabase...</p>
+            `;
+            chartContent.appendChild(box);
+            
+            const resultEl = document.getElementById('test-result');
+
+            try {
+                // FETCH LANGSUNG DARI SINI
+                const res = await fetch("https://twxsupmgnmkzsyiqebln.supabase.co/functions/v1/analyze-stock", {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC', 'apikey': 'sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC' },
+                    body: JSON.stringify({ symbol, name, price, fundamental: {} })
+                });
+                
+                if (!res.ok) throw new Error("Server Error: " + res.status);
+                const data = await res.json();
+                
+                // TAMPILKAN HASILNYA
+                resultEl.innerHTML = `
+                    <span style="color:#43D6A2; font-size:24px; font-weight:bold; text-shadow: 0 0 10px #43D6A2;">${data.ai_signal || 'HOLD'}</span><br><br>
+                    <span style="font-size:12px; color:#B9A0FF; font-weight:bold;">Confidence: ${data.confidence || 50}/100</span><br><br>
+                    <span style="font-size:12px; color:#91A8BB; line-height:1.5;">${data.analysis || 'Analisis selesai. Tidak ada teks ringkasan.'}</span>
+                `;
+            } catch (e) {
+                // KALAU ERROR, TAMPILKAN MERAH BESAR
+                resultEl.innerHTML = `<span style="color:#FF7387; font-size:16px; font-weight:bold;">❌ GAGAL: ${e.message}</span><br><br><span style="font-size:12px; color:#aaa;">Cek koneksi internet atau API Supabase.</span>`;
+            }
+        };
+    }, 1000);
+});
+</script>
 </body>
                                                                                                              </html>
