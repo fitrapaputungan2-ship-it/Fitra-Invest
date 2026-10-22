@@ -1127,3 +1127,202 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
 /* Sort Option Button */
 .sort-option-btn { width: 100%; padding: 14px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 14px; font-weight: 600; text-align: left; display: flex; align-items: center; gap: 10px; cursor: pointer; font-family: inherit; transition: 0.2s; }
 .sort-option-btn:active { background: var(--card-elevated); border-color: var(--cyan); }
+/* =========================================
+   COMPANY PROFILE & FUTURISTIC AI TERMINAL
+   ========================================= */
+.company-profile-section {
+    background: linear-gradient(135deg, rgba(20, 36, 56, 0.8), rgba(13, 24, 39, 0.95));
+    border: 1px solid rgba(233, 185, 73, 0.3);
+    border-left: 4px solid var(--gold);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    animation: fadeIn 0.4s ease-out;
+}
+
+.company-profile-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.company-profile-title svg { width: 18px; height: 18px; stroke: var(--gold); }
+
+.company-story-text {
+    font-size: 12px;
+    line-height: 1.6;
+    color: rgba(244, 247, 251, 0.85);
+    margin-bottom: 14px;
+    font-style: italic;
+    padding-left: 8px;
+    border-left: 2px solid rgba(233, 185, 73, 0.2);
+}
+
+.company-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.company-meta-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.company-meta-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.company-meta-value {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--cyan);
+}
+
+/* --- AI TERMINAL --- */
+.ai-terminal-section {
+    background: #050a14; /* Latar belakang gelap terminal */
+    border: 1px solid rgba(80, 228, 242, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(80, 228, 242, 0.1), inset 0 0 30px rgba(0, 0, 0, 0.8);
+    position: relative;
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Garis scanline futuristik */
+.ai-terminal-section::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.terminal-header {
+    background: rgba(80, 228, 242, 0.1);
+    border-bottom: 1px solid rgba(80, 228, 242, 0.2);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.terminal-dots { display: flex; gap: 6px; }
+.terminal-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.terminal-dots span:nth-child(1) { background: #FF5F56; }
+.terminal-dots span:nth-child(2) { background: #FFBD2E; }
+.terminal-dots span:nth-child(3) { background: #27C93F; }
+
+.terminal-title {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    color: var(--cyan);
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.terminal-status {
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--green);
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.analysis-body-inline { padding: 16px; position: relative; z-index: 2; }
+
+/* AI VERDICT BOX */
+.ai-verdict-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    background: radial-gradient(circle at center, rgba(80, 228, 242, 0.1) 0%, transparent 70%);
+    border: 1px dashed rgba(80, 228, 242, 0.3);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.ai-verdict-signal {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border-radius: 8px;
+    text-shadow: 0 0 10px currentColor;
+}
+
+.ai-verdict-signal.buy { color: #43D6A2; border: 2px solid #43D6A2; box-shadow: 0 0 20px rgba(67, 214, 162, 0.4); }
+.ai-verdict-signal.sell { color: #FF7387; border: 2px solid #FF7387; box-shadow: 0 0 20px rgba(255, 115, 135, 0.4); }
+.ai-verdict-signal.hold { color: #E9B949; border: 2px solid #E9B949; box-shadow: 0 0 20px rgba(233, 185, 73, 0.4); }
+
+/* CONFIDENCE BAR */
+.ai-confidence-wrap { margin-bottom: 16px; }
+.ai-confidence-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+.ai-confidence-bar { width: 100%; height: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); }
+.ai-confidence-fill { height: 100%; background: linear-gradient(90deg, #50E4F2, #43D6A2); box-shadow: 0 0 10px #50E4F2; transition: width 1s ease-in-out; }
+
+/* METRICS MATRIX */
+.ai-metrics-title { font-size: 11px; font-weight: 800; color: var(--gold); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.ai-metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.ai-metric-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+}
+.ai-metric-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--cyan); opacity: 0.5; }
+.ai-metric-label { font-size: 9px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+.ai-metric-value { font-size: 13px; font-weight: 800; color: #fff; }
+.ai-metric-value.good { color: var(--green); }
+.ai-metric-value.warn { color: var(--gold); }
+.ai-metric-value.bad { color: var(--red); }
+
+/* CRITICAL INSIGHTS (Risiko & Peluang) */
+.ai-insight-box {
+    background: rgba(0,0,0,0.3);
+    border-left: 3px solid var(--violet);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+.ai-insight-box.risk { border-left-color: var(--red); background: rgba(255, 115, 135, 0.05); }
+.ai-insight-box.opportunity { border-left-color: var(--green); background: rgba(67, 214, 162, 0.05); }
+
+.ai-summary-text {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255,255,255,0.1);
+}
