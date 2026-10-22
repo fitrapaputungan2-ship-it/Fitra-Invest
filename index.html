@@ -382,29 +382,38 @@
         </div>
     </div>
 
-    <!-- MODAL: BROWSE -->
-    <div class="modal-overlay" id="browseModal">
-        <div class="modal-content browse-content">
-            <div class="modal-header"><h3>Browse Market</h3><button class="modal-close" id="closeBrowseModal">×</button></div>
-            <div class="browse-search-bar"><input type="text" id="browseSearch" placeholder="🔍 Cari symbol atau nama..."></div>
-            <div class="browse-categories">
-                <button class="cat-btn active" data-cat="all">Semua</button>
-                <button class="cat-btn" data-cat="us-tech">US Tech</button>
-                <button class="cat-btn" data-cat="us-finance">Finance</button>
-                <button class="cat-btn" data-cat="us-healthcare">Healthcare</button>
-                <button class="cat-btn" data-cat="us-consumer">Consumer</button>
-                <button class="cat-btn" data-cat="us-industrial">Industrial</button>
-                <button class="cat-btn" data-cat="us-energy">Energy</button>
-                <button class="cat-btn" data-cat="international">International</button>
-                <button class="cat-btn" data-cat="crypto">Crypto</button>
-                <button class="cat-btn" data-cat="commodity">Commodity</button>
-                <button class="cat-btn" data-cat="index">Index</button>
-            </div>
-            <div class="browse-body" id="browseBody"></div>
+    <!-- MODAL: BROWSE (FUTURISTIC REDESIGN) -->
+<div class="modal-overlay" id="browseModal">
+    <div class="modal-content browse-content">
+        <div class="modal-header">
+            <h3>Browse Market</h3>
+            <button class="modal-close" id="closeBrowseModal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
         </div>
+        <div class="browse-search-bar">
+            <div class="browse-search-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="browseSearch" placeholder="Cari symbol atau nama aset..." autocomplete="off">
+            </div>
+        </div>
+        <div class="browse-categories" id="browseCategoriesBar">
+            <button class="cat-btn active" data-cat="all">🌐 Semua</button>
+            <button class="cat-btn" data-cat="us-tech">💻 US Tech</button>
+            <button class="cat-btn" data-cat="us-finance">🏦 Finance</button>
+            <button class="cat-btn" data-cat="us-healthcare">💊 Healthcare</button>
+            <button class="cat-btn" data-cat="us-consumer">🛒 Consumer</button>
+            <button class="cat-btn" data-cat="us-industrial">🏭 Industrial</button>
+            <button class="cat-btn" data-cat="us-energy">⚡ Energy</button>
+            <button class="cat-btn" data-cat="international">🌍 International</button>
+            <button class="cat-btn" data-cat="crypto">🪙 Crypto</button>
+            <button class="cat-btn" data-cat="commodity">🥇 Commodity</button>
+            <button class="cat-btn" data-cat="index">📈 Index</button>
+        </div>
+        <div class="browse-body" id="browseBody"></div>
     </div>
 
-    <!-- MODAL: ADD HOLDING -->
+</div>   <!-- MODAL: ADD HOLDING -->
     <div class="modal-overlay" id="holdingModal">
         <div class="modal-content">
             <div class="modal-header"><h3>Tambah Holding</h3><button class="modal-close" id="closeHoldingModal">×</button></div>
