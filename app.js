@@ -190,61 +190,41 @@ const STOCK_UNIVERSE = [
     { symbol: 'INTC', name: 'Intel Corp.', type: 'stock', category: 'us-tech' }, { symbol: 'ORCL', name: 'Oracle Corp.', type: 'stock', category: 'us-tech' },
     { symbol: 'CRM', name: 'Salesforce Inc.', type: 'stock', category: 'us-tech' }, { symbol: 'ADBE', name: 'Adobe Inc.', type: 'stock', category: 'us-tech' },
     { symbol: 'NFLX', name: 'Netflix Inc.', type: 'stock', category: 'us-tech' }, { symbol: 'AVGO', name: 'Broadcom Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'QCOM', name: 'Qualcomm Inc.', type: 'stock', category: 'us-tech' }, { symbol: 'TXN', name: 'Texas Instruments', type: 'stock', category: 'us-tech' },
-    { symbol: 'CSCO', name: 'Cisco Systems', type: 'stock', category: 'us-tech' }, { symbol: 'IBM', name: 'IBM Corp.', type: 'stock', category: 'us-tech' },
-    { symbol: 'NOW', name: 'ServiceNow Inc.', type: 'stock', category: 'us-tech' }, { symbol: 'UBER', name: 'Uber Technologies', type: 'stock', category: 'us-tech' },
-    { symbol: 'SHOP', name: 'Shopify Inc.', type: 'stock', category: 'us-tech' }, { symbol: 'SNOW', name: 'Snowflake Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'PLTR', name: 'Palantir Technologies', type: 'stock', category: 'us-tech' }, { symbol: 'SQ', name: 'Block Inc.', type: 'stock', category: 'us-tech' },
-    { symbol: 'PYPL', name: 'PayPal Holdings', type: 'stock', category: 'us-tech' }, { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'stock', category: 'us-finance' },
-    { symbol: 'BAC', name: 'Bank of America', type: 'stock', category: 'us-finance' }, { symbol: 'WFC', name: 'Wells Fargo & Co.', type: 'stock', category: 'us-finance' },
-    { symbol: 'GS', name: 'Goldman Sachs', type: 'stock', category: 'us-finance' }, { symbol: 'MS', name: 'Morgan Stanley', type: 'stock', category: 'us-finance' },
+    { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'stock', category: 'us-finance' }, { symbol: 'BAC', name: 'Bank of America', type: 'stock', category: 'us-finance' },
     { symbol: 'V', name: 'Visa Inc.', type: 'stock', category: 'us-finance' }, { symbol: 'MA', name: 'Mastercard Inc.', type: 'stock', category: 'us-finance' },
-    { symbol: 'AXP', name: 'American Express', type: 'stock', category: 'us-finance' }, { symbol: 'BLK', name: 'BlackRock Inc.', type: 'stock', category: 'us-finance' },
-    { symbol: 'C', name: 'Citigroup Inc.', type: 'stock', category: 'us-finance' }, { symbol: 'SCHW', name: 'Charles Schwab', type: 'stock', category: 'us-finance' },
-    { symbol: 'BRK-B', name: 'Berkshire Hathaway B', type: 'stock', category: 'us-finance' }, { symbol: 'JNJ', name: 'Johnson & Johnson', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'PFE', name: 'Pfizer Inc.', type: 'stock', category: 'us-healthcare' }, { symbol: 'UNH', name: 'UnitedHealth Group', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'ABBV', name: 'AbbVie Inc.', type: 'stock', category: 'us-healthcare' }, { symbol: 'LLY', name: 'Eli Lilly and Co.', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'MRK', name: 'Merck & Co.', type: 'stock', category: 'us-healthcare' }, { symbol: 'TMO', name: 'Thermo Fisher Scientific', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'ABT', name: 'Abbott Laboratories', type: 'stock', category: 'us-healthcare' }, { symbol: 'DHR', name: 'Danaher Corp.', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'BMY', name: 'Bristol-Myers Squibb', type: 'stock', category: 'us-healthcare' }, { symbol: 'AMGN', name: 'Amgen Inc.', type: 'stock', category: 'us-healthcare' },
-    { symbol: 'GILD', name: 'Gilead Sciences', type: 'stock', category: 'us-healthcare' }, { symbol: 'WMT', name: 'Walmart Inc.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'COST', name: 'Costco Wholesale', type: 'stock', category: 'us-consumer' }, { symbol: 'HD', name: 'Home Depot Inc.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'MCD', name: 'McDonald\'s Corp.', type: 'stock', category: 'us-consumer' }, { symbol: 'NKE', name: 'Nike Inc.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'SBUX', name: 'Starbucks Corp.', type: 'stock', category: 'us-consumer' }, { symbol: 'KO', name: 'Coca-Cola Co.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'PEP', name: 'PepsiCo Inc.', type: 'stock', category: 'us-consumer' }, { symbol: 'PG', name: 'Procter & Gamble', type: 'stock', category: 'us-consumer' },
-    { symbol: 'DIS', name: 'Walt Disney Co.', type: 'stock', category: 'us-consumer' }, { symbol: 'TGT', name: 'Target Corp.', type: 'stock', category: 'us-consumer' },
-    { symbol: 'LOW', name: 'Lowe\'s Companies', type: 'stock', category: 'us-consumer' }, { symbol: 'BKNG', name: 'Booking Holdings', type: 'stock', category: 'us-consumer' },
-    { symbol: 'LULU', name: 'Lululemon Athletica', type: 'stock', category: 'us-consumer' }, { symbol: 'BA', name: 'Boeing Co.', type: 'stock', category: 'us-industrial' },
-    { symbol: 'CAT', name: 'Caterpillar Inc.', type: 'stock', category: 'us-industrial' }, { symbol: 'GE', name: 'General Electric', type: 'stock', category: 'us-industrial' },
-    { symbol: 'MMM', name: '3M Company', type: 'stock', category: 'us-industrial' }, { symbol: 'HON', name: 'Honeywell International', type: 'stock', category: 'us-industrial' },
-    { symbol: 'UPS', name: 'United Parcel Service', type: 'stock', category: 'us-industrial' }, { symbol: 'LMT', name: 'Lockheed Martin', type: 'stock', category: 'us-industrial' },
-    { symbol: 'RTX', name: 'Raytheon Technologies', type: 'stock', category: 'us-industrial' }, { symbol: 'DE', name: 'Deere & Company', type: 'stock', category: 'us-industrial' },
-    { symbol: 'F', name: 'Ford Motor Co.', type: 'stock', category: 'us-industrial' }, { symbol: 'GM', name: 'General Motors', type: 'stock', category: 'us-industrial' },
+    { symbol: 'JNJ', name: 'Johnson & Johnson', type: 'stock', category: 'us-healthcare' }, { symbol: 'PFE', name: 'Pfizer Inc.', type: 'stock', category: 'us-healthcare' },
+    { symbol: 'UNH', name: 'UnitedHealth Group', type: 'stock', category: 'us-healthcare' }, { symbol: 'WMT', name: 'Walmart Inc.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'COST', name: 'Costco Wholesale', type: 'stock', category: 'us-consumer' }, { symbol: 'KO', name: 'Coca-Cola Co.', type: 'stock', category: 'us-consumer' },
+    { symbol: 'BA', name: 'Boeing Co.', type: 'stock', category: 'us-industrial' }, { symbol: 'CAT', name: 'Caterpillar Inc.', type: 'stock', category: 'us-industrial' },
     { symbol: 'XOM', name: 'Exxon Mobil Corp.', type: 'stock', category: 'us-energy' }, { symbol: 'CVX', name: 'Chevron Corp.', type: 'stock', category: 'us-energy' },
-    { symbol: 'COP', name: 'ConocoPhillips', type: 'stock', category: 'us-energy' }, { symbol: 'SLB', name: 'Schlumberger Ltd.', type: 'stock', category: 'us-energy' },
-    { symbol: 'NEE', name: 'NextEra Energy', type: 'stock', category: 'us-energy' }, { symbol: 'OXY', name: 'Occidental Petroleum', type: 'stock', category: 'us-energy' },
-    { symbol: 'TSM', name: 'Taiwan Semiconductor', type: 'stock', category: 'international' }, { symbol: 'ASML', name: 'ASML Holding N.V.', type: 'stock', category: 'international' },
-    { symbol: 'BABA', name: 'Alibaba Group', type: 'stock', category: 'international' }, { symbol: 'TM', name: 'Toyota Motor Corp.', type: 'stock', category: 'international' },
-    { symbol: 'SONY', name: 'Sony Group Corp.', type: 'stock', category: 'international' }, { symbol: 'SAP', name: 'SAP SE', type: 'stock', category: 'international' },
-    { symbol: 'NESN.SW', name: 'Nestlé S.A.', type: 'stock', category: 'international' }, { symbol: 'LVMH.PA', name: 'LVMH Moët Hennessy', type: 'stock', category: 'international' },
-    { symbol: 'SHEL', name: 'Shell plc', type: 'stock', category: 'international' }, { symbol: 'AZN', name: 'AstraZeneca PLC', type: 'stock', category: 'international' },
-    { symbol: 'NVO', name: 'Novo Nordisk A/S', type: 'stock', category: 'international' }, { symbol: 'HSBC', name: 'HSBC Holdings', type: 'stock', category: 'international' },
-    { symbol: 'TCEHY', name: 'Tencent Holdings', type: 'stock', category: 'international' }, { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', category: 'crypto' },
-    { symbol: 'ETH', name: 'Ethereum', type: 'crypto', category: 'crypto' }, { symbol: 'SOL', name: 'Solana', type: 'crypto', category: 'crypto' },
-    { symbol: 'BNB', name: 'Binance Coin', type: 'crypto', category: 'crypto' }, { symbol: 'XRP', name: 'Ripple', type: 'crypto', category: 'crypto' },
-    { symbol: 'ADA', name: 'Cardano', type: 'crypto', category: 'crypto' }, { symbol: 'DOGE', name: 'Dogecoin', type: 'crypto', category: 'crypto' },
-    { symbol: 'AVAX', name: 'Avalanche', type: 'crypto', category: 'crypto' }, { symbol: 'DOT', name: 'Polkadot', type: 'crypto', category: 'crypto' },
-    { symbol: 'MATIC', name: 'Polygon', type: 'crypto', category: 'crypto' }, { symbol: 'LINK', name: 'Chainlink', type: 'crypto', category: 'crypto' },
-    { symbol: 'LTC', name: 'Litecoin', type: 'crypto', category: 'crypto' }, { symbol: 'ATOM', name: 'Cosmos', type: 'crypto', category: 'crypto' },
-    { symbol: 'TRX', name: 'TRON', type: 'crypto', category: 'crypto' }, { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity', category: 'commodity' },
-    { symbol: 'SI=F', name: 'Silver Futures', type: 'commodity', category: 'commodity' }, { symbol: 'CL=F', name: 'Crude Oil WTI', type: 'commodity', category: 'commodity' },
-    { symbol: 'NG=F', name: 'Natural Gas', type: 'commodity', category: 'commodity' }, { symbol: 'HG=F', name: 'Copper Futures', type: 'commodity', category: 'commodity' },
-    { symbol: 'PL=F', name: 'Platinum Futures', type: 'commodity', category: 'commodity' }, { symbol: 'ZC=F', name: 'Corn Futures', type: 'commodity', category: 'commodity' },
-    { symbol: 'ZW=F', name: 'Wheat Futures', type: 'commodity', category: 'commodity' }, { symbol: '^GSPC', name: 'S&P 500', type: 'stock', category: 'index' },
-    { symbol: '^DJI', name: 'Dow Jones Industrial', type: 'stock', category: 'index' }, { symbol: '^IXIC', name: 'NASDAQ Composite', type: 'stock', category: 'index' },
-    { symbol: '^RUT', name: 'Russell 2000', type: 'stock', category: 'index' }, { symbol: '^N225', name: 'Nikkei 225', type: 'stock', category: 'index' },
-    { symbol: '^HSI', name: 'Hang Seng Index', type: 'stock', category: 'index' }, { symbol: '^FTSE', name: 'FTSE 100', type: 'stock', category: 'index' },
-    { symbol: '^GDAXI', name: 'DAX Index', type: 'stock', category: 'index' },
+    { symbol: 'TSM', name: 'Taiwan Semiconductor', type: 'stock', category: 'international' }, { symbol: 'BABA', name: 'Alibaba Group', type: 'stock', category: 'international' },
+    { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', category: 'crypto' }, { symbol: 'ETH', name: 'Ethereum', type: 'crypto', category: 'crypto' },
+    { symbol: 'SOL', name: 'Solana', type: 'crypto', category: 'crypto' }, { symbol: 'BNB', name: 'Binance Coin', type: 'crypto', category: 'crypto' },
+    { symbol: 'GC=F', name: 'Gold Futures', type: 'commodity', category: 'commodity' }, { symbol: 'SI=F', name: 'Silver Futures', type: 'commodity', category: 'commodity' },
+    { symbol: 'CL=F', name: 'Crude Oil WTI', type: 'commodity', category: 'commodity' }, { symbol: 'NG=F', name: 'Natural Gas', type: 'commodity', category: 'commodity' },
+    { symbol: '^GSPC', name: 'S&P 500', type: 'stock', category: 'index' }, { symbol: '^DJI', name: 'Dow Jones', type: 'stock', category: 'index' },
+    { symbol: '^IXIC', name: 'NASDAQ Composite', type: 'stock', category: 'index' }
+];
+
+const SECTOR_CONFIG = [
+    { key: 'us-tech', name: 'Technology', icon: '💻' },
+    { key: 'us-finance', name: 'Finance', icon: '🏦' },
+    { key: 'us-healthcare', name: 'Healthcare', icon: '💊' },
+    { key: 'us-consumer', name: 'Consumer', icon: '🛒' },
+    { key: 'us-industrial', name: 'Industrial', icon: '🏭' },
+    { key: 'us-energy', name: 'Energy', icon: '⚡' },
+    { key: 'international', name: 'International', icon: '🌍' },
+    { key: 'crypto', name: 'Crypto', icon: '🪙' },
+    { key: 'commodity', name: 'Commodity', icon: '🥇' },
+    { key: 'index', name: 'Index', icon: '📈' }
+];
+
+const GLOBAL_INDICES = [
+    { symbol: '^GSPC', name: 'S&P 500', country: 'USA', region: 'americas', flag: '🇺🇸', sectors: [{ name: 'Tech', pct: 30, color: '#50E4F2' }, { name: 'Finance', pct: 15, color: '#B9A0FF' }, { name: 'Healthcare', pct: 12, color: '#43D6A2' }], topHoldings: [{ symbol: 'AAPL', name: 'Apple' }, { symbol: 'MSFT', name: 'Microsoft' }, { symbol: 'AMZN', name: 'Amazon' }] },
+    { symbol: '^DJI', name: 'Dow Jones', country: 'USA', region: 'americas', flag: '🇺🇸', sectors: [{ name: 'Industrial', pct: 20, color: '#E9B949' }, { name: 'Finance', pct: 18, color: '#B9A0FF' }, { name: 'Healthcare', pct: 15, color: '#43D6A2' }], topHoldings: [{ symbol: 'UNH', name: 'UnitedHealth' }, { symbol: 'GS', name: 'Goldman Sachs' }, { symbol: 'HD', name: 'Home Depot' }] },
+    { symbol: '^IXIC', name: 'NASDAQ', country: 'USA', region: 'americas', flag: '🇺🇸', sectors: [{ name: 'Tech', pct: 60, color: '#50E4F2' }, { name: 'Consumer', pct: 15, color: '#FF7387' }, { name: 'Healthcare', pct: 10, color: '#43D6A2' }], topHoldings: [{ symbol: 'AAPL', name: 'Apple' }, { symbol: 'NVDA', name: 'NVIDIA' }, { symbol: 'META', name: 'Meta' }] },
+    { symbol: '^N225', name: 'Nikkei 225', country: 'Japan', region: 'asia', flag: '🇯🇵', sectors: [{ name: 'Industrial', pct: 25, color: '#E9B949' }, { name: 'Tech', pct: 20, color: '#50E4F2' }, { name: 'Consumer', pct: 15, color: '#FF7387' }], topHoldings: [{ symbol: 'TM', name: 'Toyota' }, { symbol: 'SONY', name: 'Sony' }] },
+    { symbol: '^FTSE', name: 'FTSE 100', country: 'UK', region: 'europe', flag: '🇬🇧', sectors: [{ name: 'Finance', pct: 25, color: '#B9A0FF' }, { name: 'Energy', pct: 15, color: '#FF7387' }, { name: 'Consumer', pct: 15, color: '#E9B949' }], topHoldings: [{ symbol: 'SHEL', name: 'Shell' }, { symbol: 'HSBC', name: 'HSBC' }] }
 ];
 
 const MOVERS_UNIVERSE = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'INTC', 'NFLX', 'AVGO', 'ADBE', 'JPM', 'BAC', 'V', 'MA', 'GS', 'WFC', 'WMT', 'DIS', 'MCD', 'NKE', 'SBUX', 'KO', 'PEP', 'JNJ', 'PFE', 'UNH', 'LLY', 'BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
@@ -345,13 +325,13 @@ function applySort(mode) {
     renderWatchlist();
 }
 
-// ============ 🎯 RENDER WATCHLIST ============
+// ============ 🎯 RENDER WATCHLIST (SORTING DIPERBAIKI) ============
 async function renderWatchlist() {
     const container = document.getElementById('watchlist'); if (!container) return;
     
-    let filteredWatchlist = watchlist; 
-    if (activeGroup === 'favorites') filteredWatchlist = watchlist.filter(w => isFavorite(w.symbol)); 
-    else if (activeGroup !== 'all') filteredWatchlist = watchlist.filter(w => w.group === activeGroup);
+    let filteredWatchlist = [...watchlist]; 
+    if (activeGroup === 'favorites') filteredWatchlist = filteredWatchlist.filter(w => isFavorite(w.symbol)); 
+    else if (activeGroup !== 'all') filteredWatchlist = filteredWatchlist.filter(w => w.group === activeGroup);
     
     if (filteredWatchlist.length === 0) { 
         const msg = activeGroup === 'favorites' ? 'Belum ada saham favorit.' : activeGroup === 'all' ? 'Watchlist kosong.' : 'Folder ini masih kosong.'; 
@@ -371,14 +351,36 @@ async function renderWatchlist() {
     });
     container.innerHTML = `<div class="watchlist-section">${skeletonHtml}</div>`;
 
-    filteredWatchlist.forEach(async (asset) => {
+    // Fetch all prices first for accurate sorting
+    const assetsWithPrices = await Promise.all(filteredWatchlist.map(async (asset) => {
         const priceData = await fetchPrice(asset.symbol, asset.type);
-        const el = document.getElementById(`skeleton-${asset.symbol}`);
-        if (el) {
-            const idx = watchlist.findIndex(w => w.symbol === asset.symbol);
-            el.outerHTML = renderAssetCard({...asset, priceData}, priceData, idx);
-        }
+        return { ...asset, priceData };
+    }));
+
+    // Apply Sorting Logic
+    assetsWithPrices.sort((a, b) => {
+        if (currentSortMode === 'az') return a.symbol.localeCompare(b.symbol);
+        if (currentSortMode === 'favorites') return (isFavorite(b.symbol) ? 1 : 0) - (isFavorite(a.symbol) ? 1 : 0);
+        
+        const priceA = a.priceData ? a.priceData.price : 0;
+        const priceB = b.priceData ? b.priceData.price : 0;
+        const changeA = a.priceData ? a.priceData.change : 0;
+        const changeB = b.priceData ? b.priceData.change : 0;
+
+        if (currentSortMode === 'price-desc') return priceB - priceA;
+        if (currentSortMode === 'price-asc') return priceA - priceB;
+        if (currentSortMode === 'change-desc') return changeB - changeA;
+        if (currentSortMode === 'change-asc') return changeA - changeB;
+        return 0; // default
     });
+
+    // Re-render sorted
+    let finalHtml = '';
+    assetsWithPrices.forEach((asset) => {
+        const idx = watchlist.findIndex(w => w.symbol === asset.symbol);
+        finalHtml += renderAssetCard(asset, asset.priceData, idx);
+    });
+    container.innerHTML = `<div class="watchlist-section">${finalHtml}</div>`;
 }
 
 function renderAssetCard(asset, priceData, index) {
@@ -495,13 +497,14 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
             for (let i = 0; i < timestamps.length; i++) { if (opens[i] == null || closes[i] == null) continue; candles.push({ time: timestamps[i], open: opens[i], high: highs[i], low: lows[i], close: closes[i], volume: volumes[i] || 0 }); } return candles;
         } return [];
     } catch (error) { return []; }
-     }// ============ 🪙 CRYPTO TAB ============
+}
+
+// ============ 🪙 CRYPTO TAB ============
 const CRYPTO_FALLBACK = [
     { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', current_price: 65000, market_cap: 1280000000000, market_cap_rank: 1, price_change_percentage_24h: 0, total_volume: 30000000000, circulating_supply: 19000000, total_supply: 21000000, ath: 73750, ath_change_percentage: -12 },
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
 ];
 
-// ============ 🎯 CRYPTO CATEGORIES MAPPING ============
 const CRYPTO_CATEGORY_MAP = {
     'uni': 'defi', 'aave': 'defi', 'link': 'defi', 'mkr': 'defi', 'comp': 'defi', 'snx': 'defi', 'crv': 'defi', 'ldo': 'defi', 'sushi': 'defi', '1inch': 'defi', 'grt': 'defi', 'rpl': 'defi', 'ens': 'defi', 'dydx': 'defi', 'cake': 'defi', 'pancakeswap': 'defi',
     'fet': 'ai', 'agix': 'ai', 'rndr': 'ai', 'tao': 'ai', 'ocean': 'ai', 'nmr': 'ai', 'grt': 'ai', 'wld': 'ai', 'arkm': 'ai', 'ai': 'ai', 'aioz': 'ai',
@@ -511,7 +514,6 @@ const CRYPTO_CATEGORY_MAP = {
     'ondo': 'rwa', 'polyx': 'rwa', 'mpl': 'rwa', 'cfg': 'rwa', 'gfi': 'rwa', 'rio': 'rwa', 'landx': 'rwa', 'tru': 'rwa', 'mkr': 'rwa'
 };
 
-// ============ 🆕 CRYPTO EVENTS DATA ============
 const CRYPTO_EVENTS_DATA = [
     { date: '2024-04-19', title: 'Bitcoin Halving 2024', desc: 'Block reward BTC turun dari 6.25 ke 3.125 BTC.', coin: 'BTC' },
     { date: '2026-11-15', title: 'Ethereum Pectra Upgrade', desc: 'Update jaringan Ethereum (Account Abstraction & Staking).', coin: 'ETH' },
@@ -609,7 +611,6 @@ function renderCryptoHeatmap() {
     }).join('');
 }
 
-// ============ 🎯 CRYPTO CATEGORIES RENDER ============
 function renderCryptoCategoryList() {
     const container = document.getElementById('cryptoCatList'); if (!container) return;
     if (cryptoData.length === 0) { container.innerHTML = '<div class="empty-state">Memuat categories...</div>'; return; }
@@ -652,7 +653,6 @@ function getCategoryLabel(cat) {
     return labels[cat] || '';
 }
 
-// ============ 🆕 CRYPTO EVENTS RENDER ============
 function renderCryptoEvents() {
     const list = document.getElementById('cryptoEventsList'); if (!list) return;
     const today = new Date().getTime();
@@ -1298,7 +1298,9 @@ function renderCryptoScorecardVerdict(result, verdict, coinData) {
     verdictEl.innerHTML = `<div class="scorecard-verdict-title">🧠 Kesimpulan Crypto</div><div class="scorecard-verdict-text">${summaryText}</div><div class="scorecard-stats-row"><div class="scorecard-stat-box"><span class="scorecard-stat-label">Lolos</span><span class="scorecard-stat-value excellent">${passCount}/10</span></div><div class="scorecard-stat-box"><span class="scorecard-stat-label">Skor</span><span class="scorecard-stat-value ${verdict.class}">${result.score}</span></div><div class="scorecard-stat-box"><span class="scorecard-stat-label">Rank</span><span class="scorecard-stat-value">#${rank}</span></div></div>`;
     verdictEl.style.display = 'block';
 }
-function closeCryptoScorecard() { document.getElementById('cryptoScorecardModal').classList.remove('active'); }// ============ 🥇 COMMODITY TAB ============
+function closeCryptoScorecard() { document.getElementById('cryptoScorecardModal').classList.remove('active'); }
+
+// ============ 🥇 COMMODITY TAB ============
 const COMMODITY_LIST = [
     { symbol: 'GC=F', name: 'Gold', icon: '🥇', category: 'metals', unit: 'Troy Ounce' },
     { symbol: 'SI=F', name: 'Silver', icon: '🥈', category: 'metals', unit: 'Troy Ounce' },
@@ -1820,10 +1822,10 @@ async function openAssetDetail(symbol, name, price, change, type) {
     currentSymbol = symbol; currentType = type; currentName = name; currentPrice = price; currentChange = change;
     document.getElementById('chartModal').classList.add('active'); document.getElementById('chartTitle').textContent = symbol + ' — ' + name;
     updateChartPrice(); document.getElementById('analysisBody').innerHTML = `<div class="loading-spinner"></div><p class="loading-text">Mengambil data fundamental...</p>`;
-    ['htfValue','ltfValue','ema20Value','rsiValue','bidValue','askValue','buyerPct','sellerPct'].forEach(id => document.getElementById(id).textContent = '-');
+    ['htfValue','ltfValue','ema20Value','rsiValue','bidValue','askValue','buyerPct','sellerPct'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '-'; });
     const stockScorecardBtn = document.getElementById('openScorecardBtn'); const cryptoScorecardBtn = document.getElementById('openCryptoScorecardBtn'); const dcfBtn = document.getElementById('openDcfBtn');
-    if (type === 'crypto') { stockScorecardBtn.style.display = 'none'; dcfBtn.style.display = 'none'; cryptoScorecardBtn.style.display = 'flex'; }
-    else { stockScorecardBtn.style.display = 'flex'; dcfBtn.style.display = 'flex'; cryptoScorecardBtn.style.display = 'none'; }
+    if (type === 'crypto') { if (stockScorecardBtn) stockScorecardBtn.style.display = 'none'; if (dcfBtn) dcfBtn.style.display = 'none'; if (cryptoScorecardBtn) cryptoScorecardBtn.style.display = 'flex'; }
+    else { if (stockScorecardBtn) stockScorecardBtn.style.display = 'flex'; if (dcfBtn) dcfBtn.style.display = 'flex'; if (cryptoScorecardBtn) cryptoScorecardBtn.style.display = 'none'; }
     loadChart(symbol, type); updateIndicators(symbol, type); loadAnalysis(symbol, name, price, type);
     if (indicatorInterval) clearInterval(indicatorInterval); indicatorInterval = setInterval(() => { if (currentSymbol) updateIndicators(currentSymbol, currentType); }, 15000);
 }
@@ -2111,16 +2113,321 @@ async function loadIndeksChart(symbol) {
 }
 function closeIndeksDetail() { document.getElementById('indeksDetailModal').classList.remove('active'); if (indeksDetailChart) { try { indeksDetailChart.remove(); } catch(e) {} indeksDetailChart = null; } document.getElementById('indeksChartContainer').innerHTML = ''; indeksDetailSymbol = null; }
 
+// ============ STOCK SCORECARD ============
+async function openStockScorecard() {
+    if (!currentSymbol || currentType === 'crypto') return;
+    const modal = document.getElementById('scorecardModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.getElementById('scorecardTitle').textContent = `${currentSymbol} — ${currentName}`;
+    const heroEl = document.getElementById('scorecardHero');
+    const breakdownEl = document.getElementById('scorecardBreakdown');
+    const verdictEl = document.getElementById('scorecardVerdict');
+    heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Menghitung skor...</p></div>';
+    breakdownEl.innerHTML = ''; verdictEl.style.display = 'none';
+
+    try {
+        const fund = await fetchFundamental(currentSymbol, currentType);
+        const candles = await fetchChartData(currentSymbol, currentType, '1d', '1y');
+        const criteria = [];
+        let totalScore = 0;
+
+        // 1. ROE
+        const roe = fund.roe || 0;
+        let roeScore = 0; let roeStatus = 'fail'; let roeDesc = '';
+        if (roe >= 0.20) { roeScore = 10; roeStatus = 'pass'; roeDesc = 'ROE > 20% (Sangat Baik)'; }
+        else if (roe >= 0.15) { roeScore = 8; roeStatus = 'pass'; roeDesc = 'ROE > 15% (Baik)'; }
+        else if (roe >= 0.10) { roeScore = 5; roeStatus = 'partial'; roeDesc = 'ROE > 10% (Cukup)'; }
+        else { roeScore = 0; roeStatus = 'fail'; roeDesc = 'ROE < 10% (Kurang)'; }
+        criteria.push({ label: 'Return on Equity', icon: '📈', score: roeScore, max: 10, value: (roe*100).toFixed(1)+'%', status: roeStatus, desc: roeDesc });
+        totalScore += roeScore;
+
+        // 2. DER
+        const der = fund.debt_to_equity || 0;
+        let derScore = 0; let derStatus = 'fail'; let derDesc = '';
+        if (der < 0.5 && der >= 0) { derScore = 10; derStatus = 'pass'; derDesc = 'DER < 0.5 (Sangat Sehat)'; }
+        else if (der < 1.0) { derScore = 7; derStatus = 'pass'; derDesc = 'DER < 1.0 (Sehat)'; }
+        else if (der < 2.0) { derScore = 4; derStatus = 'partial'; derDesc = 'DER < 2.0 (Cukup)'; }
+        else { derScore = 0; derStatus = 'fail'; derDesc = 'DER > 2.0 (Berisiko)'; }
+        criteria.push({ label: 'Debt to Equity (DER)', icon: '⚖️', score: derScore, max: 10, value: der.toFixed(2), status: derStatus, desc: derDesc });
+        totalScore += derScore;
+
+        // 3. P/E Ratio
+        const pe = fund.pe_ratio || 0;
+        let peScore = 0; let peStatus = 'fail'; let peDesc = '';
+        if (pe > 0 && pe < 15) { peScore = 10; peStatus = 'pass'; peDesc = 'P/E < 15 (Undervalued)'; }
+        else if (pe >= 15 && pe < 25) { peScore = 7; peStatus = 'pass'; peDesc = 'P/E 15-25 (Wajar)'; }
+        else if (pe >= 25 && pe < 40) { peScore = 4; peStatus = 'partial'; peDesc = 'P/E 25-40 (Mahal)'; }
+        else if (pe >= 40) { peScore = 0; peStatus = 'fail'; peDesc = 'P/E > 40 (Sangat Mahal)'; }
+        else { peScore = 5; peStatus = 'partial'; peDesc = 'P/E N/A (Tidak ada laba)'; }
+        criteria.push({ label: 'P/E Ratio', icon: '💰', score: peScore, max: 10, value: pe > 0 ? pe.toFixed(2) : 'N/A', status: peStatus, desc: peDesc });
+        totalScore += peScore;
+
+        // 4. Profit Margin
+        const margin = fund.profit_margin || 0;
+        let marginScore = 0; let marginStatus = 'fail'; let marginDesc = '';
+        if (margin >= 0.20) { marginScore = 10; marginStatus = 'pass'; marginDesc = 'Margin > 20% (Sangat Profitabel)'; }
+        else if (margin >= 0.10) { marginScore = 7; marginStatus = 'pass'; marginDesc = 'Margin > 10% (Profitabel)'; }
+        else if (margin >= 0.05) { marginScore = 4; marginStatus = 'partial'; marginDesc = 'Margin > 5% (Tipis)'; }
+        else { marginScore = 0; marginStatus = 'fail'; marginDesc = 'Margin < 5% (Rendah)'; }
+        criteria.push({ label: 'Profit Margin', icon: '💵', score: marginScore, max: 10, value: (margin*100).toFixed(1)+'%', status: marginStatus, desc: marginDesc });
+        totalScore += marginScore;
+
+        // 5. Dividend Yield
+        const div = fund.dividend_yield || 0;
+        let divScore = 0; let divStatus = 'fail'; let divDesc = '';
+        if (div >= 0.04) { divScore = 10; divStatus = 'pass'; divDesc = 'Yield > 4% (Tinggi)'; }
+        else if (div >= 0.02) { divScore = 7; divStatus = 'pass'; divDesc = 'Yield > 2% (Baik)'; }
+        else if (div > 0) { divScore = 4; divStatus = 'partial'; divDesc = 'Yield < 2% (Kecil)'; }
+        else { divScore = 0; divStatus = 'fail'; divDesc = 'Tidak membagikan dividen'; }
+        criteria.push({ label: 'Dividend Yield', icon: '🪙', score: divScore, max: 10, value: (div*100).toFixed(1)+'%', status: divStatus, desc: divDesc });
+        totalScore += divScore;
+
+        // 6. Current Ratio
+        const cr = fund.current_ratio || 0;
+        let crScore = 0; let crStatus = 'fail'; let crDesc = '';
+        if (cr >= 2.0) { crScore = 10; crStatus = 'pass'; crDesc = 'Current Ratio > 2.0 (Likuid)'; }
+        else if (cr >= 1.5) { crScore = 7; crStatus = 'pass'; crDesc = 'Current Ratio > 1.5 (Sehat)'; }
+        else if (cr >= 1.0) { crScore = 4; crStatus = 'partial'; crDesc = 'Current Ratio > 1.0 (Cukup)'; }
+        else { crScore = 0; crStatus = 'fail'; crDesc = 'Current Ratio < 1.0 (Berisiko)'; }
+        criteria.push({ label: 'Current Ratio', icon: '💧', score: crScore, max: 10, value: cr.toFixed(2), status: crStatus, desc: crDesc });
+        totalScore += crScore;
+
+        // 7. P/B Ratio
+        const pb = fund.pb_ratio || 0;
+        let pbScore = 0; let pbStatus = 'fail'; let pbDesc = '';
+        if (pb > 0 && pb < 1.5) { pbScore = 10; pbStatus = 'pass'; pbDesc = 'P/B < 1.5 (Murah)'; }
+        else if (pb >= 1.5 && pb < 3) { pbScore = 7; pbStatus = 'pass'; pbDesc = 'P/B 1.5-3 (Wajar)'; }
+        else if (pb >= 3) { pbScore = 4; pbStatus = 'partial'; pbDesc = 'P/B > 3 (Mahal)'; }
+        else { pbScore = 5; pbStatus = 'partial'; pbDesc = 'P/B N/A'; }
+        criteria.push({ label: 'Price to Book', icon: '📚', score: pbScore, max: 10, value: pb > 0 ? pb.toFixed(2) : 'N/A', status: pbStatus, desc: pbDesc });
+        totalScore += pbScore;
+
+        // 8. EPS Growth
+        const epsGrowth = fund.eps_growth || 0;
+        let epsScore = 0; let epsStatus = 'fail'; let epsDesc = '';
+        if (epsGrowth > 0.15) { epsScore = 10; epsStatus = 'pass'; epsDesc = 'EPS Growth > 15% (Tumbuh Cepat)'; }
+        else if (epsGrowth > 0.05) { epsScore = 7; epsStatus = 'pass'; epsDesc = 'EPS Growth > 5% (Tumbuh)'; }
+        else if (epsGrowth >= 0) { epsScore = 4; epsStatus = 'partial'; epsDesc = 'EPS Growth Datar'; }
+        else { epsScore = 0; epsStatus = 'fail'; epsDesc = 'EPS Menurun'; }
+        criteria.push({ label: 'EPS Growth', icon: '🚀', score: epsScore, max: 10, value: (epsGrowth*100).toFixed(1)+'%', status: epsStatus, desc: epsDesc });
+        totalScore += epsScore;
+
+        // 9. Revenue Growth
+        const revGrowth = fund.revenue_growth || 0;
+        let revScore = 0; let revStatus = 'fail'; let revDesc = '';
+        if (revGrowth > 0.10) { revScore = 10; revStatus = 'pass'; revDesc = 'Revenue Growth > 10%'; }
+        else if (revGrowth > 0.03) { revScore = 7; revStatus = 'pass'; revDesc = 'Revenue Growth > 3%'; }
+        else if (revGrowth >= 0) { revScore = 4; revStatus = 'partial'; revDesc = 'Revenue Datar'; }
+        else { revScore = 0; revStatus = 'fail'; revDesc = 'Revenue Menurun'; }
+        criteria.push({ label: 'Revenue Growth', icon: '📊', score: revScore, max: 10, value: (revGrowth*100).toFixed(1)+'%', status: revStatus, desc: revDesc });
+        totalScore += revScore;
+
+        // 10. Momentum (Price vs MA50)
+        let momScore = 0; let momStatus = 'fail'; let momDesc = '';
+        if (candles && candles.length >= 50) {
+            const closes = candles.map(c => c.close);
+            const ma50 = calcSMA(closes, 50);
+            const lastMa50 = ma50[ma50.length - 1];
+            const currentPrice = closes[closes.length - 1];
+            if (currentPrice > lastMa50) { momScore = 10; momStatus = 'pass'; momDesc = 'Harga di atas MA50 (Bullish)'; }
+            else { momScore = 0; momStatus = 'fail'; momDesc = 'Harga di bawah MA50 (Bearish)'; }
+            criteria.push({ label: 'Momentum (MA50)', icon: '🔥', score: momScore, max: 10, value: currentPrice > lastMa50 ? 'Bullish' : 'Bearish', status: momStatus, desc: momDesc });
+        } else {
+            criteria.push({ label: 'Momentum (MA50)', icon: '🔥', score: 5, max: 10, value: 'N/A', status: 'partial', desc: 'Data historis belum cukup' });
+            momScore = 5;
+        }
+        totalScore += momScore;
+
+        // Render UI
+        const normalizedScore = Math.round((totalScore / 100) * 100);
+        let verdictLabel = 'POOR'; let verdictClass = 'poor'; let verdictIcon = '🚨'; let verdictDesc = 'Fundamental sangat lemah, harap waspada.';
+        if (normalizedScore >= 80) { verdictLabel = 'EXCELLENT'; verdictClass = 'excellent'; verdictIcon = '🏆'; verdictDesc = 'Kualitas bisnis sangat baik (ala Warren Buffett).'; }
+        else if (normalizedScore >= 60) { verdictLabel = 'GOOD'; verdictClass = 'good'; verdictIcon = '👍'; verdictDesc = 'Fundamental cukup kuat dan sehat.'; }
+        else if (normalizedScore >= 40) { verdictLabel = 'FAIR'; verdictClass = 'fair'; verdictIcon = '⚠️'; verdictDesc = 'Ada beberapa red flag keuangan.'; }
+
+        heroEl.innerHTML = `<div class="scorecard-score-big">${normalizedScore}</div><div class="scorecard-score-label">Value Score / 100</div><div class="scorecard-verdict-badge ${verdictClass}">${verdictIcon} ${verdictLabel}</div><div class="scorecard-hero-desc">${verdictDesc}</div>`;
+
+        breakdownEl.innerHTML = `<div class="scorecard-breakdown-title">📋 Detail Penilaian (10 Kriteria)</div>` + criteria.map(c => {
+            const pct = (c.score / c.max) * 100;
+            let barColor = '#FF7387'; if (pct >= 70) barColor = '#43D6A2'; else if (pct >= 40) barColor = '#E9B949';
+            return `<div class="scorecard-criteria-item"><div class="criteria-top"><div class="criteria-label"><span class="criteria-label-icon">${c.icon}</span>${c.label}</div><div style="display:flex; align-items:center; gap:8px;"><span class="criteria-score-badge ${c.status}">${c.score}/${c.max}</span><span class="criteria-value">${c.value}</span></div></div><div class="criteria-bar-bg"><div class="criteria-bar-fill" style="width:${pct}%; background:${barColor};"></div></div><div class="criteria-desc">${c.desc}</div></div>`;
+        }).join('');
+
+        const passCount = criteria.filter(c => c.status === 'pass').length;
+        verdictEl.innerHTML = `<div class="scorecard-verdict-title">🧠 Kesimpulan Value Investing</div><div class="scorecard-verdict-text"><strong>${currentSymbol}</strong> ${normalizedScore >= 60 ? 'layak dipertimbangkan untuk investasi jangka panjang' : 'perlu riset lebih dalam atau dihindari'}. Skor total: ${normalizedScore}/100.</div><div class="scorecard-stats-row"><div class="scorecard-stat-box"><span class="scorecard-stat-label">Lolos</span><span class="scorecard-stat-value excellent">${passCount}/10</span></div><div class="scorecard-stat-box"><span class="scorecard-stat-label">Skor</span><span class="scorecard-stat-value ${verdictClass}">${normalizedScore}</span></div><div class="scorecard-stat-box"><span class="scorecard-stat-label">Verdict</span><span class="scorecard-stat-value ${verdictClass}">${verdictLabel}</span></div></div>`;
+        verdictEl.style.display = 'block';
+
+    } catch (error) {
+        heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menganalisis Scorecard</p><p class="error-detail">${error.message}</p></div>`;
+    }
+}
+function closeScorecardModal() { document.getElementById('scorecardModal').classList.remove('active'); }
+
+// ============ DCF VALUATION ============
+async function openDcfModal() {
+    if (!currentSymbol || currentType === 'crypto') return;
+    const modal = document.getElementById('dcfModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.getElementById('dcfTitle').textContent = `${currentSymbol} — ${currentName}`;
+    const heroEl = document.getElementById('dcfHero');
+    heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Mengambil data fundamental...</p></div>';
+
+    try {
+        const fund = await fetchFundamental(currentSymbol, currentType);
+        // Auto-fill EPS
+        const eps = fund.eps || fund.trailing_eps || 0;
+        document.getElementById('dcfEps').value = eps;
+        document.getElementById('dcfResult').style.display = 'none';
+        document.getElementById('dcfSensitivity').style.display = 'none';
+        document.getElementById('dcfMethods').style.display = 'none';
+        heroEl.innerHTML = `<div class="dcf-intrinsic-label">Current Price</div><div class="dcf-intrinsic-value fair">$${currentPrice.toFixed(2)}</div><div class="dcf-hero-desc">Sesuaikan asumsi DCF di bawah untuk melihat valuasi intrinsik.</div>`;
+    } catch (error) {
+        heroEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal mengambil data fundamental</p></div>`;
+    }
+}
+function closeDcfModal() { document.getElementById('dcfModal').classList.remove('active'); }
+
+function calculateDCF() {
+    const eps = parseFloat(document.getElementById('dcfEps').value) || 0;
+    const growth1 = (parseFloat(document.getElementById('dcfGrowth1').value) || 10) / 100;
+    const growth2 = (parseFloat(document.getElementById('dcfGrowth2').value) || 5) / 100;
+    const terminal = (parseFloat(document.getElementById('dcfTerminal').value) || 2.5) / 100;
+    const discount = (parseFloat(document.getElementById('dcfDiscount').value) || 10) / 100;
+
+    if (eps <= 0) { alert('EPS harus > 0 untuk DCF!'); return; }
+
+    // Projections
+    let pv = 0;
+    let currentEps = eps;
+    const projections = [];
+
+    // 5 years phase 1
+    for (let i = 1; i <= 5; i++) {
+        currentEps = currentEps * (1 + growth1);
+        pv += currentEps / Math.pow(1 + discount, i);
+        projections.push({ year: i, eps: currentEps });
+    }
+    // 5 years phase 2
+    for (let i = 6; i <= 10; i++) {
+        currentEps = currentEps * (1 + growth2);
+        pv += currentEps / Math.pow(1 + discount, i);
+        projections.push({ year: i, eps: currentEps });
+    }
+    
+    // Terminal Value (Gordon Growth)
+    const terminalEps = currentEps * (1 + terminal);
+    const terminalValue = terminalEps / (discount - terminal);
+    const pvTerminal = terminalValue / Math.pow(1 + discount, 10);
+    
+    const intrinsicValue = pv + pvTerminal;
+    const currentPriceVal = currentPrice;
+    
+    // Verdict
+    let verdict = 'FAIR'; let verdictClass = 'fair'; let mos = ((intrinsicValue - currentPriceVal) / intrinsicValue) * 100;
+    
+    if (intrinsicValue > currentPriceVal * 1.15) { verdict = 'UNDERVALUED'; verdictClass = 'undervalued'; }
+    else if (intrinsicValue < currentPriceVal * 0.85) { verdict = 'OVERVALUED'; verdictClass = 'overvalued'; }
+
+    const dcfResultEl = document.getElementById('dcfResult');
+    dcfResultEl.style.display = 'flex';
+    dcfResultEl.innerHTML = `
+        <div class="dcf-result-title">📊 Hasil Valuasi DCF</div>
+        <div class="dcf-result-row"><span class="dcf-result-label">Intrinsic Value (Per Share)</span><span class="dcf-result-value positive">$${intrinsicValue.toFixed(2)}</span></div>
+        <div class="dcf-result-row"><span class="dcf-result-label">Harga Saat Ini</span><span class="dcf-result-value">$${currentPriceVal.toFixed(2)}</span></div>
+        <div class="dcf-result-row"><span class="dcf-result-label">Margin of Safety</span><span class="dcf-result-value ${mos > 0 ? 'positive' : 'negative'}">${mos > 0 ? '+' : ''}${mos.toFixed(2)}%</span></div>
+        <div class="dcf-result-row"><span class="dcf-result-label">Estimasi EPS 10 Tahun</span><span class="dcf-result-value">$${projections[projections.length-1].eps.toFixed(2)}</span></div>
+    `;
+
+    const heroEl = document.getElementById('dcfHero');
+    heroEl.className = `dcf-hero ${verdictClass}`;
+    heroEl.innerHTML = `
+        <div class="dcf-intrinsic-label">Intrinsic Value Estimate</div>
+        <div class="dcf-intrinsic-value ${verdictClass}">$${intrinsicValue.toFixed(2)}</div>
+        <div class="dcf-current-price">Harga sekarang: <strong>$${currentPriceVal.toFixed(2)}</strong></div>
+        <div class="dcf-verdict-badge ${verdictClass}">${verdict}</div>
+        <div class="dcf-margin-of-safety">
+            <div class="dcf-mos-item"><span class="dcf-mos-label">Margin of Safety</span><span class="dcf-mos-value ${mos > 0 ? 'positive' : 'negative'}">${mos > 0 ? '+' : ''}${mos.toFixed(2)}%</span></div>
+            <div class="dcf-mos-item"><span class="dcf-mos-label">Upside/Downside</span><span class="dcf-mos-value ${mos > 0 ? 'positive' : 'negative'}">${(intrinsicValue/currentPriceVal*100 - 100).toFixed(1)}%</span></div>
+        </div>
+    `;
+
+    // Sensitivity Matrix
+    const dcfSensEl = document.getElementById('dcfSensitivity');
+    dcfSensEl.style.display = 'flex';
+    let tableHtml = `<div class="dcf-sens-title">🎯 Sensitivity Analysis (Discount vs Growth)</div><div class="dcf-sens-desc">Intrinsic value berdasarkan kombinasi Discount Rate dan Growth Rate.</div><div class="dcf-sens-table">`;
+    
+    const discounts = [discount - 0.02, discount, discount + 0.02];
+    const growths = [growth1 - 0.02, growth1, growth1 + 0.02];
+
+    tableHtml += `<div class="dcf-sens-cell dcf-sens-row-label">Disc \\ Growth</div>`;
+    growths.forEach(g => { tableHtml += `<div class="dcf-sens-cell dcf-sens-header">${(g*100).toFixed(0)}%</div>`; });
+
+    discounts.forEach(d => {
+        tableHtml += `<div class="dcf-sens-cell dcf-sens-row-label">${(d*100).toFixed(0)}%</div>`;
+        growths.forEach(g => {
+            let pv = 0; let currentEps = eps;
+            for (let i = 1; i <= 5; i++) { currentEps = currentEps * (1 + g); pv += currentEps / Math.pow(1 + d, i); }
+            for (let i = 6; i <= 10; i++) { currentEps = currentEps * (1 + growth2); pv += currentEps / Math.pow(1 + d, i); }
+            const tv = (currentEps * (1 + terminal)) / (d - terminal);
+            const pvTv = tv / Math.pow(1 + d, 10);
+            const iv = pv + pvTv;
+            
+            let cellClass = 'neutral';
+            if (iv > currentPriceVal * 1.15) cellClass = 'cheap';
+            else if (iv < currentPriceVal * 0.85) cellClass = 'expensive';
+            
+            tableHtml += `<div class="dcf-sens-cell dcf-sens-value ${cellClass}">$${iv.toFixed(2)}</div>`;
+        });
+    });
+    tableHtml += `</div>`;
+    dcfSensEl.innerHTML = tableHtml;
+
+    // Alternative Methods
+    const dcfMethodsEl = document.getElementById('dcfMethods');
+    dcfMethodsEl.style.display = 'flex';
+    
+    // Graham Number = sqrt(22.5 * EPS * BVPS)
+    const bvps = fund.book_value_per_share || (fund.pb_ratio > 0 ? currentPriceVal / fund.pb_ratio : 0);
+    const graham = bvps > 0 ? Math.sqrt(22.5 * eps * bvps) : 0;
+    
+    // PE Multiple
+    const pe = fund.pe_ratio || 15;
+    const industryPe = 15; // Asumsi
+    const peValuation = eps * industryPe;
+
+    dcfMethodsEl.innerHTML = `
+        <div class="dcf-methods-title">⚖️ 3 Metode Alternatif</div>
+        <div class="dcf-method-item">
+            <div class="dcf-method-name">1. DCF (Discounted Cash Flow)</div>
+            <div class="dcf-method-desc">Berdasarkan asumsi pertumbuhan di atas</div>
+            <div class="dcf-method-value">$${intrinsicValue.toFixed(2)}</div>
+            <div class="dcf-method-verdict ${verdictClass === 'undervalued' ? 'cheap' : verdictClass === 'overvalued' ? 'expensive' : 'fair'}">${verdict}</div>
+        </div>
+        <div class="dcf-method-item">
+            <div class="dcf-method-name">2. Graham Number</div>
+            <div class="dcf-method-desc">√(22.5 × EPS × BVPS) ala Benjamin Graham</div>
+            <div class="dcf-method-value">$${graham > 0 ? graham.toFixed(2) : 'N/A'}</div>
+            ${graham > 0 ? `<div class="dcf-method-verdict ${graham > currentPriceVal ? 'cheap' : 'expensive'}">${graham > currentPriceVal ? 'UNDERVALUED' : 'OVERVALUED'}</div>` : ''}
+        </div>
+        <div class="dcf-method-item">
+            <div class="dcf-method-name">3. P/E Multiple</div>
+            <div class="dcf-method-desc">EPS × Fair P/E (15x Industri)</div>
+            <div class="dcf-method-value">$${peValuation.toFixed(2)}</div>
+            <div class="dcf-method-verdict ${peValuation > currentPriceVal ? 'cheap' : 'expensive'}">${peValuation > currentPriceVal ? 'UNDERVALUED' : 'OVERVALUED'}</div>
+        </div>
+    `;
+}
+
 // ============ EVENT LISTENERS & INIT ============
 document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
 document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
 document.getElementById('browseSearch').addEventListener('input', renderBrowseStocks);
 document.querySelectorAll('.cat-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentBrowseCategory = btn.dataset.cat; renderBrowseStocks(); }); });
-const assetModal = document.getElementById('assetModal');
-document.getElementById('addAssetBtn').addEventListener('click', () => assetModal.classList.add('active'));
-document.getElementById('closeAssetModal').addEventListener('click', () => assetModal.classList.remove('active'));
-document.getElementById('cancelAsset').addEventListener('click', () => assetModal.classList.remove('active'));
-document.getElementById('saveAsset').addEventListener('click', () => { const symbol = document.getElementById('assetSymbol').value.trim().toUpperCase(); const name = document.getElementById('assetName').value.trim(); const type = document.getElementById('assetType').value; const group = document.getElementById('assetGroup').value; if (!symbol || !name) { alert('Isi semua field!'); return; } if (watchlist.some(a => a.symbol === symbol)) { alert(`${symbol} udah ada!`); return; } watchlist.push({ symbol, name, type, group }); saveWatchlist(); assetModal.classList.remove('active'); document.getElementById('assetSymbol').value = ''; document.getElementById('assetName').value = ''; renderWatchlist(); renderGroupsBar(); });
+
+// TOMBOL + MANUAL DAN MODALNYA UDAH DIHAPUS TOTAL DARI SINI
+
 document.getElementById('setAlertBtn').addEventListener('click', () => openAlertModal(currentSymbol, currentName, currentPrice, currentType));
 document.getElementById('closeAlertModal').addEventListener('click', closeAlertModal);
 document.getElementById('cancelAlert').addEventListener('click', closeAlertModal);
@@ -2132,6 +2439,13 @@ document.getElementById('alertVolumeMultiplier').addEventListener('input', updat
 document.getElementById('alertToastClose').addEventListener('click', closeAlertToast);
 document.getElementById('closeChartModal').addEventListener('click', closeAssetDetail);
 document.getElementById('runScreener').addEventListener('click', runScreener);
+
+// Scorecard & DCF Listeners
+document.getElementById('openScorecardBtn').addEventListener('click', openStockScorecard);
+document.getElementById('closeScorecardModal').addEventListener('click', closeScorecardModal);
+document.getElementById('openDcfBtn').addEventListener('click', openDcfModal);
+document.getElementById('closeDcfModal').addEventListener('click', closeDcfModal);
+document.getElementById('dcfCalcBtn').addEventListener('click', calculateDCF);
 
 // Event Listeners Watchlist Baru
 document.getElementById('sortWatchlistBtn').addEventListener('click', openSortModal);
@@ -2194,6 +2508,10 @@ const closeCorrBtn = document.getElementById('closeCryptoCorrelationModal');
 if (closeCorrBtn) closeCorrBtn.addEventListener('click', closeCryptoCorrelation);
 const corrCalcBtn = document.getElementById('corrCalcBtn');
 if (corrCalcBtn) corrCalcBtn.addEventListener('click', runCryptoCorrelation);
+const openCryptoScorecardBtn = document.getElementById('openCryptoScorecardBtn');
+if (openCryptoScorecardBtn) openCryptoScorecardBtn.addEventListener('click', openCryptoScorecard);
+const closeCryptoScorecardModal = document.getElementById('closeCryptoScorecardModal');
+if (closeCryptoScorecardModal) closeCryptoScorecardModal.addEventListener('click', closeCryptoScorecard);
 
 // ============ INIT ============
 populateCurrencyDropdowns();
