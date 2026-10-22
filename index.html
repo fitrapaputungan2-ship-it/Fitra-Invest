@@ -8,18 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1005">
+    <link rel="stylesheet" href="style.css?v=1007">
 </head>
 <body>
-    <!-- DETEKTOR ERROR -->
-<script>
-    window.onerror = function(msg, url, line, col, error) {
-        var errDiv = document.createElement('div');
-        errDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; background:red; color:white; z-index:999999; padding:15px; font-size:12px; font-family:monospace; border-bottom: 3px solid yellow;';
-        errDiv.innerHTML = '<b>⚠️ JS ERROR TERDETEKSI:</b><br>' + msg + '<br><br><b>Di file:</b> ' + url + '<br><b>Baris:</b> ' + line;
-        document.body.appendChild(errDiv);
-    };
-</script>
     <div class="app">
         <header class="header">
             <div class="header-left">
@@ -53,7 +44,7 @@
         </div>
 
         <main class="content">
-            <!-- WATCHLIST REDESIGN -->
+            <!-- WATCHLIST -->
             <div class="tab-content active" id="tab-watchlist">
                 <div class="watchlist-header-new">
                     <h2>My Watchlist</h2>
@@ -491,10 +482,10 @@
             <button class="dcf-btn" id="openDcfBtn">💰 DCF Valuation Calculator</button>
             <button class="crypto-scorecard-btn" id="openCryptoScorecardBtn" style="display:none;">🪙 Crypto Value Scorecard</button>
 
-            <!-- --- COMPANY PROFILE BARU --- -->
+            <!-- COMPANY PROFILE -->
             <div class="company-profile-section" id="companyProfileSection" style="display: none;"></div>
 
-            <!-- --- AI TERMINAL BARU --- -->
+            <!-- AI TERMINAL -->
             <div class="ai-terminal-section">
                 <div class="terminal-header">
                     <div class="terminal-dots"><span></span><span></span><span></span></div>
@@ -506,7 +497,6 @@
                     <p class="loading-text">Menginisialisasi AI Neural Network...</p>
                 </div>
             </div>
-            
         </div>
     </div>
 
@@ -682,64 +672,138 @@
         </div>
     </div>
 
-    <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=1005"></script>
-    <script src="ai.js"></script>
-    <!-- SCRIPT PAMUNGKAS: PAKSA AI MUNCUL -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Tunggu 1 detik biar app.js selesai loading
-    setTimeout(() => {
-        // Fungsi ini bakal nimpa fungsi bawaan app.js
-        window.loadAnalysis = async function(symbol, name, price, type) {
-            
-            // Hapus Company Intel lama kalau ada
-            const cp = document.getElementById('companyProfileSection');
-            if (cp) cp.style.display = 'none';
+    <!-- SCRIPT PAMUNGKAS: PAKSA AI & COMPANY MUNCUL -->
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            const COMPANY_PROFILES = {
+                'AAPL': { story: 'Didirikan pada 1976 oleh Steve Jobs, Steve Wozniak, dan Ronald Wayne. Berawal dari garasi, Apple kini jadi raksasa teknologi global. Perusahaan ini berhasil melewati berbagai krisis dan revolusi produk (Mac, iPod, iPhone).', gen: 'Generasi ke-2 (Tim Cook)', sector: 'Technology (Consumer Electronics)', ceo: 'Tim Cook', owner: 'Institutional Investors & Public' },
+                'MSFT': { story: 'Didirikan pada 1975 oleh Bill Gates dan Paul Allen. Berfokus pada software (Windows & Office) sebelum berevolusi menjadi raksasa Cloud (Azure) dan AI di bawah kepemimpinan Satya Nadella.', gen: 'Generasi ke-3 (Satya Nadella)', sector: 'Technology (Software & Cloud)', ceo: 'Satya Nadella', owner: 'Institutional Investors & Public' },
+                'NVDA': { story: 'Didirikan pada 1993 oleh Jensen Huang, Chris Malachowsky, dan Curtis Priem. Berawal dari GPU untuk gaming, NVIDIA kini mendominasi pasar chip AI global.', gen: 'Generasi ke-1 (Jensen Huang)', sector: 'Technology (Semiconductors)', ceo: 'Jensen Huang', owner: 'Institutional Investors & Public' },
+                'TSLA': { story: 'Didirikan pada 2003 oleh Martin Eberhard dan Marc Tarpenning. Elon Musk bergabung tak lama setelahnya. Misi utamanya adalah mempercepat transisi dunia menuju energi berkelanjutan.', gen: 'Generasi ke-1 (Elon Musk)', sector: 'Consumer Cyclical (Automotive)', ceo: 'Elon Musk', owner: 'Elon Musk & Public' },
+                'GOOGL': { story: 'Didirikan pada 1998 oleh Larry Page dan Sergey Brin saat mereka masih mahasiswa Stanford. Berevolusi dari mesin pencari menjadi raksasa iklan digital dan AI (Alphabet).', gen: 'Generasi ke-2 (Sundar Pichai)', sector: 'Technology (Internet Content)', ceo: 'Sundar Pichai', owner: 'Founders & Public' },
+                'AMZN': { story: 'Didirikan pada 1994 oleh Jeff Bezos sebagai toko buku online. Berkat obsesinya pada pelanggan, Amazon menjadi raksasa e-commerce dan Cloud (AWS).', gen: 'Generasi ke-2 (Andy Jassy)', sector: 'Consumer Cyclical (E-commerce)', ceo: 'Andy Jassy', owner: 'Jeff Bezos & Public' }
+            };
 
-            // Hapus kotak AI lama yang mungkin nyangkut/error
-            document.querySelectorAll('.analysis-section, .ai-terminal-section, #test-ai-box').forEach(el => el.remove());
-
-            // Cari tempat buat naruh kotak (chart content)
-            const chartContent = document.querySelector('.chart-content');
-            if (!chartContent) return;
-
-            // BIKIN KOTAK NEON SUPER TERANG
-            const box = document.createElement('div');
-            box.id = 'test-ai-box';
-            box.style.cssText = "background: #1a2b3c; border: 3px solid #50E4F2; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 0 30px rgba(80,228,242,0.5); width: 100%; box-sizing: border-box; z-index: 9999; position: relative;";
-            box.innerHTML = `
-                <h3 style="color:#50E4F2; font-family:monospace; margin-bottom:10px;">> AI SYSTEM TEST...</h3>
-                <p id="test-result" style="color:#fff; font-family:monospace; font-size:14px;">Menghubungi server Supabase...</p>
-            `;
-            chartContent.appendChild(box);
-            
-            const resultEl = document.getElementById('test-result');
-
-            try {
-                // FETCH LANGSUNG DARI SINI
-                const res = await fetch("https://twxsupmgnmkzsyiqebln.supabase.co/functions/v1/analyze-stock", {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC', 'apikey': 'sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC' },
-                    body: JSON.stringify({ symbol, name, price, fundamental: {} })
-                });
+            function renderCompanyProfile(symbol) {
+                const section = document.getElementById('companyProfileSection');
+                if (!section) return;
+                const profile = COMPANY_PROFILES[symbol] || {
+                    story: `${symbol} merupakan perusahaan publik yang terdaftar di bursa saham global. Perusahaan ini terus beradaptasi dengan dinamika pasar untuk memberikan nilai tambah bagi para pemegang saham.`,
+                    gen: 'Generasi ke-1', sector: 'Diversified', ceo: 'TBA', owner: 'Public'
+                };
                 
-                if (!res.ok) throw new Error("Server Error: " + res.status);
-                const data = await res.json();
-                
-                // TAMPILKAN HASILNYA
-                resultEl.innerHTML = `
-                    <span style="color:#43D6A2; font-size:24px; font-weight:bold; text-shadow: 0 0 10px #43D6A2;">${data.ai_signal || 'HOLD'}</span><br><br>
-                    <span style="font-size:12px; color:#B9A0FF; font-weight:bold;">Confidence: ${data.confidence || 50}/100</span><br><br>
-                    <span style="font-size:12px; color:#91A8BB; line-height:1.5;">${data.analysis || 'Analisis selesai. Tidak ada teks ringkasan.'}</span>
+                section.style.display = 'block';
+                section.innerHTML = `
+                    <div class="company-profile-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                        Company Intel
+                    </div>
+                    <div class="company-story-text">"${profile.story}"</div>
+                    <div class="company-meta-grid">
+                        <div class="company-meta-item"><span class="company-meta-label">Sektor</span><span class="company-meta-value">${profile.sector}</span></div>
+                        <div class="company-meta-item"><span class="company-meta-label">Generasi</span><span class="company-meta-value">${profile.gen}</span></div>
+                        <div class="company-meta-item"><span class="company-meta-label">CEO</span><span class="company-meta-value">${profile.ceo}</span></div>
+                        <div class="company-meta-item"><span class="company-meta-label">Owner Utama</span><span class="company-meta-value">${profile.owner}</span></div>
+                    </div>
                 `;
-            } catch (e) {
-                // KALAU ERROR, TAMPILKAN MERAH BESAR
-                resultEl.innerHTML = `<span style="color:#FF7387; font-size:16px; font-weight:bold;">❌ GAGAL: ${e.message}</span><br><br><span style="font-size:12px; color:#aaa;">Cek koneksi internet atau API Supabase.</span>`;
             }
-        };
-    }, 1000);
-});
-</script>
+
+            window.loadAnalysis = async function(symbol, name, price, type) {
+                if (type === 'stock') {
+                    renderCompanyProfile(symbol);
+                } else {
+                    const cp = document.getElementById('companyProfileSection');
+                    if (cp) cp.style.display = 'none';
+                }
+
+                const oldBox = document.getElementById('forced-ai-box');
+                if (oldBox) oldBox.remove();
+
+                const chartContent = document.querySelector('.chart-content');
+                if (!chartContent) return;
+
+                const aiBox = document.createElement('div');
+                aiBox.id = 'forced-ai-box';
+                aiBox.className = 'ai-terminal-section';
+                aiBox.innerHTML = `
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span></span><span></span><span></span></div>
+                        <div class="terminal-title">AI_WARREN_BUFFETT_ANALYSIS.exe</div>
+                        <div class="terminal-status" id="terminalStatus">SYS.ANALYZING...</div>
+                    </div>
+                    <div class="analysis-body-inline" id="analysisBody">
+                        <div style="text-align:center; padding: 20px; font-family:monospace; color:#50E4F2;">
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top:10px;">> Menganalisis ${symbol}...</p>
+                        </div>
+                    </div>
+                `;
+                
+                const cpSection = document.getElementById('companyProfileSection');
+                if (cpSection && cpSection.parentNode) {
+                    cpSection.parentNode.insertBefore(aiBox, cpSection.nextSibling);
+                } else {
+                    chartContent.appendChild(aiBox);
+                }
+
+                const body = document.getElementById('analysisBody');
+                const status = document.getElementById('terminalStatus');
+
+                try {
+                    let fundamental = {};
+                    try {
+                        const fRes = await fetch("https://twxsupmgnmkzsyiqebln.supabase.co/functions/v1/fetch-fundamental", {
+                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC', 'apikey': 'sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC' }, body: JSON.stringify({ symbol, type })
+                        });
+                        const fData = await fRes.json();
+                        fundamental = fData.fundamental || {};
+                    } catch (e) { }
+
+                    const res = await fetch("https://twxsupmgnmkzsyiqebln.supabase.co/functions/v1/analyze-stock", {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC', 'apikey': 'sb_publishable_9KSdez89Nm7-zE2I2-yzMA_9NPYAMRC' },
+                        body: JSON.stringify({ symbol, name, price, fundamental })
+                    });
+                    
+                    if (!res.ok) throw new Error("API Error");
+                    const data = await res.json();
+                    
+                    status.textContent = 'SYS.ONLINE';
+                    
+                    const signal = data.ai_signal ? data.ai_signal.toUpperCase() : 'HOLD';
+                    let color = signal.includes('BUY') ? '#43D6A2' : signal.includes('SELL') ? '#FF7387' : '#E9B949';
+                    let icon = signal.includes('BUY') ? '🚀' : signal.includes('SELL') ? '⚠️' : '⏸️';
+                    let conf = data.confidence || 50;
+
+                    body.innerHTML = `
+                        <div class="ai-verdict-box">
+                            <div class="ai-verdict-signal" style="border: 2px solid ${color}; color: ${color}; box-shadow: 0 0 15px ${color}40;">${icon} ${signal}</div>
+                            <div class="ai-confidence-wrap" style="width: 100%; margin-top: 15px;">
+                                <div class="ai-confidence-header"><span>Confidence Score</span><span style="color: ${color};">${conf}/100</span></div>
+                                <div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: ${conf}%; background: ${color};"></div></div>
+                            </div>
+                        </div>
+                        <div class="ai-metrics-title">🧠 CRITICAL INSIGHTS</div>
+                        ${(data.reasons || []).map(r => {
+                            let cls = 'ai-insight-box';
+                            let rIcon = '💡';
+                            if (r.toLowerCase().includes('risk') || r.toLowerCase().includes('debt')) { cls += ' risk'; rIcon = '🚨'; }
+                            else if (r.toLowerCase().includes('growth') || r.toLowerCase().includes('profit')) { cls += ' opportunity'; rIcon = '📈'; }
+                            return `<div class="${cls}"><strong>${rIcon} Analisis:</strong> ${r}</div>`;
+                        }).join('')}
+                        <div class="ai-summary-text"><strong style="color: var(--cyan);">> EXECUTIVE SUMMARY:</strong><br>${data.analysis || "Tidak ada ringkasan."}</div>
+                    `;
+
+                } catch (err) {
+                    status.textContent = 'SYS.ERROR';
+                    body.innerHTML = `<div style="color: #FF7387; padding: 20px; text-align: center; font-family: monospace;">❌ SYS.ERROR: Gagal terhubung ke AI.<br><span style="font-size: 10px;">${err.message}</span></div>`;
+                }
+            };
+        }, 1000);
+    });
+    </script>
+
+    <script src="./lightweight-charts.js"></script>
+    <script src="app.js?v=1007"></script>
 </body>
-                                                                                                             </html>
+                                                                                                                                                </html>
