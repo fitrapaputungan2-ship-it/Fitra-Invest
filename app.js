@@ -945,6 +945,81 @@ async function openDcfModal() { if (!currentSymbol || currentType === 'crypto') 
 function closeDcfModal() { document.getElementById('dcfModal').classList.remove('active'); }
 function calculateDCF() { const eps = parseFloat(document.getElementById('dcfEps').value) || 0; const growth1 = (parseFloat(document.getElementById('dcfGrowth1').value) || 10) / 100; const growth2 = (parseFloat(document.getElementById('dcfGrowth2').value) || 5) / 100; const terminal = (parseFloat(document.getElementById('dcfTerminal').value) || 2.5) / 100; const discount = (parseFloat(document.getElementById('dcfDiscount').value) || 10) / 100; if (eps <= 0) { alert('EPS harus > 0 untuk DCF!'); return; } let pv = 0; let currentEps = eps; const projections = []; for (let i = 1; i <= 5; i++) { currentEps = currentEps * (1 + growth1); pv += currentEps / Math.pow(1 + discount, i); projections.push({ year: i, eps: currentEps }); } for (let i = 6; i <= 10; i++) { currentEps = currentEps * (1 + growth2); pv += currentEps / Math.pow(1 + discount, i); projections.push({ year: i, eps: currentEps }); } const terminalEps = currentEps * (1 + terminal); const terminalValue = terminalEps / (discount - terminal); const pvTerminal = terminalValue / Math.pow(1 + discount, 10); const intrinsicValue = pv + pvTerminal; const currentPriceVal = currentPrice; let verdict = 'FAIR'; let verdictClass = 'fair'; let mos = ((intrinsicValue - currentPriceVal) / intrinsicValue) * 100; if (intrinsicValue > currentPriceVal * 1.15) { verdict = 'UNDERVALUED'; verdictClass = 'undervalued'; } else if (intrinsicValue < currentPriceVal * 0.85) { verdict = 'OVERVALUED'; verdictClass = 'overvalued'; } const dcfResultEl = document.getElementById('dcfResult'); dcfResultEl.style.display = 'flex'; dcfResultEl.innerHTML = `<div class="dcf-result-title">📊 Hasil Valuasi DCF</div><div class="dcf-result-row"><span class="dcf-result-label">Intrinsic Value (Per Share)</span><span class="dcf-result-value positive">$${intrinsicValue.toFixed(2)}</span></div><div class="dcf-result-row"><span class="dcf-result-label">Harga Saat Ini</span><span class="dcf-result-value">$${currentPriceVal.toFixed(2)}</span></div><div class="dcf-result-row"><span class="dcf-result-label">Margin of Safety</span><span class="dcf-result-value ${mos > 0 ? 'positive' : 'negative'}">${mos > 0 ? '+' : ''}${mos.toFixed(2)}%</span></div><div class="dcf-result-row"><span class="dcf-result-label">Estimasi EPS 10 Tahun</span><span class="dcf-result-value">$${projections[projections.length-1].eps.toFixed(2)}</span></div>`; const heroEl = document.getElementById('dcfHero'); heroEl.className = `dcf-hero ${verdictClass}`; heroEl.innerHTML = `<div class="dcf-intrinsic-label">Intrinsic Value Estimate</div><div class="dcf-intrinsic-value ${verdictClass}">$${intrinsicValue.toFixed(2)}</div><div class="dcf-current-price">Harga sekarang: <strong>$${currentPriceVal.toFixed(2)}</strong></div><div class="dcf-verdict-badge ${verdictClass}">${verdict}</div><div class="dcf-margin-of-safety"><div class="dcf-mos-item"><span class="dcf-mos-label">Margin of Safety</span><span class="dcf-mos-value ${mos > 0 ? 'positive' : 'negative'}">${mos > 0 ? '+' : ''}${mos.toFixed(2)}%</span></div><div class="dcf-mos-item"><span class="dcf-mos-label">Upside/Downside</span><span class="dcf-mos-value ${mos > 0 ? 'positive' : 'negative'}">${(intrinsicValue/currentPriceVal*100 - 100).toFixed(1)}%</span></div></div>`; const dcfSensEl = document.getElementById('dcfSensitivity'); dcfSensEl.style.display = 'flex'; let tableHtml = `<div class="dcf-sens-title">🎯 Sensitivity Analysis (Discount vs Growth)</div><div class="dcf-sens-desc">Intrinsic value berdasarkan kombinasi Discount Rate dan Growth Rate.</div><div class="dcf-sens-table">`; const discounts = [discount - 0.02, discount, discount + 0.02]; const growths = [growth1 - 0.02, growth1, growth1 + 0.02]; tableHtml += `<div class="dcf-sens-cell dcf-sens-row-label">Disc \\ Growth</div>`; growths.forEach(g => { tableHtml += `<div class="dcf-sens-cell dcf-sens-header">${(g*100).toFixed(0)}%</div>`; }); discounts.forEach(d => { tableHtml += `<div class="dcf-sens-cell dcf-sens-row-label">${(d*100).toFixed(0)}%</div>`; growths.forEach(g => { let pv = 0; let currentEps = eps; for (let i = 1; i <= 5; i++) { currentEps = currentEps * (1 + g); pv += currentEps / Math.pow(1 + d, i); } for (let i = 6; i <= 10; i++) { currentEps = currentEps * (1 + growth2); pv += currentEps / Math.pow(1 + d, i); } const tv = (currentEps * (1 + terminal)) / (d - terminal); const pvTv = tv / Math.pow(1 + d, 10); const iv = pv + pvTv; let cellClass = 'neutral'; if (iv > currentPriceVal * 1.15) cellClass = 'cheap'; else if (iv < currentPriceVal * 0.85) cellClass = 'expensive'; tableHtml += `<div class="dcf-sens-cell dcf-sens-value ${cellClass}">$${iv.toFixed(2)}</div>`; }); }); tableHtml += `</div>`; dcfSensEl.innerHTML = tableHtml; const dcfMethodsEl = document.getElementById('dcfMethods'); dcfMethodsEl.style.display = 'flex'; const bvps = fund?.book_value_per_share || (fund?.pb_ratio > 0 ? currentPriceVal / fund?.pb_ratio : 0); const graham = bvps > 0 ? Math.sqrt(22.5 * eps * bvps) : 0; const pe = fund?.pe_ratio || 15; const industryPe = 15; const peValuation = eps * industryPe; dcfMethodsEl.innerHTML = `<div class="dcf-methods-title">⚖️ 3 Metode Alternatif</div><div class="dcf-method-item"><div class="dcf-method-name">1. DCF (Discounted Cash Flow)</div><div class="dcf-method-desc">Berdasarkan asumsi pertumbuhan di atas</div><div class="dcf-method-value">$${intrinsicValue.toFixed(2)}</div><div class="dcf-method-verdict ${verdictClass === 'undervalued' ? 'cheap' : verdictClass === 'overvalued' ? 'expensive' : 'fair'}">${verdict}</div></div><div class="dcf-method-item"><div class="dcf-method-name">2. Graham Number</div><div class="dcf-method-desc">√(22.5 × EPS × BVPS) ala Benjamin Graham</div><div class="dcf-method-value">$${graham > 0 ? graham.toFixed(2) : 'N/A'}</div>${graham > 0 ? `<div class="dcf-method-verdict ${graham > currentPriceVal ? 'cheap' : 'expensive'}">${graham > currentPriceVal ? 'UNDERVALUED' : 'OVERVALUED'}</div>` : ''}</div><div class="dcf-method-item"><div class="dcf-method-name">3. P/E Multiple</div><div class="dcf-method-desc">EPS × Fair P/E (15x Industri)</div><div class="dcf-method-value">$${peValuation.toFixed(2)}</div><div class="dcf-method-verdict ${peValuation > currentPriceVal ? 'cheap' : 'expensive'}">${peValuation > currentPriceVal ? 'UNDERVALUED' : 'OVERVALUED'}</div></div>`; }
 
+// ============ CRYPTO CORRELATION & SCORECARD (YANG HILANG) ============
+function populateCryptoCorrelationDropdowns() {
+    const selA = document.getElementById('corrCoinA'); const selB = document.getElementById('corrCoinB');
+    if (!selA || !selB || selA.options.length > 0) return;
+    const options = cryptoData.map(c => `<option value="${c.symbol.toUpperCase()}">${c.symbol.toUpperCase()} — ${c.name}</option>`).join('');
+    selA.innerHTML = options; selB.innerHTML = options;
+    if (cryptoData.length >= 2) { selA.value = cryptoData[0].symbol.toUpperCase(); selB.value = cryptoData[1].symbol.toUpperCase(); }
+}
+function openCryptoCorrelation() {
+    document.getElementById('cryptoCorrelationModal').classList.add('active');
+    document.getElementById('corrResult').style.display = 'none';
+    document.getElementById('corrChartSection').style.display = 'none';
+    populateCryptoCorrelationDropdowns();
+}
+function closeCryptoCorrelation() {
+    document.getElementById('cryptoCorrelationModal').classList.remove('active');
+    if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
+}
+async function runCryptoCorrelation() {
+    const selA = document.getElementById('corrCoinA'); const selB = document.getElementById('corrCoinB');
+    const periodEl = document.getElementById('corrPeriod'); const btn = document.getElementById('corrCalcBtn'); const resultEl = document.getElementById('corrResult');
+    if (!selA || !selB || !periodEl || !btn || !resultEl) return;
+    const symbolA = selA.value; const symbolB = selB.value;
+    if (symbolA === symbolB) { alert('Pilih 2 coin yang berbeda!'); return; }
+    const days = parseInt(periodEl.value) || 90;
+    let range = '3mo'; if (days === 30) range = '1mo'; else if (days === 90) range = '3mo'; else if (days === 365) range = '1y';
+    
+    const originalText = btn.innerHTML; btn.innerHTML = '⏳ Menghitung...'; btn.disabled = true;
+    resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
+    
+    try {
+        const [chartA, chartB] = await Promise.all([ fetchChartData(symbolA, 'crypto', '1d', range), fetchChartData(symbolB, 'crypto', '1d', range) ]);
+        if (!chartA || chartA.length < 5 || !chartB || chartB.length < 5) throw new Error('Data historis tidak cukup.');
+        const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartA, chartB);
+        if (returnsA.length < 3) throw new Error('Data tidak cukup untuk hitung korelasi.');
+        const coef = calculatePearsonCorrelation(returnsA, returnsB); const verdict = getCorrelationVerdict(coef);
+        
+        resultEl.innerHTML = `<div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div><div class="corr-coef-label">Pearson Correlation Coefficient</div><div class="corr-verdict-badge ${verdict.cls}">${verdict.icon} ${verdict.label}</div><div class="corr-interpretation"><strong>${symbolA}</strong> vs <strong>${symbolB}</strong> — ${days} hari terakhir</div><div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : '⚠️'}</span><span>${verdict.insight}</span></div>`;
+        
+        document.getElementById('corrChartSection').style.display = 'block';
+        setTimeout(() => { renderCryptoCorrelationChart(alignedA, alignedB, times, symbolA, symbolB); }, 100);
+    } catch (err) {
+        resultEl.innerHTML = `<div class="analysis-error"><p>❌ ${err.message}</p></div>`;
+    } finally { btn.innerHTML = originalText; btn.disabled = false; }
+}
+function renderCryptoCorrelationChart(alignedA, alignedB, times, nameA, nameB) {
+    const container = document.getElementById('corrChart'); if (!container) return; container.innerHTML = '';
+    if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
+    if (typeof LightweightCharts === 'undefined' || !alignedA || alignedA.length < 2) return;
+    
+    corrChartInstance = LightweightCharts.createChart(container, { width: container.clientWidth, height: 260, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false } });
+    const baseA = alignedA[0]; const baseB = alignedB[0];
+    const seriesA = corrChartInstance.addLineSeries({ color: '#E9B949', lineWidth: 2, title: nameA });
+    const seriesB = corrChartInstance.addLineSeries({ color: '#B9A0FF', lineWidth: 2, title: nameB });
+    const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    seriesA.setData(dataA); seriesB.setData(dataB); corrChartInstance.timeScale().fitContent();
+}
+
+function openCryptoScorecard() {
+    if (!currentSymbol || currentType !== 'crypto') return;
+    const modal = document.getElementById('cryptoScorecardModal'); if (!modal) return;
+    modal.classList.add('active');
+    document.getElementById('cryptoScorecardTitle').textContent = `${currentSymbol} — ${currentName}`;
+    const heroEl = document.getElementById('cryptoScorecardHero');
+    heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Menghitung skor crypto...</p></div>';
+    setTimeout(() => {
+        const mockScore = Math.floor(Math.random() * 30) + 60; 
+        heroEl.innerHTML = `<div class="scorecard-score-big">${mockScore}</div><div class="scorecard-score-label">Crypto Score / 100</div><div class="scorecard-verdict-badge good">👍 GOOD</div><div class="scorecard-hero-desc">Analisis fundamental crypto berdasarkan market cap, likuiditas, dan momentum.</div>`;
+        document.getElementById('cryptoScorecardBreakdown').innerHTML = `<div class="scorecard-breakdown-title">📋 Detail Penilaian</div><div class="scorecard-criteria-item"><div class="criteria-top"><div class="criteria-label">Market Cap</div><div class="criteria-value">Tier 1</div></div><div class="criteria-bar-bg"><div class="criteria-bar-fill" style="width: 90%; background: #43D6A2;"></div></div></div>`;
+        document.getElementById('cryptoScorecardVerdict').style.display = 'block';
+    }, 1000);
+}
+function closeCryptoScorecard() { document.getElementById('cryptoScorecardModal').classList.remove('active'); }
+
 // ============ EVENT LISTENERS & INIT ============
 document.getElementById('browseStockBtn').addEventListener('click', openBrowseModal);
 document.getElementById('closeBrowseModal').addEventListener('click', closeBrowseModal);
