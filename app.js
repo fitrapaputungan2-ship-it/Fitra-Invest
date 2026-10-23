@@ -412,7 +412,9 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
             for (let i = 0; i < timestamps.length; i++) { if (opens[i] == null || closes[i] == null) continue; candles.push({ time: timestamps[i], open: opens[i], high: highs[i], low: lows[i], close: closes[i], volume: volumes[i] || 0 }); } return candles;
         } return [];
     } catch (error) { return []; }
-    }// ============ 🪙 CRYPTO TAB ============
+}
+
+// ============ 🪙 CRYPTO TAB ============
 const CRYPTO_FALLBACK = [
     { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', current_price: 65000, market_cap: 1280000000000, market_cap_rank: 1, price_change_percentage_24h: 0, total_volume: 30000000000, circulating_supply: 19000000, total_supply: 21000000, ath: 73750, ath_change_percentage: -12 },
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
@@ -678,7 +680,7 @@ async function openAssetDetail(symbol, name, price, change, type) {
             if (p) {
                 currentPrice = p.price;
                 currentChange = p.change;
-                if (currentName === symbol) currentName = p.name || currentName; // Update name if fetched
+                if (currentName === symbol) currentName = p.name || currentName;
                 updateChartPrice();
             }
         });
@@ -711,6 +713,9 @@ async function openAssetDetail(symbol, name, price, change, type) {
     
     if (indicatorInterval) clearInterval(indicatorInterval); 
     indicatorInterval = setInterval(() => { if (currentSymbol) updateIndicators(currentSymbol, currentType); }, 15000);
+
+    // --- FIX WEBVIEW LAYOUT (Paksa Render Ulang) ---
+    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 500);
 }
 function updateChartPrice() { const changeStr = (currentChange >= 0 ? '+' : '') + currentChange.toFixed(2) + '%'; const priceStr = '$' + currentPrice.toLocaleString('en-US', { maximumFractionDigits: 2 }); const priceEl = document.getElementById('chartPrice'); if(priceEl) { priceEl.textContent = priceStr + '  ' + changeStr; priceEl.style.color = currentChange >= 0 ? '#43D6A2' : '#FF7387'; } }
 function loadChart(symbol, type) {
@@ -791,6 +796,9 @@ async function loadAnalysis(symbol, name, price, type) {
         if(statusEl) statusEl.textContent = 'SYS.ERROR';
         container.innerHTML = `<div class="analysis-error"><p style="color:var(--red); font-weight:bold;">❌ Koneksi ke Neural Network Terputus</p><p class="error-detail" style="color:var(--text-secondary); font-size:12px; margin-top:8px;">${error.message}</p></div>`; 
     }
+    
+    // --- FIX WEBVIEW LAYOUT (Paksa Render Ulang) ---
+    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 500);
 }
 function renderAdvancedAIUI(data, fundamental, container) {
     const signal = data.ai_signal.toUpperCase(); 
