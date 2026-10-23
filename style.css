@@ -1102,3 +1102,46 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
 .dcf-method-verdict.cheap { background: rgba(67, 214, 162, 0.15); color: var(--green); border: 1px solid rgba(67, 214, 162, 0.3); }
 .dcf-method-verdict.expensive { background: rgba(255, 115, 135, 0.15); color: var(--red); border: 1px solid rgba(255, 115, 135, 0.3); }
 .dcf-method-verdict.fair { background: rgba(233, 185, 73, 0.15); color: var(--gold); border: 1px solid rgba(233, 185, 73, 0.3); }
+
+/* ============ PAKSA RAPI LAYOUT CHART ============ */
+.chart-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(8, 17, 30, 0.98) !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+.chart-content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+    padding-bottom: 150px !important;
+}
+.tradingview-container {
+    width: 100% !important;
+    height: 380px !important;
+    flex-shrink: 0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    margin-bottom: 15px !important;
+    background: #101F30 !important;
+    border: 1px solid #26394C !important;
+}
+.company-profile-section {
+    background: #101F30 !important;
+    border: 1px solid #E9B949 !important;
+    border-radius: 12px !important;
+    padding: 15px !important;
+    margin-top: 20px !important;
+    margin-bottom: 20px !important;
+    display: block !important;
+}
+.indicators-panel {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    margin-top: 10px !important;
+}
