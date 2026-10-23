@@ -237,24 +237,65 @@ function applySort(mode) { currentSortMode = mode; closeSortModal(); renderWatch
 
 async function renderWatchlist() {
     const container = document.getElementById('watchlist'); if (!container) return;
+    
     let filteredWatchlist = [...watchlist]; 
     if (activeGroup === 'favorites') filteredWatchlist = filteredWatchlist.filter(w => isFavorite(w.symbol)); 
     else if (activeGroup !== 'all') filteredWatchlist = filteredWatchlist.filter(w => w.group === activeGroup);
-    if (filteredWatchlist.length === 0) { const msg = activeGroup === 'favorites' ? 'Belum ada saham favorit.' : activeGroup === 'all' ? 'Watchlist kosong.' : 'Folder ini masih kosong.'; container.innerHTML = `<div class="empty-state">${msg}</div>`; return; }
+    
+    if (filteredWatchlist.length === 0) { 
+        const msg = activeGroup === 'favorites' ? 'Belum ada saham favorit.' : activeGroup === 'all' ? 'Watchlist kosong.' : 'Folder ini masih kosong.'; 
+        container.innerHTML = `<div class="empty-state">${msg}</div>`; 
+        return; 
+    }
+
+    // Tampilkan Skeleton dulu
     let skeletonHtml = '';
-    filteredWatchlist.forEach((asset) => { skeletonHtml += `<div class="watchlist-card-wrapper" id="skeleton-${asset.symbol}"><div class="asset-card-new neutral" style="opacity: 0.6;"><div class="asset-info-new"><span class="asset-symbol-new">${asset.symbol}</span><span class="asset-name-new">${asset.name}</span></div><div class="asset-price-wrap-new"><span class="asset-price-new">...</span><span class="asset-change-new" style="color:var(--text-muted)">Loading</span></div></div></div>`; });
+    filteredWatchlist.forEach((asset) => {
+        skeletonHtml += `
+        <div class="watchlist-card-wrapper" id="skeleton-${asset.symbol}">
+            <div class="asset-card-new neutral" style="opacity: 0.6;">
+                <div class="asset-info-new"><span class="asset-symbol-new">${asset.symbol}</span><span class="asset-name-new">${asset.name}</span></div>
+                <div class="asset-price-wrap-new"><span class="asset-price-new">...</span><span class="asset-change-new" style="color:var(--text-muted)">Loading</span></div>
+            </div>
+        </div>`;
+    });
     container.innerHTML = `<div class="watchlist-section">${skeletonHtml}</div>`;
-    const assetsWithPrices = await Promise.all(filteredWatchlist.map(async (asset) => { const priceData = await fetchPrice(asset.symbol, asset.type); return { ...asset, priceData }; }));
+
+    // FETCH PAKE CHUNK (Jeda per 3 item)
+    const assetsWithPrices = [];
+    const chunkSize = 3;
+    for (let i = 0; i < filteredWatchlist.length; i += chunkSize) {
+        const chunk = filteredWatchlist.slice(i, i + chunkSize);
+        const chunkResults = await Promise.all(chunk.map(async (asset) => {
+            const priceData = await fetchPrice(asset.symbol, asset.type);
+            return { ...asset, priceData };
+        }));
+        assetsWithPrices.push(...chunkResults);
+        
+        // Kasih jeda 200ms biar gak nyembur ke API
+        await new Promise(r => setTimeout(r, 200)); 
+    }
+
+    // Sorting logic
     assetsWithPrices.sort((a, b) => {
         if (currentSortMode === 'az') return a.symbol.localeCompare(b.symbol);
         if (currentSortMode === 'favorites') return (isFavorite(b.symbol) ? 1 : 0) - (isFavorite(a.symbol) ? 1 : 0);
-        const priceA = a.priceData ? a.priceData.price : 0; const priceB = b.priceData ? b.priceData.price : 0;
-        const changeA = a.priceData ? a.priceData.change : 0; const changeB = b.priceData ? b.priceData.change : 0;
-        if (currentSortMode === 'price-desc') return priceB - priceA; if (currentSortMode === 'price-asc') return priceA - priceB;
-        if (currentSortMode === 'change-desc') return changeB - changeA; if (currentSortMode === 'change-asc') return changeA - changeB; return 0; 
+        const priceA = a.priceData ? a.priceData.price : 0;
+        const priceB = b.priceData ? b.priceData.price : 0;
+        const changeA = a.priceData ? a.priceData.change : 0;
+        const changeB = b.priceData ? b.priceData.change : 0;
+        if (currentSortMode === 'price-desc') return priceB - priceA;
+        if (currentSortMode === 'price-asc') return priceA - priceB;
+        if (currentSortMode === 'change-desc') return changeB - changeA;
+        if (currentSortMode === 'change-asc') return changeA - changeB;
+        return 0; 
     });
+
     let finalHtml = '';
-    assetsWithPrices.forEach((asset) => { const idx = watchlist.findIndex(w => w.symbol === asset.symbol); finalHtml += renderAssetCard(asset, asset.priceData, idx); });
+    assetsWithPrices.forEach((asset) => {
+        const idx = watchlist.findIndex(w => w.symbol === asset.symbol);
+        finalHtml += renderAssetCard(asset, asset.priceData, idx);
+    });
     container.innerHTML = `<div class="watchlist-section">${finalHtml}</div>`;
 }
 
@@ -299,18 +340,30 @@ function toggleFromBrowse(symbol, name, type) {
 async function fetchMarketMovers() {
     const container = document.getElementById('marketMovers'); if (!container) return;
     container.innerHTML = '<div class="movers-loading"><div class="loading-spinner"></div><p class="loading-text">Memuat pergerakan pasar...</p></div>';
-    const results = []; const batchSize = 10;
-    for (let i = 0; i < MOVERS_UNIVERSE.length; i += batchSize) { const batch = MOVERS_UNIVERSE.slice(i, i + batchSize); const batchResults = await Promise.all(batch.map(async (symbol) => { const stockInfo = STOCK_UNIVERSE.find(s => s.symbol === symbol) || { symbol, name: symbol, type: 'stock' }; const priceData = await fetchPrice(symbol, stockInfo.type); if (!priceData) return null; return { symbol, name: priceData.name || stockInfo.name, type: stockInfo.type, price: priceData.price, change: priceData.change }; })); results.push(...batchResults.filter(Boolean)); }
+    const results = []; 
+    const batchSize = 4; // <--- KITA KECILIN JADI 4 BIAR GAK KEBERATAN
+    
+    // Ambil cuma 20 saham utama biar cepet (bukan 34)
+    const moverSymbols = MOVERS_UNIVERSE.slice(0, 20); 
+    
+    for (let i = 0; i < moverSymbols.length; i += batchSize) { 
+        const batch = moverSymbols.slice(i, i + batchSize); 
+        const batchResults = await Promise.all(batch.map(async (symbol) => { 
+            const stockInfo = STOCK_UNIVERSE.find(s => s.symbol === symbol) || { symbol, name: symbol, type: 'stock' }; 
+            const priceData = await fetchPrice(symbol, stockInfo.type); 
+            if (!priceData) return null; 
+            return { symbol, name: priceData.name || stockInfo.name, type: stockInfo.type, price: priceData.price, change: priceData.change }; 
+        })); 
+        results.push(...batchResults.filter(Boolean)); 
+        
+        // Kasih jeda 300ms tiap batch biar server gak ngambek
+        await new Promise(r => setTimeout(r, 300)); 
+    }
+    
     if (results.length === 0) { container.innerHTML = '<div class="empty-state">Gagal memuat data</div>'; return; }
-    const sorted = results.sort((a, b) => b.change - a.change); marketMoversData = { gainers: sorted.filter(r => r.change > 0).slice(0, 5), losers: sorted.filter(r => r.change < 0).slice(-5).reverse() }; renderMarketMovers();
-}
-function renderMarketMovers() {
-    const container = document.getElementById('marketMovers'); if (!container) return;
-    const { gainers, losers } = marketMoversData; if (gainers.length === 0 && losers.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada data</div>'; return; }
-    let html = '';
-    if (gainers.length > 0) { html += `<div class="movers-section"><div class="movers-header"><span class="movers-title gainers-title">📈 Top Gainers</span><span class="movers-count">${gainers.length}</span></div><div class="movers-list">`; gainers.forEach(g => { html += `<div class="mover-item gainer" onclick="openAssetDetail('${g.symbol}', '${g.name.replace(/'/g, "\\'")}', ${g.price}, ${g.change}, '${g.type}')"><div class="mover-info"><span class="mover-symbol">${g.symbol}</span><span class="mover-name">${g.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${g.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change gainer">+${g.change.toFixed(2)}%</span></div></div>`; }); html += `</div></div>`; }
-    if (losers.length > 0) { html += `<div class="movers-section"><div class="movers-header"><span class="movers-title losers-title">📉 Top Losers</span><span class="movers-count">${losers.length}</span></div><div class="movers-list">`; losers.forEach(l => { html += `<div class="mover-item loser" onclick="openAssetDetail('${l.symbol}', '${l.name.replace(/'/g, "\\'")}', ${l.price}, ${l.change}, '${l.type}')"><div class="mover-info"><span class="mover-symbol">${l.symbol}</span><span class="mover-name">${l.name}</span></div><div class="mover-price-wrap"><span class="mover-price">$${l.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span><span class="mover-change loser">${l.change.toFixed(2)}%</span></div></div>`; }); html += `</div></div>`; }
-    container.innerHTML = html;
+    const sorted = results.sort((a, b) => b.change - a.change); 
+    marketMoversData = { gainers: sorted.filter(r => r.change > 0).slice(0, 5), losers: sorted.filter(r => r.change < 0).slice(-5).reverse() }; 
+    renderMarketMovers();
 }
 
 // ============ FETCH HELPERS ============
