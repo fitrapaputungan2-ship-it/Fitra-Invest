@@ -411,9 +411,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
             for (let i = 0; i < timestamps.length; i++) { if (opens[i] == null || closes[i] == null) continue; candles.push({ time: timestamps[i], open: opens[i], high: highs[i], low: lows[i], close: closes[i], volume: volumes[i] || 0 }); } return candles;
         } return [];
     } catch (error) { return []; }
-}
-
-// ============ 🪙 CRYPTO TAB ============
+        }// ============ 🪙 CRYPTO TAB ============
 const CRYPTO_FALLBACK = [
     { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', current_price: 65000, market_cap: 1280000000000, market_cap_rank: 1, price_change_percentage_24h: 0, total_volume: 30000000000, circulating_supply: 19000000, total_supply: 21000000, ath: 73750, ath_change_percentage: -12 },
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
@@ -488,7 +486,76 @@ function renderCommodityCorrelationChart(alignedA, alignedB, times, nameA, nameB
 function openDxyCorrelation() { document.getElementById('dxyCorrelationModal').classList.add('active'); document.getElementById('dxyResult').style.display = 'none'; document.getElementById('dxyChartSection').style.display = 'none'; }
 function closeDxyCorrelation() { document.getElementById('dxyCorrelationModal').classList.remove('active'); if (dxyChartInstance) { try { dxyChartInstance.remove(); } catch(e) {} dxyChartInstance = null; } }
 async function runDxyCorrelation() { const periodEl = document.getElementById('dxyPeriod'); const btn = document.getElementById('dxyCalcBtn'); const resultEl = document.getElementById('dxyResult'); if (!periodEl || !btn || !resultEl) return; const days = parseInt(periodEl.value) || 90; let range = '3mo'; if (days === 30) range = '1mo'; else if (days === 90) range = '3mo'; else if (days === 365) range = '1y'; const originalText = btn.innerHTML; btn.innerHTML = '⏳ Menghitung...'; btn.disabled = true; resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data DXY & Gold...</p>'; try { const [chartDxy, chartGold] = await Promise.all([ fetchChartData('DX-Y.NYB', 'stock', '1d', range), fetchChartData('GC=F', 'commodity', '1d', range) ]); if (!chartDxy || chartDxy.length < 5 || !chartGold || chartGold.length < 5) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p></div>'; return; } const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartDxy, chartGold); if (returnsA.length < 3) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>'; return; } const coef = calculatePearsonCorrelation(returnsA, returnsB); const verdict = getCorrelationVerdict(coef); resultEl.innerHTML = `<div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div><div class="corr-coef-label">DXY vs Gold Correlation</div><div class="corr-verdict-badge ${verdict.cls}">${verdict.icon} ${verdict.label}</div><div class="corr-interpretation"><strong>DXY (Dolar AS)</strong> vs <strong>Gold</strong> — ${days} hari terakhir (${returnsA.length} data point)</div><div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : verdict.insightCls === 'warn' ? '⚠️' : '🚨'}</span><span>${verdict.insight}</span></div>`; document.getElementById('dxyChartSection').style.display = 'block'; setTimeout(() => { renderDxyChart(alignedA, alignedB, times); }, 100); } catch (err) { resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`; } finally { btn.innerHTML = originalText; btn.disabled = false; } }
-function renderDxyChart(alignedA, alignedB, times) { const container = document.getElementById('dxyChart'); if (!container) return; container.innerHTML = ''; if (dxyChartInstance) { try { dxyChartInstance.remove(); } catch(e) {} dxyChartInstance = null; } if (typeof LightweightCharts === 'undefined') return; if (!alignedA || alignedA.length < 2) return; dxyChartInstance = LightweightCharts.createChart(container, { width: container.clientWidth, height: 260, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false } }); const baseA = alignedA[0]; const baseB = alignedB[0]; const seriesA = dxyChartInstance.addLineSeries({ color: '#43D6A2', lineWidth: 2, title: 'DXY' }); const seriesB = dxyChartInstance.addLineSeries({ color: '#E9B949', lineWidth: 2, title: 'Gold' }); const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value)); const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value)); seriesA.setData(dataA); seriesB.setData(dataB); dxyChartInstance.timeScale().fitContent(); }
+function renderDxyChart(alignedA, alignedB, times) { const container = document.getElementById('dxyChart'); if (!container) return; container.innerHTML = ''; if (dxyChartInstance) { try { dxyChartInstance.remove(); } catch(e) {} dxyChartInstance = null; } if (typeof LightweightCharts === 'undefined') return; if (!alignedA || alignedA.length < 2) return; dxyChartInstance = LightweightCharts.createChart(container, { width: container.clientWidth, height: 260, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false } }); const baseA = alignedA[0]; const baseB = alignedB[0]; const seriesA = dxyChartInstance.addLineSeries({ color: '#43D6A2', lineWidth: 2, title: 'DXY' }); const seriesB = dxyChartInstance.addLineSeries({ color: '#E9B949', lineWidth: 2, title: 'Gold' }); const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value)); const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value)); seriesA.setData(dataA); seriesB.setData(dataB); dxyChartInstance.timeScale().fitContent(); }// ============ CRYPTO CORRELATION & SCORECARD ============
+function populateCryptoCorrelationDropdowns() {
+    const selA = document.getElementById('corrCoinA'); const selB = document.getElementById('corrCoinB');
+    if (!selA || !selB || selA.options.length > 0) return;
+    const options = cryptoData.map(c => `<option value="${c.symbol.toUpperCase()}">${c.symbol.toUpperCase()} — ${c.name}</option>`).join('');
+    selA.innerHTML = options; selB.innerHTML = options;
+    if (cryptoData.length >= 2) { selA.value = cryptoData[0].symbol.toUpperCase(); selB.value = cryptoData[1].symbol.toUpperCase(); }
+}
+function openCryptoCorrelation() {
+    document.getElementById('cryptoCorrelationModal').classList.add('active');
+    document.getElementById('corrResult').style.display = 'none';
+    document.getElementById('corrChartSection').style.display = 'none';
+    populateCryptoCorrelationDropdowns();
+}
+function closeCryptoCorrelation() {
+    document.getElementById('cryptoCorrelationModal').classList.remove('active');
+    if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
+}
+async function runCryptoCorrelation() {
+    const selA = document.getElementById('corrCoinA'); const selB = document.getElementById('corrCoinB');
+    const periodEl = document.getElementById('corrPeriod'); const btn = document.getElementById('corrCalcBtn'); const resultEl = document.getElementById('corrResult');
+    if (!selA || !selB || !periodEl || !btn || !resultEl) return;
+    const symbolA = selA.value; const symbolB = selB.value;
+    if (symbolA === symbolB) { alert('Pilih 2 coin yang berbeda!'); return; }
+    const days = parseInt(periodEl.value) || 90;
+    let range = '3mo'; if (days === 30) range = '1mo'; else if (days === 90) range = '3mo'; else if (days === 365) range = '1y';
+    const originalText = btn.innerHTML; btn.innerHTML = '⏳ Menghitung...'; btn.disabled = true;
+    resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
+    try {
+        const [chartA, chartB] = await Promise.all([ fetchChartData(symbolA, 'crypto', '1d', range), fetchChartData(symbolB, 'crypto', '1d', range) ]);
+        if (!chartA || chartA.length < 5 || !chartB || chartB.length < 5) throw new Error('Data historis tidak cukup.');
+        const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartA, chartB);
+        if (returnsA.length < 3) throw new Error('Data tidak cukup untuk hitung korelasi.');
+        const coef = calculatePearsonCorrelation(returnsA, returnsB); const verdict = getCorrelationVerdict(coef);
+        resultEl.innerHTML = `<div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div><div class="corr-coef-label">Pearson Correlation Coefficient</div><div class="corr-verdict-badge ${verdict.cls}">${verdict.icon} ${verdict.label}</div><div class="corr-interpretation"><strong>${symbolA}</strong> vs <strong>${symbolB}</strong> — ${days} hari terakhir</div><div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : '⚠️'}</span><span>${verdict.insight}</span></div>`;
+        document.getElementById('corrChartSection').style.display = 'block';
+        setTimeout(() => { renderCryptoCorrelationChart(alignedA, alignedB, times, symbolA, symbolB); }, 100);
+    } catch (err) {
+        resultEl.innerHTML = `<div class="analysis-error"><p>❌ ${err.message}</p></div>`;
+    } finally { btn.innerHTML = originalText; btn.disabled = false; }
+}
+function renderCryptoCorrelationChart(alignedA, alignedB, times, nameA, nameB) {
+    const container = document.getElementById('corrChart'); if (!container) return; container.innerHTML = '';
+    if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
+    if (typeof LightweightCharts === 'undefined' || !alignedA || alignedA.length < 2) return;
+    corrChartInstance = LightweightCharts.createChart(container, { width: container.clientWidth, height: 260, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false } });
+    const baseA = alignedA[0]; const baseB = alignedB[0];
+    const seriesA = corrChartInstance.addLineSeries({ color: '#E9B949', lineWidth: 2, title: nameA });
+    const seriesB = corrChartInstance.addLineSeries({ color: '#B9A0FF', lineWidth: 2, title: nameB });
+    const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
+    seriesA.setData(dataA); seriesB.setData(dataB); corrChartInstance.timeScale().fitContent();
+}
+
+function openCryptoScorecard() {
+    if (!currentSymbol || currentType !== 'crypto') return;
+    const modal = document.getElementById('cryptoScorecardModal'); if (!modal) return;
+    modal.classList.add('active');
+    document.getElementById('cryptoScorecardTitle').textContent = `${currentSymbol} — ${currentName}`;
+    const heroEl = document.getElementById('cryptoScorecardHero');
+    heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Menghitung skor crypto...</p></div>';
+    setTimeout(() => {
+        const mockScore = Math.floor(Math.random() * 30) + 60; 
+        heroEl.innerHTML = `<div class="scorecard-score-big">${mockScore}</div><div class="scorecard-score-label">Crypto Score / 100</div><div class="scorecard-verdict-badge good">👍 GOOD</div><div class="scorecard-hero-desc">Analisis fundamental crypto berdasarkan market cap, likuiditas, dan momentum.</div>`;
+        document.getElementById('cryptoScorecardBreakdown').innerHTML = `<div class="scorecard-breakdown-title">📋 Detail Penilaian</div><div class="scorecard-criteria-item"><div class="criteria-top"><div class="criteria-label">Market Cap</div><div class="criteria-value">Tier 1</div></div><div class="criteria-bar-bg"><div class="criteria-bar-fill" style="width: 90%; background: #43D6A2;"></div></div></div>`;
+        document.getElementById('cryptoScorecardVerdict').style.display = 'block';
+    }, 1000);
+}
+function closeCryptoScorecard() { document.getElementById('cryptoScorecardModal').classList.remove('active'); }
+
 
 // ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
