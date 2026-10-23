@@ -411,7 +411,7 @@ async function fetchChartData(symbol, type, interval = '1mo', range = 'max') {
             for (let i = 0; i < timestamps.length; i++) { if (opens[i] == null || closes[i] == null) continue; candles.push({ time: timestamps[i], open: opens[i], high: highs[i], low: lows[i], close: closes[i], volume: volumes[i] || 0 }); } return candles;
         } return [];
     } catch (error) { return []; }
-                                             }// ============ 🪙 CRYPTO TAB ============
+}// ============ 🪙 CRYPTO TAB ============
 const CRYPTO_FALLBACK = [
     { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', current_price: 65000, market_cap: 1280000000000, market_cap_rank: 1, price_change_percentage_24h: 0, total_volume: 30000000000, circulating_supply: 19000000, total_supply: 21000000, ath: 73750, ath_change_percentage: -12 },
     { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', current_price: 3500, market_cap: 420000000000, market_cap_rank: 2, price_change_percentage_24h: 0, total_volume: 15000000000, circulating_supply: 120000000, total_supply: 120000000, ath: 4878, ath_change_percentage: -28 }
@@ -700,16 +700,14 @@ function loadChart(symbol, type) {
     const container = document.getElementById('tradingviewContainer'); if(!container) return; container.innerHTML = ''; clearIndicatorSeries();
     if (currentChart) { currentChart.remove(); currentChart = null; }
     
-    // TINGGI CHART DIPERKECIL BIAR GAK MAKAN TEMPAT
+    // TINGGI CHART STANDAR (Gak terlalu kecil, gak makan tempat)
     const isMobile = window.innerWidth < 400; 
-    const chartHeight = isMobile ? 300 : 350; 
+    const chartHeight = isMobile ? 350 : 400; 
     
     if (typeof LightweightCharts === 'undefined') { container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library gagal dimuat.</div>'; return; }
     
     currentChart = LightweightCharts.createChart(container, { 
-        width: container.clientWidth, 
-        height: chartHeight, 
-        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, 
+        width: container.clientWidth, height: chartHeight, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, 
         grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, 
         crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(80, 228, 242, 0.5)', labelBackgroundColor: '#50E4F2' }, horzLine: { color: 'rgba(80, 228, 242, 0.5)', labelBackgroundColor: '#50E4F2' } }, 
         rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.25 } }, 
@@ -796,7 +794,7 @@ function renderAdvancedAIUI(data, fundamental, container) {
         else { if (val >= good) return 'var(--green)'; if (val >= warn) return 'var(--gold)'; return 'var(--red)'; }
     };
 
-    // PASTIKAN TIDAK ADA DOUBLE WRAPPER (ai-terminal-section) DISINI
+    // TIDAK ADA WRAPPER DOBEL DISINI (Hanya inner HTML)
     container.innerHTML = `
         <div class="ai-verdict-box" style="animation: slideUp 0.5s ease;">
             <div class="ai-verdict-signal" style="color: ${barColor}; text-shadow: 0 0 15px ${barColor};">${signalIcon} ${signal}</div>
@@ -874,7 +872,7 @@ function renderCompanyProfile(symbol) {
         story: `${symbol} merupakan perusahaan publik yang terdaftar di bursa saham global.`, founded: '-', gen: '-', sector: '-', ceo: '-', owner: '-'
     };
     section.style.display = 'block';
-    // PASTIKAN TIDAK ADA DOUBLE WRAPPER (company-profile-section) DISINI
+    // TIDAK ADA WRAPPER DOBEL DISINI
     section.innerHTML = `
         <div class="company-intel-header">
             <div class="intel-icon">🏢</div>
