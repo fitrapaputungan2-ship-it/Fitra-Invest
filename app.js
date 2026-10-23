@@ -699,12 +699,31 @@ function updateChartPrice() { const changeStr = (currentChange >= 0 ? '+' : '') 
 function loadChart(symbol, type) {
     const container = document.getElementById('tradingviewContainer'); if(!container) return; container.innerHTML = ''; clearIndicatorSeries();
     if (currentChart) { currentChart.remove(); currentChart = null; }
-    const isMobile = window.innerWidth < 400; const chartHeight = isMobile ? 450 : 520;
+    
+    // TINGGI CHART DIPERKECIL BIAR GAK MAKAN TEMPAT
+    const isMobile = window.innerWidth < 400; 
+    const chartHeight = isMobile ? 300 : 350; 
+    
     if (typeof LightweightCharts === 'undefined') { container.innerHTML = '<div style="color:#f00;padding:20px;">❌ Library gagal dimuat.</div>'; return; }
-    currentChart = LightweightCharts.createChart(container, { width: container.clientWidth, height: chartHeight, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(80, 228, 242, 0.5)', labelBackgroundColor: '#50E4F2' }, horzLine: { color: 'rgba(80, 228, 242, 0.5)', labelBackgroundColor: '#50E4F2' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.25 } }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: true, secondsVisible: false, rightOffset: 10, barSpacing: 12 }, handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true } });
+    
+    currentChart = LightweightCharts.createChart(container, { 
+        width: container.clientWidth, 
+        height: chartHeight, 
+        layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, 
+        grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, 
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { color: 'rgba(80, 228, 242, 0.5)', labelBackgroundColor: '#50E4F2' }, horzLine: { color: 'rgba(80, 228, 242, 0.5)', labelBackgroundColor: '#50E4F2' } }, 
+        rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: { top: 0.1, bottom: 0.25 } }, 
+        timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: true, secondsVisible: false, rightOffset: 10, barSpacing: 12 }, 
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }, 
+        handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true } 
+    });
+    
     candleSeries = currentChart.addCandlestickSeries({ upColor: '#43D6A2', downColor: '#FF7387', borderUpColor: '#43D6A2', borderDownColor: '#FF7387', wickUpColor: '#43D6A2', wickDownColor: '#FF7387' });
     volumeSeries = currentChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' }); volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
-    const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered && (a.alertType === 'price' || !a.alertType)); if (activeAlert && candleSeries) candleSeries.createPriceLine({ price: activeAlert.targetPrice, color: activeAlert.direction === 'above' ? '#43D6A2' : '#FF7387', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert' });
+    
+    const activeAlert = alerts.find(a => a.symbol === symbol && !a.triggered && (a.alertType === 'price' || !a.alertType)); 
+    if (activeAlert && candleSeries) candleSeries.createPriceLine({ price: activeAlert.targetPrice, color: activeAlert.direction === 'above' ? '#43D6A2' : '#FF7387', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: '🔔 Alert' });
+    
     loadChartData(symbol, type, currentTimeframe); setupTimeframeButtons(); window.addEventListener('resize', resizeChart);
     if (Object.values(activeIndicators).some(v => v)) { setTimeout(() => { if (currentSymbol === symbol) refreshChartIndicators(); }, 700); }
 }
