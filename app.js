@@ -486,78 +486,7 @@ function renderCommodityCorrelationChart(alignedA, alignedB, times, nameA, nameB
 function openDxyCorrelation() { document.getElementById('dxyCorrelationModal').classList.add('active'); document.getElementById('dxyResult').style.display = 'none'; document.getElementById('dxyChartSection').style.display = 'none'; }
 function closeDxyCorrelation() { document.getElementById('dxyCorrelationModal').classList.remove('active'); if (dxyChartInstance) { try { dxyChartInstance.remove(); } catch(e) {} dxyChartInstance = null; } }
 async function runDxyCorrelation() { const periodEl = document.getElementById('dxyPeriod'); const btn = document.getElementById('dxyCalcBtn'); const resultEl = document.getElementById('dxyResult'); if (!periodEl || !btn || !resultEl) return; const days = parseInt(periodEl.value) || 90; let range = '3mo'; if (days === 30) range = '1mo'; else if (days === 90) range = '3mo'; else if (days === 365) range = '1y'; const originalText = btn.innerHTML; btn.innerHTML = '⏳ Menghitung...'; btn.disabled = true; resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data DXY & Gold...</p>'; try { const [chartDxy, chartGold] = await Promise.all([ fetchChartData('DX-Y.NYB', 'stock', '1d', range), fetchChartData('GC=F', 'commodity', '1d', range) ]); if (!chartDxy || chartDxy.length < 5 || !chartGold || chartGold.length < 5) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data historis tidak cukup.</p></div>'; return; } const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartDxy, chartGold); if (returnsA.length < 3) { resultEl.innerHTML = '<div class="analysis-error"><p>❌ Data tidak cukup untuk hitung korelasi.</p></div>'; return; } const coef = calculatePearsonCorrelation(returnsA, returnsB); const verdict = getCorrelationVerdict(coef); resultEl.innerHTML = `<div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div><div class="corr-coef-label">DXY vs Gold Correlation</div><div class="corr-verdict-badge ${verdict.cls}">${verdict.icon} ${verdict.label}</div><div class="corr-interpretation"><strong>DXY (Dolar AS)</strong> vs <strong>Gold</strong> — ${days} hari terakhir (${returnsA.length} data point)</div><div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : verdict.insightCls === 'warn' ? '⚠️' : '🚨'}</span><span>${verdict.insight}</span></div>`; document.getElementById('dxyChartSection').style.display = 'block'; setTimeout(() => { renderDxyChart(alignedA, alignedB, times); }, 100); } catch (err) { resultEl.innerHTML = `<div class="analysis-error"><p>❌ Gagal menghitung korelasi</p><p style="font-size:11px;">${err.message}</p></div>`; } finally { btn.innerHTML = originalText; btn.disabled = false; } }
-function renderDxyChart(alignedA, alignedB, times) { const container = document.getElementById('dxyChart'); if (!container) return; container.innerHTML = ''; if (dxyChartInstance) { try { dxyChartInstance.remove(); } catch(e) {} dxyChartInstance = null; } if (typeof LightweightCharts === 'undefined') return; if (!alignedA || alignedA.length < 2) return; dxyChartInstance = LightweightCharts.createChart(container, { width: container.clientWidth, height: 260, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false } }); const baseA = alignedA[0]; const baseB = alignedB[0]; const seriesA = dxyChartInstance.addLineSeries({ color: '#43D6A2', lineWidth: 2, title: 'DXY' }); const seriesB = dxyChartInstance.addLineSeries({ color: '#E9B949', lineWidth: 2, title: 'Gold' }); const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value)); const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value)); seriesA.setData(dataA); seriesB.setData(dataB); dxyChartInstance.timeScale().fitContent(); }// ============ CRYPTO CORRELATION & SCORECARD ============
-function populateCryptoCorrelationDropdowns() {
-    const selA = document.getElementById('corrCoinA'); const selB = document.getElementById('corrCoinB');
-    if (!selA || !selB || selA.options.length > 0) return;
-    const options = cryptoData.map(c => `<option value="${c.symbol.toUpperCase()}">${c.symbol.toUpperCase()} — ${c.name}</option>`).join('');
-    selA.innerHTML = options; selB.innerHTML = options;
-    if (cryptoData.length >= 2) { selA.value = cryptoData[0].symbol.toUpperCase(); selB.value = cryptoData[1].symbol.toUpperCase(); }
-}
-function openCryptoCorrelation() {
-    document.getElementById('cryptoCorrelationModal').classList.add('active');
-    document.getElementById('corrResult').style.display = 'none';
-    document.getElementById('corrChartSection').style.display = 'none';
-    populateCryptoCorrelationDropdowns();
-}
-function closeCryptoCorrelation() {
-    document.getElementById('cryptoCorrelationModal').classList.remove('active');
-    if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
-}
-async function runCryptoCorrelation() {
-    const selA = document.getElementById('corrCoinA'); const selB = document.getElementById('corrCoinB');
-    const periodEl = document.getElementById('corrPeriod'); const btn = document.getElementById('corrCalcBtn'); const resultEl = document.getElementById('corrResult');
-    if (!selA || !selB || !periodEl || !btn || !resultEl) return;
-    const symbolA = selA.value; const symbolB = selB.value;
-    if (symbolA === symbolB) { alert('Pilih 2 coin yang berbeda!'); return; }
-    const days = parseInt(periodEl.value) || 90;
-    let range = '3mo'; if (days === 30) range = '1mo'; else if (days === 90) range = '3mo'; else if (days === 365) range = '1y';
-    const originalText = btn.innerHTML; btn.innerHTML = '⏳ Menghitung...'; btn.disabled = true;
-    resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="loading-spinner"></div><p class="loading-text">Mengambil data historis...</p>';
-    try {
-        const [chartA, chartB] = await Promise.all([ fetchChartData(symbolA, 'crypto', '1d', range), fetchChartData(symbolB, 'crypto', '1d', range) ]);
-        if (!chartA || chartA.length < 5 || !chartB || chartB.length < 5) throw new Error('Data historis tidak cukup.');
-        const { returnsA, returnsB, alignedA, alignedB, times } = alignReturnsSeries(chartA, chartB);
-        if (returnsA.length < 3) throw new Error('Data tidak cukup untuk hitung korelasi.');
-        const coef = calculatePearsonCorrelation(returnsA, returnsB); const verdict = getCorrelationVerdict(coef);
-        resultEl.innerHTML = `<div class="corr-coef-big ${verdict.cls}">${coef >= 0 ? '+' : ''}${coef.toFixed(3)}</div><div class="corr-coef-label">Pearson Correlation Coefficient</div><div class="corr-verdict-badge ${verdict.cls}">${verdict.icon} ${verdict.label}</div><div class="corr-interpretation"><strong>${symbolA}</strong> vs <strong>${symbolB}</strong> — ${days} hari terakhir</div><div class="corr-insight-box ${verdict.insightCls}"><span style="font-size:14px;">${verdict.insightCls === 'good' ? '✅' : '⚠️'}</span><span>${verdict.insight}</span></div>`;
-        document.getElementById('corrChartSection').style.display = 'block';
-        setTimeout(() => { renderCryptoCorrelationChart(alignedA, alignedB, times, symbolA, symbolB); }, 100);
-    } catch (err) {
-        resultEl.innerHTML = `<div class="analysis-error"><p>❌ ${err.message}</p></div>`;
-    } finally { btn.innerHTML = originalText; btn.disabled = false; }
-}
-function renderCryptoCorrelationChart(alignedA, alignedB, times, nameA, nameB) {
-    const container = document.getElementById('corrChart'); if (!container) return; container.innerHTML = '';
-    if (corrChartInstance) { try { corrChartInstance.remove(); } catch(e) {} corrChartInstance = null; }
-    if (typeof LightweightCharts === 'undefined' || !alignedA || alignedA.length < 2) return;
-    corrChartInstance = LightweightCharts.createChart(container, { width: container.clientWidth, height: 260, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false } });
-    const baseA = alignedA[0]; const baseB = alignedB[0];
-    const seriesA = corrChartInstance.addLineSeries({ color: '#E9B949', lineWidth: 2, title: nameA });
-    const seriesB = corrChartInstance.addLineSeries({ color: '#B9A0FF', lineWidth: 2, title: nameB });
-    const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
-    const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value));
-    seriesA.setData(dataA); seriesB.setData(dataB); corrChartInstance.timeScale().fitContent();
-}
-
-function openCryptoScorecard() {
-    if (!currentSymbol || currentType !== 'crypto') return;
-    const modal = document.getElementById('cryptoScorecardModal'); if (!modal) return;
-    modal.classList.add('active');
-    document.getElementById('cryptoScorecardTitle').textContent = `${currentSymbol} — ${currentName}`;
-    const heroEl = document.getElementById('cryptoScorecardHero');
-    heroEl.innerHTML = '<div class="scorecard-loading"><div class="loading-spinner"></div><p class="loading-text">🤖 Menghitung skor crypto...</p></div>';
-    setTimeout(() => {
-        const mockScore = Math.floor(Math.random() * 30) + 60; 
-        heroEl.innerHTML = `<div class="scorecard-score-big">${mockScore}</div><div class="scorecard-score-label">Crypto Score / 100</div><div class="scorecard-verdict-badge good">👍 GOOD</div><div class="scorecard-hero-desc">Analisis fundamental crypto berdasarkan market cap, likuiditas, dan momentum.</div>`;
-        document.getElementById('cryptoScorecardBreakdown').innerHTML = `<div class="scorecard-breakdown-title">📋 Detail Penilaian</div><div class="scorecard-criteria-item"><div class="criteria-top"><div class="criteria-label">Market Cap</div><div class="criteria-value">Tier 1</div></div><div class="criteria-bar-bg"><div class="criteria-bar-fill" style="width: 90%; background: #43D6A2;"></div></div></div>`;
-        document.getElementById('cryptoScorecardVerdict').style.display = 'block';
-    }, 1000);
-}
-function closeCryptoScorecard() { document.getElementById('cryptoScorecardModal').classList.remove('active'); }
-
-
-// ============ SMART ALERT MODAL ============
+function renderDxyChart(alignedA, alignedB, times) { const container = document.getElementById('dxyChart'); if (!container) return; container.innerHTML = ''; if (dxyChartInstance) { try { dxyChartInstance.remove(); } catch(e) {} dxyChartInstance = null; } if (typeof LightweightCharts === 'undefined') return; if (!alignedA || alignedA.length < 2) return; dxyChartInstance = LightweightCharts.createChart(container, { width: container.clientWidth, height: 260, layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }, grid: { vertLines: { color: 'rgba(255, 255, 255, 0.04)' }, horzLines: { color: 'rgba(255, 255, 255, 0.04)' } }, rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)' }, timeScale: { borderColor: 'rgba(255, 255, 255, 0.08)', timeVisible: false } }); const baseA = alignedA[0]; const baseB = alignedB[0]; const seriesA = dxyChartInstance.addLineSeries({ color: '#43D6A2', lineWidth: 2, title: 'DXY' }); const seriesB = dxyChartInstance.addLineSeries({ color: '#E9B949', lineWidth: 2, title: 'Gold' }); const dataA = alignedA.map((v, i) => ({ time: times[i], value: ((v / baseA) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value)); const dataB = alignedB.map((v, i) => ({ time: times[i], value: ((v / baseB) - 1) * 100 })).filter(d => d.time != null && !isNaN(d.value)); seriesA.setData(dataA); seriesB.setData(dataB); dxyChartInstance.timeScale().fitContent(); }// ============ SMART ALERT MODAL ============
 function openAlertModal(symbol, name, price, type) {
     currentAlertSymbol = symbol; currentAlertName = name; currentAlertAssetType = type; currentAlertPrice = price;
     currentAlertType = 'price'; currentAlertDirection = 'above';
@@ -832,46 +761,88 @@ async function loadAnalysis(symbol, name, price, type) {
 function renderAdvancedAIUI(data, fundamental, container) {
     const signal = data.ai_signal.toUpperCase(); 
     const confidence = data.confidence; 
-    const reasons = data.reasons || [];
+    const metrics = data.metrics || {};
+    const insights = data.insights || [];
+    
     let signalClass = 'hold'; let signalIcon = '⏸️'; let barColor = 'var(--gold)';
     if (signal.includes('BUY')) { signalClass = 'buy'; signalIcon = '🚀'; barColor = 'var(--green)'; } 
     else if (signal.includes('SELL') || signal.includes('AVOID')) { signalClass = 'sell'; signalIcon = '⚠️'; barColor = 'var(--red)'; }
+
+    const formatPct = (val) => (val * 100).toFixed(1) + '%';
+    const formatNum = (val) => val ? val.toFixed(2) : 'N/A';
     
-    const pe = fundamental.pe_ratio || 0; const roe = fundamental.roe || 0; const der = fundamental.debt_to_equity || 0; const margin = fundamental.profit_margin || 0;
-    const getMetricColor = (val, good, warn, isLowerBetter = false) => {
-        if (val === 'N/A' || val === 0) return '#91A8BB';
-        const num = parseFloat(val);
-        if (isLowerBetter) { if (num <= good) return '#43D6A2'; if (num <= warn) return '#E9B949'; return '#FF7387'; } 
-        else { if (num >= good) return '#43D6A2'; if (num >= warn) return '#E9B949'; return '#FF7387'; }
+    const getColor = (val, good, warn, isLowerBetter = false) => {
+        if (!val || val === 0) return '#91A8BB';
+        if (isLowerBetter) { if (val <= good) return 'var(--green)'; if (val <= warn) return 'var(--gold)'; return 'var(--red)'; } 
+        else { if (val >= good) return 'var(--green)'; if (val >= warn) return 'var(--gold)'; return 'var(--red)'; }
     };
-    const metricsHtml = `
-        <div class="ai-metrics-title">📊 Health Matrix</div>
-        <div class="ai-metrics-grid">
-            <div class="ai-metric-item" style="border-left-color: ${getMetricColor(pe, 15, 25, true)};"><span class="ai-metric-label">P/E Ratio</span><span class="ai-metric-value" style="color: ${getMetricColor(pe, 15, 25, true)};">${pe > 0 ? pe.toFixed(1) : 'N/A'}</span></div>
-            <div class="ai-metric-item" style="border-left-color: ${getMetricColor(roe*100, 15, 10)};"><span class="ai-metric-label">ROE</span><span class="ai-metric-value" style="color: ${getMetricColor(roe*100, 15, 10)};">${(roe*100).toFixed(1)}%</span></div>
-            <div class="ai-metric-item" style="border-left-color: ${getMetricColor(der, 0.5, 1.5, true)};"><span class="ai-metric-label">DER (Debt)</span><span class="ai-metric-value" style="color: ${getMetricColor(der, 0.5, 1.5, true)};">${der > 0 ? der.toFixed(2) : 'N/A'}</span></div>
-            <div class="ai-metric-item" style="border-left-color: ${getMetricColor(margin*100, 15, 5)};"><span class="ai-metric-label">Margin</span><span class="ai-metric-value" style="color: ${getMetricColor(margin*100, 15, 5)};">${(margin*100).toFixed(1)}%</span></div>
-        </div>
-    `;
-    const reasonsHtml = reasons.map(r => {
-        let cls = 'ai-insight-box'; let rIcon = '💡';
-        if (r.toLowerCase().includes('risk') || r.toLowerCase().includes('debt')) { cls += ' risk'; rIcon = '🚨'; }
-        else if (r.toLowerCase().includes('growth') || r.toLowerCase().includes('profit')) { cls += ' opportunity'; rIcon = '📈'; }
-        return `<div class="${cls}"><strong>${rIcon} Analisis:</strong> ${r}</div>`;
-    }).join('');
 
     container.innerHTML = `
-        ${metricsHtml}
-        <div class="ai-verdict-box">
-            <div class="ai-verdict-signal" style="border: 2px solid ${barColor}; color: ${barColor}; box-shadow: 0 0 15px ${barColor}40;">${signalIcon} ${signal}</div>
-            <div class="ai-confidence-wrap" style="width: 100%; margin-top: 15px;">
-                <div class="ai-confidence-header"><span>Confidence Score</span><span style="color: ${barColor};">${confidence}/100</span></div>
-                <div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: ${confidence}%; background: ${barColor};"></div></div>
+        <div class="ai-terminal-section" style="margin-bottom: 0;">
+            <div class="terminal-header">
+                <div class="terminal-dots"><span></span><span></span><span></span></div>
+                <div class="terminal-title">AI_WARREN_BUFFETT_v2.exe</div>
+                <div class="terminal-status" id="terminalStatus">SYS.ONLINE</div>
+            </div>
+            <div class="analysis-body-inline" id="analysisBody">
+                
+                <div class="ai-verdict-box" style="animation: slideUp 0.5s ease;">
+                    <div class="ai-verdict-signal" style="color: ${barColor}; text-shadow: 0 0 15px ${barColor};">${signalIcon} ${signal}</div>
+                    <div class="ai-confidence-wrap" style="width: 100%; margin-top: 15px;">
+                        <div class="ai-confidence-header"><span>AI Confidence Score</span><span style="color: ${barColor}; font-weight: 800;">${confidence}/100</span></div>
+                        <div class="ai-confidence-bar"><div class="ai-confidence-fill" style="width: ${confidence}%; background: linear-gradient(90deg, ${barColor}, #ffffff); box-shadow: 0 0 10px ${barColor};"></div></div>
+                    </div>
+                </div>
+
+                <div class="ai-summary-text" style="background: rgba(80, 228, 242, 0.05); border-left: 3px solid var(--cyan); padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong style="color: var(--cyan); display: block; margin-bottom: 6px;">> EXECUTIVE THESIS:</strong>
+                    ${data.thesis || "Tidak ada ringkasan."}
+                </div>
+
+                <div class="ai-metrics-grid-full">
+                    <div class="metric-group">
+                        <div class="metric-group-title">💰 VALUATION</div>
+                        <div class="metric-row"><span>P/E Ratio</span><span style="color: ${getColor(metrics.valuation?.pe, 15, 30, true)}">${formatNum(metrics.valuation?.pe)}</span></div>
+                        <div class="metric-row"><span>P/B Ratio</span><span style="color: ${getColor(metrics.valuation?.pb, 3, 10, true)}">${formatNum(metrics.valuation?.pb)}</span></div>
+                        <div class="metric-row"><span>PEG Ratio</span><span style="color: ${getColor(metrics.valuation?.peg, 1, 2, true)}">${formatNum(metrics.valuation?.peg)}</span></div>
+                    </div>
+                    <div class="metric-group">
+                        <div class="metric-group-title">📈 PROFITABILITY</div>
+                        <div class="metric-row"><span>ROE</span><span style="color: ${getColor(metrics.profitability?.roe, 0.15, 0.05)}">${formatPct(metrics.profitability?.roe)}</span></div>
+                        <div class="metric-row"><span>ROA</span><span style="color: ${getColor(metrics.profitability?.roa, 0.10, 0.05)}">${formatPct(metrics.profitability?.roa)}</span></div>
+                        <div class="metric-row"><span>Net Margin</span><span style="color: ${getColor(metrics.profitability?.net_margin, 0.15, 0.05)}">${formatPct(metrics.profitability?.net_margin)}</span></div>
+                    </div>
+                    <div class="metric-group">
+                        <div class="metric-group-title">🛡️ FINANCIAL HEALTH</div>
+                        <div class="metric-row"><span>Debt/Equity</span><span style="color: ${getColor(metrics.financial_health?.debt_to_equity, 0.5, 2.0, true)}">${formatNum(metrics.financial_health?.debt_to_equity)}</span></div>
+                        <div class="metric-row"><span>Current Ratio</span><span style="color: ${getColor(metrics.financial_health?.current_ratio, 2.0, 1.0)}">${formatNum(metrics.financial_health?.current_ratio)}</span></div>
+                        <div class="metric-row"><span>FCF Yield</span><span style="color: ${getColor(metrics.financial_health?.fcf_yield, 0.04, 0.01)}">${formatPct(metrics.financial_health?.fcf_yield)}</span></div>
+                    </div>
+                    <div class="metric-group">
+                        <div class="metric-group-title">🚀 GROWTH</div>
+                        <div class="metric-row"><span>Rev Growth</span><span style="color: ${getColor(metrics.growth?.revenue_growth, 0.10, 0.02)}">${formatPct(metrics.growth?.revenue_growth)}</span></div>
+                        <div class="metric-row"><span>EPS Growth</span><span style="color: ${getColor(metrics.growth?.eps_growth, 0.10, 0.02)}">${formatPct(metrics.growth?.eps_growth)}</span></div>
+                        <div class="metric-row"><span>Div Yield</span><span style="color: ${getColor(metrics.growth?.dividend_yield, 0.03, 0.01)}">${formatPct(metrics.growth?.dividend_yield)}</span></div>
+                    </div>
+                </div>
+
+                <div class="ai-insights-section">
+                    <div class="ai-metrics-title" style="color: var(--violet); margin-bottom: 12px;">🧠 DEEP CRITICAL INSIGHTS</div>
+                    ${insights.map(r => {
+                        let rIcon = '💡'; let borderColor = 'var(--violet)';
+                        if (r.toLowerCase().includes('risiko') || r.toLowerCase().includes('utang') || r.toLowerCase().includes('mahal')) { rIcon = '🚨'; borderColor = 'var(--red)'; }
+                        else if (r.toLowerCase().includes('pertumbuhan') || r.toLowerCase().includes('kuat') || r.toLowerCase().includes('tinggi')) { rIcon = '📈'; borderColor = 'var(--green)'; }
+                        return `<div class="insight-card" style="border-left-color: ${borderColor}; animation: fadeIn 0.6s ease;"> <span>${rIcon}</span> <span>${r}</span> </div>`;
+                    }).join('')}
+                </div>
+
+                <div class="ai-final-verdict" style="background: rgba(233, 185, 73, 0.1); border: 1px solid var(--gold); padding: 16px; border-radius: 12px; margin-top: 20px; text-align: center;">
+                    <span style="color: var(--gold); font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Final Verdict</span>
+                    <p style="margin-top: 8px; font-size: 14px; font-weight: 600; color: #fff;">${data.verdict || "Analisis selesai."}</p>
+                </div>
+
             </div>
         </div>
-        <div class="ai-metrics-title">🧠 CRITICAL INSIGHTS</div>
-        ${reasonsHtml}
-        <div class="ai-summary-text"><strong style="color: var(--cyan);">> EXECUTIVE SUMMARY:</strong><br>${data.analysis || "Tidak ada ringkasan."}</div>
     `;
 }
 function formatAnalysis(text) { if (!text) return ''; return text.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--cyan);">$1</strong>').replace(/\n/g, '<br>'); }
@@ -879,33 +850,33 @@ function closeAssetDetail() { document.getElementById('chartModal').classList.re
 
 // ============ COMPANY PROFILE ============
 const COMPANY_PROFILES = {
-    'AAPL': { story: 'Didirikan pada 1976 oleh Steve Jobs, Steve Wozniak, dan Ronald Wayne. Berawal dari garasi, Apple kini jadi raksasa teknologi global.', gen: 'Generasi ke-2 (Tim Cook)', sector: 'Technology (Consumer Electronics)', ceo: 'Tim Cook', owner: 'Institutional Investors & Public' },
-    'MSFT': { story: 'Didirikan pada 1975 oleh Bill Gates dan Paul Allen. Berfokus pada software (Windows & Office) sebelum berevolusi menjadi raksasa Cloud (Azure) dan AI.', gen: 'Generasi ke-3 (Satya Nadella)', sector: 'Technology (Software & Cloud)', ceo: 'Satya Nadella', owner: 'Institutional Investors & Public' },
-    'NVDA': { story: 'Didirikan pada 1993 oleh Jensen Huang. Berawal dari GPU untuk gaming, NVIDIA kini mendominasi pasar chip AI global.', gen: 'Generasi ke-1 (Jensen Huang)', sector: 'Technology (Semiconductors)', ceo: 'Jensen Huang', owner: 'Institutional Investors & Public' },
-    'TSLA': { story: 'Didirikan pada 2003 oleh Martin Eberhard dan Marc Tarpenning. Elon Musk bergabung tak lama setelahnya. Misi utamanya adalah mempercepat transisi dunia menuju energi berkelanjutan.', gen: 'Generasi ke-1 (Elon Musk)', sector: 'Consumer Cyclical (Automotive)', ceo: 'Elon Musk', owner: 'Elon Musk & Public' },
-    'GOOGL': { story: 'Didirikan pada 1998 oleh Larry Page dan Sergey Brin saat mereka masih mahasiswa Stanford. Berevolusi dari mesin pencari menjadi raksasa iklan digital dan AI (Alphabet).', gen: 'Generasi ke-2 (Sundar Pichai)', sector: 'Technology (Internet Content)', ceo: 'Sundar Pichai', owner: 'Founders & Public' },
-    'AMZN': { story: 'Didirikan pada 1994 oleh Jeff Bezos sebagai toko buku online. Berkat obsesinya pada pelanggan, Amazon menjadi raksasa e-commerce dan Cloud (AWS).', gen: 'Generasi ke-2 (Andy Jassy)', sector: 'Consumer Cyclical (E-commerce)', ceo: 'Andy Jassy', owner: 'Jeff Bezos & Public' }
+    'AAPL': { story: 'Didirikan pada 1976 di garasi oleh Steve Jobs, Steve Wozniak, dan Ronald Wayne. Apple merevolusi industri komputer, musik, dan smartphone. Kini berevolusi menjadi raksasa layanan (Services) dan Wearables.', founded: '1976', gen: 'Gen-2', sector: 'Technology (Consumer Electronics)', ceo: 'Tim Cook', owner: 'Institutional (Vanguard, BlackRock) & Public' },
+    'MSFT': { story: 'Didirikan pada 1975 oleh Bill Gates dan Paul Allen. Misi awalnya "komputer di setiap meja". Kini bertransformasi total menjadi pemimpin pasar Cloud (Azure) dan AI berkat visi Satya Nadella.', founded: '1975', gen: 'Gen-3', sector: 'Technology (Software & Cloud)', ceo: 'Satya Nadella', owner: 'Institutional & Public' },
+    'NVDA': { story: 'Didirikan pada 1993 oleh Jensen Huang. Berawal dari GPU untuk video game, NVIDIA kini menjadi perusahaan paling vital di dunia untuk infrastruktur kecerdasan buatan (AI).', founded: '1993', gen: 'Gen-1 (Founder-led)', sector: 'Technology (Semiconductors)', ceo: 'Jensen Huang', owner: 'Institutional & Public' },
+    'TSLA': { story: 'Didirikan pada 2003. Misi utamanya adalah mempercepat transisi dunia menuju energi berkelanjutan. Bukan sekadar perusahaan mobil, tapi perusahaan AI dan energi.', founded: '2003', gen: 'Gen-1 (Founder-led)', sector: 'Consumer Cyclical (Automotive)', ceo: 'Elon Musk', owner: 'Elon Musk & Public' },
+    'GOOGL': { story: 'Didirikan pada 1998 oleh Larry Page dan Sergey Brin saat kuliah di Stanford. Berawal dari algoritma PageRank, kini Alphabet menguasai pencarian, iklan digital, dan riset AI (DeepMind).', founded: '1998', gen: 'Gen-2', sector: 'Technology (Internet Content)', ceo: 'Sundar Pichai', owner: 'Founders & Public' },
+    'AMZN': { story: 'Didirikan pada 1994 oleh Jeff Bezos sebagai toko buku online. Berkat obsesi pada pelanggan (Customer Obsession), Amazon menjadi raksasa e-commerce dan Cloud (AWS).', founded: '1994', gen: 'Gen-2', sector: 'Consumer Cyclical (E-commerce)', ceo: 'Andy Jassy', owner: 'Jeff Bezos & Public' }
 };
 
 function renderCompanyProfile(symbol) {
     const section = document.getElementById('companyProfileSection');
     if (!section) return;
     const profile = COMPANY_PROFILES[symbol] || {
-        story: `${symbol} merupakan perusahaan publik yang terdaftar di bursa saham global.`,
-        gen: 'Generasi ke-1', sector: 'Diversified', ceo: 'TBA', owner: 'Public'
+        story: `${symbol} merupakan perusahaan publik yang terdaftar di bursa saham global.`, founded: '-', gen: '-', sector: '-', ceo: '-', owner: '-'
     };
     section.style.display = 'block';
     section.innerHTML = `
-        <div class="company-profile-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
-            Company Intel
+        <div class="company-intel-header">
+            <div class="intel-icon">🏢</div>
+            <div><h3 class="intel-title">Company Intel</h3><span class="intel-subtitle">Sejarah & Fundamental Bisnis</span></div>
         </div>
         <div class="company-story-text">"${profile.story}"</div>
         <div class="company-meta-grid">
-            <div class="company-meta-item"><span class="company-meta-label">Sektor</span><span class="company-meta-value">${profile.sector}</span></div>
-            <div class="company-meta-item"><span class="company-meta-label">Generasi</span><span class="company-meta-value">${profile.gen}</span></div>
-            <div class="company-meta-item"><span class="company-meta-label">CEO</span><span class="company-meta-value">${profile.ceo}</span></div>
-            <div class="company-meta-item"><span class="company-meta-label">Owner</span><span class="company-meta-value">${profile.owner}</span></div>
+            <div class="meta-card"><span class="meta-label">Berdiri</span><span class="meta-value">${profile.founded}</span></div>
+            <div class="meta-card"><span class="meta-label">Sektor</span><span class="meta-value highlight-cyan">${profile.sector}</span></div>
+            <div class="meta-card"><span class="meta-label">Generasi</span><span class="meta-value highlight-violet">${profile.gen}</span></div>
+            <div class="meta-card"><span class="meta-label">CEO</span><span class="meta-value highlight-gold">${profile.ceo}</span></div>
+            <div class="meta-card" style="grid-column: span 2;"><span class="meta-label">Pemilik Utama (Owner)</span><span class="meta-value">${profile.owner}</span></div>
         </div>
     `;
 }
