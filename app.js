@@ -828,8 +828,8 @@ function renderAdvancedAIUI(data, fundamental, container) {
             </div>
         </div>
 
-        <div class="ai-summary-text" style="background: rgba(80, 228, 242, 0.05); border-left: 3px solid var(--cyan); padding: 12px; border-radius: 8px; margin-bottom: 20px;">
-            <strong style="color: var(--cyan); display: block; margin-bottom: 6px;">> EXECUTIVE THESIS:</strong>
+        <div class="ai-summary-text">
+            <strong>> EXECUTIVE THESIS:</strong><br>
             ${data.thesis || "Tidak ada ringkasan."}
         </div>
 
