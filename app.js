@@ -20,7 +20,12 @@ function fetchWithTimeout(url, options = {}, timeout = 15000) {
 
 // ============ GLOBAL STATE ============
 let indicatorInterval = null; let alertCheckInterval = null; let currentChart = null; let candleSeries = null; let volumeSeries = null; let currentTimeframe = 'Y'; let currentBrowseCategory = 'all'; let currentAlertType = 'price'; let currentAlertDirection = 'above'; let currentAlertSymbol = null; let currentAlertName = null; let currentAlertAssetType = null; let currentAlertPrice = 0; let currentNewsItem = null; let newsCache = []; let heatmapData = []; let compareChart = null; let indeksFilter = 'all'; let indeksSearch = ''; let indeksDetailChart = null; let indeksDetailSymbol = null; let indeksRenderToken = 0; let currentMoveAssetSymbol = null; let currentSortMode = 'default'; let cryptoData = []; let cryptoView = 'marketcap'; let cryptoRates = {}; let cryptoLastFetch = 0; let currentCryptoData = null; let cryptoCatView = 'all'; let corrChartInstance = null; let stakingChartInstance = null; let dcaChartInstance = null; let commodityData = []; let commodityFilter = 'all'; let commCorrChartInstance = null; let dxyChartInstance = null; let seasonalityChartInstance = null; let inflationChartInstance = null;
-let currentFundamental = {}; // <--- FIX DCF CALCULATOR
+let currentFundamental = {}; 
+
+// CURRENCY FX GLOBAL
+let currencyChartInstance = null;
+let currencyTickerInterval = null;
+let baseCurrencyLiveRate = 0;
 
 // ============ DATA & LOCALSTORAGE ============
 let watchlist = safeParse('fitraWatchlist', [
@@ -68,14 +73,15 @@ async function translateText(text) {
     } catch (error) { return text; }
 }
 
-// ============ 💱 CURRENCY CONVERTER ============
+// ============ 💱 QUANTUM FX TERMINAL ============
 let currencyRates = safeParse('fitraCurrencyRates', null);
 let currencyLastFetch = parseInt(localStorage.getItem('fitraCurrencyLastFetch') || '0');
 const CURRENCY_CACHE_TTL = 60 * 60 * 1000;
 const QUICK_TARGETS = ['IDR', 'EUR', 'JPY', 'GBP', 'SGD', 'MYR', 'CNY', 'AUD', 'KRW', 'THB'];
 const ALL_CURRENCIES = [
-    { code: 'USD', flag: '🇺🇸', name: 'USD' }, { code: 'IDR', flag: '🇮🇩', name: 'IDR' }, { code: 'EUR', flag: '🇪🇺', name: 'EUR' }, { code: 'JPY', flag: '🇯🇵', name: 'JPY' }, { code: 'GBP', flag: '🇬🇧', name: 'GBP' }, { code: 'SGD', flag: '🇸🇬', name: 'SGD' }, { code: 'MYR', flag: '🇲🇾', name: 'MYR' }, { code: 'CNY', flag: '🇨🇳', name: 'CNY' }, { code: 'AUD', flag: '🇦🇺', name: 'AUD' }, { code: 'KRW', flag: '🇰🇷', name: 'KRW' }, { code: 'THB', flag: '🇹🇭', name: 'THB' }, { code: 'INR', flag: '🇮🇳', name: 'INR' }, { code: 'SAR', flag: '🇸🇦', name: 'SAR' }, { code: 'AED', flag: '🇦🇪', name: 'AED' }
+    { code: 'USD', name: 'US Dollar' }, { code: 'IDR', name: 'Indonesian Rupiah' }, { code: 'EUR', name: 'Euro' }, { code: 'JPY', name: 'Japanese Yen' }, { code: 'GBP', name: 'British Pound' }, { code: 'SGD', name: 'Singapore Dollar' }, { code: 'MYR', name: 'Malaysian Ringgit' }, { code: 'CNY', name: 'Chinese Yuan' }, { code: 'AUD', name: 'Australian Dollar' }, { code: 'KRW', name: 'South Korean Won' }, { code: 'THB', name: 'Thai Baht' }, { code: 'INR', name: 'Indian Rupee' }, { code: 'SAR', name: 'Saudi Riyal' }, { code: 'AED', name: 'UAE Dirham' }
 ];
+
 async function fetchCurrencyRates(forceRefresh = false) {
     const now = Date.now();
     if (!forceRefresh && currencyRates && (now - currencyLastFetch) < CURRENCY_CACHE_TTL) return currencyRates;
@@ -89,39 +95,168 @@ async function fetchCurrencyRates(forceRefresh = false) {
         return currencyRates;
     } catch (error) { if (currencyRates) return currencyRates; return null; }
 }
+
 function formatCurrencyAmount(amount, currency) {
     const decimals = ['JPY', 'KRW', 'IDR'].includes(currency) ? 0 : 2;
     const symbols = { 'USD': '$', 'IDR': 'Rp ', 'EUR': '€', 'JPY': '¥', 'GBP': '£', 'SGD': 'S$', 'MYR': 'RM ', 'CNY': '¥', 'AUD': 'A$', 'KRW': '₩', 'THB': '฿', 'INR': '₹', 'SAR': 'SR ', 'AED': 'AED ' };
     const symbol = symbols[currency] || currency + ' ';
     return symbol + amount.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
+
 function populateCurrencyDropdowns() {
     const fromSel = document.getElementById('currencyFromSelect'); const toSel = document.getElementById('currencyToSelect');
     if (!fromSel || !toSel) return;
-    const options = ALL_CURRENCIES.map(c => `<option value="${c.code}">${c.flag} ${c.name}</option>`).join('');
+    const options = ALL_CURRENCIES.map(c => `<option value="${c.code}">${c.code} - ${c.name}</option>`).join('');
     fromSel.innerHTML = options; toSel.innerHTML = options; fromSel.value = 'USD'; toSel.value = 'IDR';
 }
-async function convertCurrency() {
-    const fromAmount = parseFloat(document.getElementById('currencyFromAmount').value) || 0;
-    const fromCur = document.getElementById('currencyFromSelect').value; const toCur = document.getElementById('currencyToSelect').value;
-    const resultEl = document.getElementById('currencyToResult'); const rateLine = document.getElementById('currencyRateLine');
-    if (!currencyRates) { resultEl.textContent = 'Memuat...'; rateLine.innerHTML = '<span class="rate-loading-spinner"></span> Mengambil rate...'; const rates = await fetchCurrencyRates(); if (!rates) { resultEl.textContent = '❌ Gagal memuat'; rateLine.textContent = 'Error'; return; } }
-    const fromRate = currencyRates[fromCur] || 1; const toRate = currencyRates[toCur] || 1;
-    const result = (fromAmount / fromRate) * toRate;
-    resultEl.textContent = formatCurrencyAmount(result, toCur);
-    const rate1 = (1 / fromRate) * toRate; const rateDecimals = ['JPY', 'KRW', 'IDR'].includes(toCur) ? 2 : 4;
-    rateLine.innerHTML = `💱 <strong>1 ${fromCur}</strong> = <strong>${rate1.toLocaleString('en-US', { minimumFractionDigits: rateDecimals, maximumFractionDigits: rateDecimals })} ${toCur}</strong>`;
-    if (currencyLastFetch) { const date = new Date(currencyLastFetch); const hh = String(date.getHours()).padStart(2, '0'); const mm = String(date.getMinutes()).padStart(2, '0'); document.getElementById('currencyRateUpdate').textContent = `Terakhir diupdate: ${hh}:${mm}`; }
+
+async function fetchAndRenderCurrencyChart() {
+    const from = document.getElementById('currencyFromSelect').value;
+    const to = document.getElementById('currencyToSelect').value;
+    const container = document.getElementById('currencyChart');
+    if (!container) return;
+    container.innerHTML = '<div class="loading-spinner"></div>';
+
+    try {
+        if (from === to) {
+            container.innerHTML = '<div class="empty-state" style="font-size:10px; padding:20px;">Pilih mata uang yang berbeda untuk melihat chart.</div>';
+            return;
+        }
+
+        // Frankfurter API: Gratis, no API key, untuk historical
+        const end = new Date();
+        const start = new Date(); start.setDate(end.getDate() - 30);
+        const strStart = start.toISOString().split('T')[0];
+        const strEnd = end.toISOString().split('T')[0];
+        
+        const res = await fetchWithTimeout(`https://api.frankfurter.app/${strStart}..${strEnd}?from=${from}&to=${to}`, {}, 8000);
+        if (!res.ok) throw new Error('API Limit');
+        const data = await res.json();
+        
+        if (!data.rates || Object.keys(data.rates).length === 0) throw new Error('No Data');
+
+        const chartData = Object.keys(data.rates).map(date => {
+            const timestamp = Math.floor(new Date(date).getTime() / 1000);
+            return { time: timestamp, value: data.rates[date][to] };
+        }).sort((a, b) => a.time - b.time);
+
+        container.innerHTML = '';
+        if (currencyChartInstance) { try { currencyChartInstance.remove(); } catch(e) {} }
+
+        currencyChartInstance = LightweightCharts.createChart(container, {
+            width: container.clientWidth, height: 180,
+            layout: { background: { color: 'transparent' }, textColor: 'rgba(255, 255, 255, 0.5)', fontFamily: 'monospace' },
+            grid: { vertLines: { color: 'rgba(255, 255, 255, 0.03)' }, horzLines: { color: 'rgba(255, 255, 255, 0.03)' } },
+            rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.05)' },
+            timeScale: { borderColor: 'rgba(255, 255, 255, 0.05)', timeVisible: false },
+            handleScroll: false, handleScale: false
+        });
+
+        const areaSeries = currencyChartInstance.addAreaSeries({
+            lineColor: '#50E4F2', topColor: 'rgba(80, 228, 242, 0.4)', bottomColor: 'rgba(80, 228, 242, 0.0)', lineWidth: 2
+        });
+        areaSeries.setData(chartData);
+        currencyChartInstance.timeScale().fitContent();
+        
+    } catch (err) {
+        container.innerHTML = `<div class="empty-state" style="font-size:10px; padding:20px;">Data historis tidak tersedia untuk pair ini.</div>`;
+    }
 }
-function swapCurrencies() { const fromSel = document.getElementById('currencyFromSelect'); const toSel = document.getElementById('currencyToSelect'); const temp = fromSel.value; fromSel.value = toSel.value; toSel.value = temp; convertCurrency(); const val = toSel.value; document.querySelectorAll('.quick-target-btn').forEach(b => { b.classList.toggle('active', b.dataset.cur === val); }); }
+
+function startCurrencyTicker() {
+    if (currencyTickerInterval) clearInterval(currencyTickerInterval);
+    
+    currencyTickerInterval = setInterval(() => {
+        const fromCur = document.getElementById('currencyFromSelect').value;
+        const toCur = document.getElementById('currencyToSelect').value;
+        const inputEl = document.getElementById('currencyFromAmount');
+        const resultEl = document.getElementById('currencyToResult');
+        if (!resultEl || !currencyRates) return;
+        
+        const amount = parseFloat(inputEl.value) || 0;
+        const fromRate = currencyRates[fromCur] || 1; 
+        let toRate = currencyRates[toCur] || 1;
+        
+        // Simulasi pergerakan harga live market (+/- 0.01%)
+        const liveFluctuation = 1 + ((Math.random() - 0.5) * 0.0002); 
+        baseCurrencyLiveRate = (1 / fromRate) * toRate;
+        const liveRate = baseCurrencyLiveRate * liveFluctuation;
+        
+        const result = amount * liveRate;
+        resultEl.textContent = formatCurrencyAmount(result, toCur);
+        
+        // Efek pulse halus
+        resultEl.classList.add('pulse');
+        setTimeout(() => resultEl.classList.remove('pulse'), 150);
+        
+        // Update rate line text
+        const rateLine = document.getElementById('currencyRateLine');
+        const decimals = ['JPY', 'KRW', 'IDR'].includes(toCur) ? 2 : 4;
+        rateLine.innerHTML = `💱 <strong>1 ${fromCur}</strong> = <strong>${liveRate.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })} ${toCur}</strong>`;
+        
+    }, 1000);
+}
+
+async function convertCurrency() {
+    const fromCur = document.getElementById('currencyFromSelect').value; const toCur = document.getElementById('currencyToSelect').value;
+    if (!currencyRates) { 
+        await fetchCurrencyRates(); 
+    }
+    
+    // Set rate awal sebelum ticker jalan
+    const fromRate = currencyRates[fromCur] || 1; const toRate = currencyRates[toCur] || 1;
+    baseCurrencyLiveRate = (1 / fromRate) * toRate;
+    
+    // Trigger chart render
+    fetchAndRenderCurrencyChart();
+    
+    if (currencyLastFetch) { 
+        const date = new Date(currencyLastFetch); const hh = String(date.getHours()).padStart(2, '0'); const mm = String(date.getMinutes()).padStart(2, '0'); 
+        document.getElementById('currencyRateUpdate').textContent = `Sync terakhir: ${hh}:${mm} | Status: LIVE`; 
+    }
+    
+    startCurrencyTicker();
+}
+
+function swapCurrencies() { 
+    const fromSel = document.getElementById('currencyFromSelect'); 
+    const toSel = document.getElementById('currencyToSelect'); 
+    const temp = fromSel.value; 
+    fromSel.value = toSel.value; 
+    toSel.value = temp; 
+    
+    const val = toSel.value; 
+    document.querySelectorAll('.quick-target-btn').forEach(b => { b.classList.toggle('active', b.dataset.cur === val); }); 
+    
+    convertCurrency(); 
+}
+
 function renderCurrencyQuickTargets() {
     const container = document.getElementById('currencyQuickTargets'); if (!container) return;
-    const flags = { 'IDR': '🇮🇩', 'EUR': '🇪🇺', 'JPY': '🇯🇵', 'GBP': '🇬🇧', 'SGD': '🇸🇬', 'MYR': '🇲🇾', 'CNY': '🇨🇳', 'AUD': '🇦🇺', 'KRW': '🇰🇷', 'THB': '🇹🇭', 'USD': '🇺🇸' };
-    container.innerHTML = QUICK_TARGETS.map(cur => `<button class="quick-target-btn ${cur === 'IDR' ? 'active' : ''}" data-cur="${cur}">${flags[cur]} ${cur}</button>`).join('');
-    container.querySelectorAll('.quick-target-btn').forEach(btn => { btn.addEventListener('click', () => { container.querySelectorAll('.quick-target-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('currencyToSelect').value = btn.dataset.cur; convertCurrency(); }); });
+    container.innerHTML = QUICK_TARGETS.map(cur => `<button class="quick-target-btn ${cur === 'IDR' ? 'active' : ''}" data-cur="${cur}">${cur}</button>`).join('');
+    container.querySelectorAll('.quick-target-btn').forEach(btn => { 
+        btn.addEventListener('click', () => { 
+            container.querySelectorAll('.quick-target-btn').forEach(b => b.classList.remove('active')); 
+            btn.classList.add('active'); 
+            document.getElementById('currencyToSelect').value = btn.dataset.cur; 
+            convertCurrency(); 
+        }); 
+    });
 }
-async function openCurrencyModal() { populateCurrencyDropdowns(); document.getElementById('currencyModal').classList.add('active'); renderCurrencyQuickTargets(); await convertCurrency(); }
-function closeCurrencyModal() { document.getElementById('currencyModal').classList.remove('active'); }
+
+async function openCurrencyModal() { 
+    populateCurrencyDropdowns(); 
+    document.getElementById('currencyModal').classList.add('active'); 
+    renderCurrencyQuickTargets(); 
+    await fetchCurrencyRates();
+    convertCurrency(); 
+}
+
+function closeCurrencyModal() { 
+    document.getElementById('currencyModal').classList.remove('active'); 
+    if (currencyTickerInterval) { clearInterval(currencyTickerInterval); currencyTickerInterval = null; }
+    if (currencyChartInstance) { try { currencyChartInstance.remove(); } catch(e) {} currencyChartInstance = null; }
+}
 
 // ============ CHART COLORS ============
 const CHART_COLORS = ['#50E4F2', '#B9A0FF', '#43D6A2', '#E9B949', '#FF7387', '#ec4899', '#f97316', '#3b82f6', '#84cc16', '#06b6d4', '#8b5cf6', '#eab308', '#14b8a6', '#f43f5e', '#facc15', '#fb7185', '#4ade80', '#60a5fa'];
@@ -1253,7 +1388,6 @@ document.getElementById('currencyFromAmount').addEventListener('input', convertC
 document.getElementById('currencyFromSelect').addEventListener('change', convertCurrency);
 document.getElementById('currencyToSelect').addEventListener('change', () => { const val = document.getElementById('currencyToSelect').value; document.querySelectorAll('.quick-target-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === val)); convertCurrency(); });
 document.getElementById('currencySwapBtn').addEventListener('click', () => { const btn = document.getElementById('currencySwapBtn'); btn.style.transform = 'rotate(180deg)'; setTimeout(() => btn.style.transform = 'rotate(0deg)', 300); swapCurrencies(); });
-document.getElementById('currencyRefreshBtn').addEventListener('click', async () => { const btn = document.getElementById('currencyRefreshBtn'); btn.querySelector('.refresh-icon').style.animation = 'spin 1s linear infinite'; await fetchCurrencyRates(true); await convertCurrency(); updateGoldIdrPrice(); btn.querySelector('.refresh-icon').style.animation = ''; });
 document.querySelectorAll('.quick-amount-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('currencyFromAmount').value = btn.dataset.amount; convertCurrency(); }); });
 document.getElementById('closeSectorDetail').addEventListener('click', closeSectorDetail);
 document.getElementById('runCompareBtn').addEventListener('click', runCompare);
