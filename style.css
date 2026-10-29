@@ -733,34 +733,6 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
 .news-detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 12px; border-top: 1px solid var(--glass-border); margin-top: auto; padding-bottom: 20px; }
 .news-action-btn { padding: 14px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.2s; border: 1px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); display: flex; align-items: center; justify-content: center; gap: 6px; }
 .news-action-btn.primary { background: linear-gradient(135deg, var(--cyan), var(--violet)); color: #08111E; border: none; box-shadow: 0 4px 15px rgba(80, 228, 242, 0.3); }
-.currency-modal { position: fixed; inset: 0; background: rgba(8, 17, 30, 0.98); z-index: 1500; display: none; flex-direction: column; animation: fadeIn 0.3s ease; }
-.currency-modal.active { display: flex; }
-.currency-content { flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 14px; overflow-y: auto; max-width: 600px; margin: 0 auto; width: 100%; }
-.currency-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
-.currency-header h3 { font-size: 18px; font-weight: 800; background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.currency-card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; position: relative; }
-.currency-field { display: flex; flex-direction: column; gap: 6px; }
-.currency-field-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
-.currency-input-row { display: flex; gap: 8px; align-items: stretch; }
-.currency-input-row input { flex: 1; min-width: 0; padding: 14px 16px; background: var(--card-elevated); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 20px; font-weight: 700; outline: none; font-family: inherit; font-variant-numeric: tabular-nums; }
-.currency-input-row select { padding: 14px 16px; background: var(--card-elevated); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 14px; font-weight: 700; outline: none; font-family: inherit; cursor: pointer; flex-shrink: 0; appearance: none; -webkit-appearance: none; min-width: 100px; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='%2350E4F2' d='M6 9L1 4h10z'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
-.currency-result-box { padding: 16px; background: linear-gradient(135deg, rgba(80, 228, 242, 0.1), rgba(185, 160, 255, 0.1)); border: 1px solid rgba(80, 228, 242, 0.3); border-radius: 12px; font-size: 24px; font-weight: 800; color: var(--cyan); text-align: right; font-variant-numeric: tabular-nums; min-height: 60px; display: flex; align-items: center; justify-content: flex-end; }
-.currency-to-select { width: 100%; padding: 12px 16px; background: var(--card-elevated); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 14px; font-weight: 700; outline: none; font-family: inherit; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='%2350E4F2' d='M6 9L1 4h10z'/></svg>"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-.currency-swap-btn { align-self: center; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--violet)); border: none; color: #08111E; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(80, 228, 242, 0.4); margin: -4px 0; z-index: 2; }
-.currency-rate-info { padding-top: 12px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 4px; text-align: center; }
-.currency-rate-line { font-size: 13px; color: var(--text-secondary); line-height: 1.4; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 20px; }
-.currency-rate-line strong { color: var(--cyan); font-weight: 800; }
-.currency-rate-update { font-size: 10px; color: var(--text-muted); font-style: italic; }
-.rate-loading-spinner { width: 12px; height: 12px; border: 2px solid rgba(80, 228, 242, 0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
-.currency-quick-section { display: flex; flex-direction: column; gap: 8px; }
-.currency-quick-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
-.currency-quick-amounts { display: flex; gap: 6px; flex-wrap: wrap; }
-.quick-amount-btn { flex: 1; min-width: 55px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-secondary); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
-.quick-amount-btn.active { background: linear-gradient(135deg, rgba(80, 228, 242, 0.2), rgba(185, 160, 255, 0.2)); color: var(--cyan); border-color: rgba(80, 228, 242, 0.4); }
-.currency-quick-targets { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; }
-.quick-target-btn { padding: 10px 8px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-secondary); font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.quick-target-btn.active { background: linear-gradient(135deg, rgba(80, 228, 242, 0.2), rgba(185, 160, 255, 0.2)); color: var(--cyan); border-color: rgba(80, 228, 242, 0.4); }
-.currency-refresh-btn { padding: 14px 20px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; margin-bottom: 20px; }
 
 /* BROWSE */
 .browse-content { max-height: 92vh; height: 92vh; display: flex; flex-direction: column; background: linear-gradient(180deg, var(--bg-navy) 0%, var(--bg-deep) 100%); border-top: 2px solid rgba(80, 228, 242, 0.3); box-shadow: 0 -10px 50px rgba(80, 228, 242, 0.1); }
@@ -897,3 +869,76 @@ h2, h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--tex
 .trans-loading-spinner { width: 10px; height: 10px; border: 2px solid rgba(80, 228, 242, 0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
 .trans-inline-spinner { width: 10px; height: 10px; border: 2px solid rgba(233, 185, 73, 0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 4px; }
 .trans-done-badge { padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 700; color: var(--cyan); background: rgba(80, 228, 242, 0.1); border: 1px solid rgba(80, 228, 242, 0.25); letter-spacing: 0.3px; }
+
+/* =========================================
+   QUANTUM FX TERMINAL (FUTURISTIC CURRENCY)
+   ========================================= */
+.main-fx-card {
+    background: linear-gradient(180deg, rgba(13, 24, 39, 0.95) 0%, rgba(8, 17, 30, 0.98) 100%) !important;
+    border: 1px solid rgba(80, 228, 242, 0.4) !important;
+    box-shadow: inset 0 0 20px rgba(80, 228, 242, 0.05), 0 10px 30px rgba(0,0,0,0.5) !important;
+    position: relative;
+    overflow: hidden;
+}
+.main-fx-card::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    animation: scanline 3s linear infinite;
+}
+@keyframes scanline { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+.futuristic-select {
+    background: rgba(20, 36, 56, 0.8) !important;
+    border: 1px solid rgba(80, 228, 242, 0.3) !important;
+    color: var(--cyan) !important;
+    font-family: 'Courier New', monospace !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px;
+    text-shadow: 0 0 5px rgba(80, 228, 242, 0.5);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    transition: all 0.3s;
+}
+.futuristic-select:focus { border-color: var(--cyan) !important; box-shadow: 0 0 15px rgba(80, 228, 242, 0.3) !important; }
+.futuristic-select option { background: var(--bg-navy); color: var(--text-primary); font-family: 'Inter', sans-serif; }
+
+.currency-modal { position: fixed; inset: 0; background: rgba(8, 17, 30, 0.98); z-index: 1500; display: none; flex-direction: column; animation: fadeIn 0.3s ease; }
+.currency-modal.active { display: flex; }
+.currency-content { flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 14px; overflow-y: auto; max-width: 600px; margin: 0 auto; width: 100%; }
+.currency-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
+.currency-header h3 { font-size: 18px; font-weight: 800; background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.currency-card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+.currency-field { display: flex; flex-direction: column; gap: 6px; }
+.currency-field-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.currency-input-row { display: flex; gap: 8px; align-items: stretch; }
+.currency-input-row input { flex: 1; min-width: 0; padding: 14px 16px; background: var(--card-elevated); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 20px; font-weight: 700; outline: none; font-family: inherit; font-variant-numeric: tabular-nums; }
+.currency-input-row select { padding: 14px 16px; background: var(--card-elevated); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 14px; font-weight: 700; outline: none; font-family: inherit; cursor: pointer; flex-shrink: 0; appearance: none; -webkit-appearance: none; min-width: 100px; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='%2350E4F2' d='M6 9L1 4h10z'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+.currency-input-row input { font-family: 'Courier New', monospace !important; color: #fff !important; text-shadow: 0 0 8px rgba(255, 255, 255, 0.5); background: rgba(0,0,0,0.3) !important; }
+.currency-result-box { padding: 16px; background: linear-gradient(135deg, rgba(80, 228, 242, 0.1), rgba(185, 160, 255, 0.1)); border: 1px solid rgba(80, 228, 242, 0.5); border-radius: 12px; font-size: 24px; font-weight: 800; color: var(--cyan); text-align: right; font-variant-numeric: tabular-nums; min-height: 60px; display: flex; align-items: center; justify-content: flex-end; font-family: 'Courier New', monospace !important; text-shadow: 0 0 15px rgba(80, 228, 242, 0.6) !important; box-shadow: inset 0 0 20px rgba(80, 228, 242, 0.1) !important; transition: transform 0.1s; }
+.currency-result-box.pulse { transform: scale(1.02); box-shadow: inset 0 0 30px rgba(80, 228, 242, 0.3) !important; }
+.currency-to-select { width: 100%; padding: 12px 16px; background: var(--card-elevated); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 14px; font-weight: 700; outline: none; font-family: inherit; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='%2350E4F2' d='M6 9L1 4h10z'/></svg>"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.currency-swap-btn { align-self: center; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--violet)); border: none; color: #08111E; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(80, 228, 242, 0.4); margin: -4px 0; z-index: 2; }
+.currency-rate-info { padding-top: 12px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 4px; text-align: center; }
+.currency-rate-line { font-family: monospace; font-size: 12px; color: var(--text-secondary); line-height: 1.4; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 20px; }
+.currency-rate-line strong { color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.5); font-weight: 800; }
+.currency-rate-update { font-size: 10px; color: var(--text-muted); font-style: italic; }
+.rate-loading-spinner { width: 12px; height: 12px; border: 2px solid rgba(80, 228, 242, 0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+.currency-quick-section { display: flex; flex-direction: column; gap: 8px; }
+.currency-quick-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
+.currency-quick-amounts { display: flex; gap: 6px; flex-wrap: wrap; }
+.quick-amount-btn { flex: 1; min-width: 55px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-secondary); font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Courier New', monospace; }
+.quick-amount-btn.active { background: linear-gradient(135deg, rgba(80, 228, 242, 0.2), rgba(185, 160, 255, 0.2)); color: var(--cyan); border-color: rgba(80, 228, 242, 0.4); }
+.currency-quick-targets { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; }
+.quick-target-btn { padding: 10px 8px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-secondary); font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Courier New', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.5px; }
+.quick-target-btn.active { background: linear-gradient(135deg, rgba(80, 228, 242, 0.2), rgba(185, 160, 255, 0.2)); color: var(--cyan); border-color: rgba(80, 228, 242, 0.4); }
+.currency-refresh-btn { padding: 14px 20px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; margin-bottom: 20px; }
+
+.currency-chart-section {
+    background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(185, 160, 255, 0.3);
+    border-radius: 14px; padding: 16px; margin-bottom: 14px;
+    box-shadow: inset 0 0 20px rgba(185, 160, 255, 0.05);
+}
+.currency-chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.currency-chart-title { font-family: monospace; font-size: 12px; color: var(--violet); font-weight: 700; letter-spacing: 1px; text-shadow: 0 0 8px rgba(185, 160, 255, 0.5); }
+.currency-live-badge { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; color: var(--green); background: rgba(67, 214, 162, 0.1); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(67, 214, 162, 0.3); }
+.live-dot-pulse { width: 6px; height: 6px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); animation: pulse-green 1.5s infinite; }
+.currency-chart-container { width: 100%; height: 180px; }
