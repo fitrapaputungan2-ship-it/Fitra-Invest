@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=10002">
+    <link rel="stylesheet" href="style.css?v=10003">
 </head>
 <body>
     <div class="app">
@@ -214,15 +214,16 @@
     <div class="currency-modal" id="currencyModal">
         <div class="currency-content">
             <div class="currency-header">
-                <h3>💱 Quantum FX Terminal</h3>
+                <h3>⚡ QUANTUM FX TERMINAL ⚡</h3>
                 <button class="modal-close" id="closeCurrencyModal">×</button>
             </div>
             
             <div class="currency-card main-fx-card">
+                <div class="fx-center-title">CURRENCY CONVERTER</div>
+                
                 <div class="currency-field">
-                    <span class="currency-field-label">BASE CURRENCY</span>
                     <div class="currency-input-row">
-                        <input type="number" id="currencyFromAmount" value="1" min="0" step="any">
+                        <input type="number" id="currencyFromAmount" value="1" min="0" step="any" placeholder="Jumlah">
                         <select id="currencyFromSelect" class="futuristic-select"></select>
                     </div>
                 </div>
@@ -230,11 +231,10 @@
                 <button class="currency-swap-btn" id="currencySwapBtn">⇅</button>
                 
                 <div class="currency-field">
-                    <span class="currency-field-label">QUOTE CURRENCY</span>
-                    <div class="currency-input-row">
+                    <div class="currency-result-box" id="currencyToResult">Rp 0</div>
+                    <div class="currency-input-row" style="margin-top: 10px;">
                         <select class="currency-to-select futuristic-select" id="currencyToSelect"></select>
                     </div>
-                    <div class="currency-result-box" id="currencyToResult">Rp 0</div>
                 </div>
             </div>
 
@@ -463,8 +463,8 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=10002"></script>
+    <script src="app.js?v=10003"></script>
     <script src="//cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init();</script>
 </body>
-        </html>
+    </html>
