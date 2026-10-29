@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=10000">
+    <link rel="stylesheet" href="style.css?v=10002">
 </head>
 <body>
     <div class="app">
@@ -210,19 +210,62 @@
         </div>
     </div>
 
+    <!-- QUANTUM FX TERMINAL (CURRENCY CONVERTER) -->
     <div class="currency-modal" id="currencyModal">
         <div class="currency-content">
-            <div class="currency-header"><h3>💱 Currency Converter</h3><button class="modal-close" id="closeCurrencyModal">×</button></div>
-            <div class="currency-card">
-                <div class="currency-field"><span class="currency-field-label">Dari</span><div class="currency-input-row"><input type="number" id="currencyFromAmount" value="1" min="0" step="any"><select id="currencyFromSelect"></select></div></div>
-                <button class="currency-swap-btn" id="currencySwapBtn">⇅</button>
-                <div class="currency-field"><span class="currency-field-label">Ke</span><div class="currency-input-row"><select class="currency-to-select" id="currencyToSelect"></select></div></div>
-                <div class="currency-result-box" id="currencyToResult">Rp 0</div>
+            <div class="currency-header">
+                <h3>💱 Quantum FX Terminal</h3>
+                <button class="modal-close" id="closeCurrencyModal">×</button>
             </div>
-            <div class="currency-card"><div class="currency-rate-info"><div class="currency-rate-line" id="currencyRateLine">💱 1 USD = ... IDR</div><div class="currency-rate-update" id="currencyRateUpdate">Terakhir diupdate: --</div></div></div>
-            <div class="currency-quick-section"><span class="currency-quick-label">Jumlah Cepat</span><div class="currency-quick-amounts"><button class="quick-amount-btn" data-amount="1">1</button><button class="quick-amount-btn active" data-amount="100">100</button><button class="quick-amount-btn" data-amount="1000">1K</button><button class="quick-amount-btn" data-amount="10000">10K</button></div></div>
-            <div class="currency-quick-section"><span class="currency-quick-label">Mata Uang Populer</span><div class="currency-quick-targets" id="currencyQuickTargets"></div></div>
-            <button class="currency-refresh-btn" id="currencyRefreshBtn"><span class="refresh-icon">⟳</span> Refresh Rate</button>
+            
+            <div class="currency-card main-fx-card">
+                <div class="currency-field">
+                    <span class="currency-field-label">BASE CURRENCY</span>
+                    <div class="currency-input-row">
+                        <input type="number" id="currencyFromAmount" value="1" min="0" step="any">
+                        <select id="currencyFromSelect" class="futuristic-select"></select>
+                    </div>
+                </div>
+                
+                <button class="currency-swap-btn" id="currencySwapBtn">⇅</button>
+                
+                <div class="currency-field">
+                    <span class="currency-field-label">QUOTE CURRENCY</span>
+                    <div class="currency-input-row">
+                        <select class="currency-to-select futuristic-select" id="currencyToSelect"></select>
+                    </div>
+                    <div class="currency-result-box" id="currencyToResult">Rp 0</div>
+                </div>
+            </div>
+
+            <!-- CHART SECTION -->
+            <div class="currency-chart-section">
+                <div class="currency-chart-header">
+                    <span class="currency-chart-title">📈 TREND RATE (30D)</span>
+                    <span class="currency-live-badge"><span class="live-dot-pulse"></span> LIVE SYNC</span>
+                </div>
+                <div id="currencyChart" class="currency-chart-container"></div>
+            </div>
+
+            <div class="currency-rate-info">
+                <div class="currency-rate-line" id="currencyRateLine">Memuat data rate...</div>
+                <div class="currency-rate-update" id="currencyRateUpdate">Terakhir diupdate: --</div>
+            </div>
+
+            <div class="currency-quick-section">
+                <span class="currency-quick-label">QUICK AMOUNT</span>
+                <div class="currency-quick-amounts">
+                    <button class="quick-amount-btn" data-amount="1">1</button>
+                    <button class="quick-amount-btn active" data-amount="100">100</button>
+                    <button class="quick-amount-btn" data-amount="1000">1K</button>
+                    <button class="quick-amount-btn" data-amount="10000">10K</button>
+                </div>
+            </div>
+            
+            <div class="currency-quick-section">
+                <span class="currency-quick-label">POPULAR PAIRS</span>
+                <div class="currency-quick-targets" id="currencyQuickTargets"></div>
+            </div>
         </div>
     </div>
 
@@ -420,8 +463,8 @@
     </div>
 
     <script src="./lightweight-charts.js"></script>
-    <script src="app.js?v=10000"></script>
+    <script src="app.js?v=10002"></script>
     <script src="//cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init();</script>
 </body>
-    </html>
+        </html>
